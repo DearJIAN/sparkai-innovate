@@ -1,0 +1,83 @@
+# 操作系统文件
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+*.swo
+*~
+
+# 编辑器配置
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+temp/
+tmp/
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# Python 虚拟环境
+venv/
+env/
+.env/
+.python-version
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Flask 迁移目录（可选，根据需求决定是否忽略）
+# migrations/
+
+# Node.js 依赖
+node_modules/
+package-lock.json
+yarn.lock
+
+# 前端构建产物
+dist/
+build/
+*.min.js
+*.min.css
+
+# 上传文件目录
+backend/uploads/
+
+# Trae 相关目录
+.trae/
+
+# 其他项目目录
+keshe/
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker 相关
+docker-compose.yml
+Dockerfile
+
+# IDE 缓存
+.cache/
+.parcel-cache/
+.eslintcache
+
+# 测试覆盖报告
+coverage/
+.coverage
+htmlcov/
+
+# 类型定义
+*.d.ts
