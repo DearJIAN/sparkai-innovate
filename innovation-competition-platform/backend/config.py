@@ -29,7 +29,7 @@ class Config:
     
     # 文件上传配置
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-    MAX_CONTENT_LENGTH = 500 * 1024 * 1024  # 最大 500MB
+    MAX_CONTENT_LENGTH = 4 * 1024 * 1024 * 1024  # 最大 4GB
     ALLOWED_EXTENSIONS = {
         'png', 'jpg', 'jpeg', 'gif', 'bmp',  # 图片
         'doc', 'docx',  # Word

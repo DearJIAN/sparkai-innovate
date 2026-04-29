@@ -62,23 +62,27 @@ def register_blueprints(app):
     from routes.user import user_bp
     from routes.project import project_bp
     from routes.member import member_bp
+    from routes.file import file_bp
     from routes.team import team_bp
     from routes.material import material_bp
     from routes.task import task_bp
     from routes.review import review_bp
     from routes.dashboard import dashboard_bp
     from routes.ai import ai_bp
-    
+    from routes.competition import competition_bp
+
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api/users')
     app.register_blueprint(project_bp, url_prefix='/api/projects')
     app.register_blueprint(member_bp, url_prefix='/api')
+    app.register_blueprint(file_bp, url_prefix='/api')
     app.register_blueprint(team_bp, url_prefix='/api/teams')
     app.register_blueprint(material_bp, url_prefix='/api/materials')
-    app.register_blueprint(task_bp, url_prefix='/api/tasks')
-    app.register_blueprint(review_bp, url_prefix='/api/reviews')
+    app.register_blueprint(task_bp, url_prefix='/api')
+    app.register_blueprint(review_bp, url_prefix='/api')
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
     app.register_blueprint(ai_bp, url_prefix='/api/ai')
+    app.register_blueprint(competition_bp, url_prefix='/api')
 
 
 def register_error_handlers(app):

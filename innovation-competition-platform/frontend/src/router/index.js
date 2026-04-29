@@ -25,6 +25,8 @@ const studentMenus = [
   { path: '/projects/:id', name: 'ProjectDetail', component: () => import('@/views/projects/detail.vue'), meta: { title: '项目详情', icon: 'Document', hidden: true } },
   { path: '/projects/:id/edit', name: 'ProjectEdit', component: () => import('@/views/projects/edit.vue'), meta: { title: '编辑项目', icon: 'Edit', hidden: true } },
   { path: '/projects/:id/members', name: 'ProjectMembers', component: () => import('@/views/projects/members.vue'), meta: { title: '团队成员', icon: 'User', hidden: true } },
+  { path: '/projects/:id/files', name: 'ProjectFiles', component: () => import('@/views/projects/files.vue'), meta: { title: '项目材料', icon: 'Document', hidden: true } },
+  { path: '/projects/:id/tasks', name: 'ProjectTasks', component: () => import('@/views/projects/tasks.vue'), meta: { title: '任务进度', icon: 'List', hidden: true } },
   { path: '/ai-assistant', name: 'AIAssistant', component: () => import('@/views/ai-assistant/index.vue'), meta: { title: 'AI 项目助手', icon: 'MagicStick' } }
 ]
 
@@ -41,6 +43,7 @@ const judgeMenus = [
   { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/judge.vue'), meta: { title: '工作台', icon: 'HomeFilled' } },
   { path: '/pending-reviews', name: 'PendingReviews', component: () => import('@/views/reviews/pending.vue'), meta: { title: '待评审项目', icon: 'StarFilled' } },
   { path: '/review-history', name: 'ReviewHistory', component: () => import('@/views/reviews/history.vue'), meta: { title: '评审记录', icon: 'DocumentChecked' } },
+  { path: '/reviews/:id', name: 'ReviewDetail', component: () => import('@/views/reviews/detail.vue'), meta: { title: '项目评审', icon: 'StarFilled', hidden: true } },
   { path: '/projects/:id', name: 'ProjectDetail', component: () => import('@/views/projects/detail.vue'), meta: { title: '项目详情', icon: 'Document', hidden: true } }
 ]
 
@@ -49,7 +52,7 @@ const adminMenus = [
   { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/admin.vue'), meta: { title: '数据看板', icon: 'Odometer' } },
   { path: '/user-management', name: 'UserManagement', component: () => import('@/views/admin/users.vue'), meta: { title: '用户管理', icon: 'UserFilled' } },
   { path: '/project-management', name: 'ProjectManagement', component: () => import('@/views/admin/projects.vue'), meta: { title: '项目管理', icon: 'FolderOpened' } },
-  { path: '/competition-management', name: 'CompetitionManagement', component: () => import('@/views/admin/competitions.vue'), meta: { title: '比赛管理', icon: 'Trophy' } },
+  { path: '/competition-management', name: 'CompetitionManagement', component: () => import('@/views/competitions/index.vue'), meta: { title: '比赛批次管理', icon: 'Trophy', roles: ['admin'] } },
   { path: '/review-management', name: 'ReviewManagement', component: () => import('@/views/admin/reviews.vue'), meta: { title: '评审管理', icon: 'StarFilled' } },
   { path: '/projects/:id', name: 'ProjectDetail', component: () => import('@/views/projects/detail.vue'), meta: { title: '项目详情', icon: 'Document', hidden: true } },
   { path: '/projects/:id/edit', name: 'ProjectEdit', component: () => import('@/views/projects/edit.vue'), meta: { title: '编辑项目', icon: 'Edit', hidden: true } }
@@ -115,11 +118,26 @@ router.beforeEach((to, from, next) => {
     return
   }
 
+  // 等待用户信息加载完成
+  if (!userStore.userInfo) {
+    userStore.init().then(() => {
+      checkPermission(to, next, userStore)
+    }).catch(() => {
+      next('/login')
+    })
+    return
+  }
+
+  checkPermission(to, next, userStore)
+})
+
+function checkPermission(to, next, userStore) {
+  const userRole = userStore.userInfo?.role
+
   // 检查角色权限
-  if (to.meta.role && userStore.userInfo?.role !== to.meta.role) {
+  if (to.meta.role && userRole !== to.meta.role) {
     // 如果用户已登录但角色不匹配，根据实际角色重定向
-    const actualRole = userStore.userInfo?.role
-    if (actualRole && roleRoutes[actualRole]) {
+    if (userRole && roleRoutes[userRole]) {
       next('/dashboard')
     } else {
       next('/login')
@@ -127,8 +145,14 @@ router.beforeEach((to, from, next) => {
     return
   }
 
+  // 检查路由是否需要特定角色
+  if (to.meta.roles && !to.meta.roles.includes(userRole)) {
+    next('/dashboard')
+    return
+  }
+
   next()
-})
+}
 
 export { roleRoutes }
 export default router

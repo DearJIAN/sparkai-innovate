@@ -154,15 +154,80 @@
             </div>
           </el-card>
 
+          <!-- 任务进度 -->
+          <el-card class="mt-4" shadow="never">
+            <template #header>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>任务进度</span>
+                <el-button v-if="taskStats.total > 0" link size="small" @click="goToTasks">
+                  查看全部
+                </el-button>
+              </div>
+            </template>
+            <div v-if="taskStats.total > 0">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 13px; color: var(--text-secondary);">
+                  已完成 {{ taskStats.done }} / {{ taskStats.total }}
+                </span>
+                <span style="font-size: 13px; font-weight: 600; color: var(--primary-600);">
+                  {{ taskStats.completion_rate }}%
+                </span>
+              </div>
+              <el-progress :percentage="taskStats.completion_rate" :stroke-width="8" :show-text="false" />
+              <div class="recent-tasks">
+                <div
+                  v-for="task in recentTasks.slice(0, 3)"
+                  :key="task.id"
+                  class="recent-task-item"
+                >
+                  <el-icon size="14" :color="taskStatusColor(task.status)">
+                    <component :is="taskStatusIcon(task.status)" />
+                  </el-icon>
+                  <span class="recent-task-title" :class="{ 'task-done': task.status === 'done' }">
+                    {{ task.title }}
+                  </span>
+                  <el-tag size="small" :type="priorityType(task.priority)">{{ priorityText(task.priority) }}</el-tag>
+                </div>
+              </div>
+            </div>
+            <el-empty v-else description="暂无任务" :image-size="60">
+              <el-button v-if="canManage" type="primary" size="small" @click="goToTasks">创建任务</el-button>
+            </el-empty>
+          </el-card>
+
           <!-- 评审结果 -->
           <el-card class="mt-4" shadow="never">
             <template #header>
               <span>评审结果</span>
             </template>
-            <el-empty v-if="!project.reviews?.length" description="暂无评审结果" :image-size="80" />
-            <div v-else>
-              <!-- 评审结果展示 -->
+            <div v-if="reviews.length > 0">
+              <div class="review-summary">
+                <div class="review-score">
+                  <span class="score-value">{{ averageScore }}</span>
+                  <span class="score-label">平均分</span>
+                </div>
+              </div>
+              <div class="review-list">
+                <div v-for="review in reviews" :key="review.id" class="review-item">
+                  <div class="review-header">
+                    <span class="reviewer">{{ review.judge?.real_name || review.judge?.username || '评委' }}</span>
+                    <span class="review-score-tag">{{ review.total_score }}分</span>
+                  </div>
+                  <div class="review-scores">
+                    <span>创新 {{ review.innovation_score }}</span>
+                    <span>可行 {{ review.feasibility_score }}</span>
+                    <span>市场 {{ review.market_score }}</span>
+                    <span>团队 {{ review.team_score }}</span>
+                    <span>商业 {{ review.business_score }}</span>
+                    <span>技术 {{ review.technology_score }}</span>
+                    <span>路演 {{ review.presentation_score }}</span>
+                  </div>
+                  <div v-if="review.comment" class="review-comment">{{ review.comment }}</div>
+                </div>
+              </div>
             </div>
+            <el-empty v-else-if="['passed', 'rejected', 'judging'].includes(project.status)" description="评审进行中，暂无结果" :image-size="80" />
+            <el-empty v-else description="暂无评审结果" :image-size="80" />
           </el-card>
         </el-col>
       </el-row>
@@ -175,9 +240,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import {
-  ArrowLeft, Edit, Upload, Document, List, User, ArrowRight
+  ArrowLeft, Edit, Upload, Document, List, User, ArrowRight,
+  CircleCheckFilled, Loading, WarningFilled, CircleCloseFilled, Timer
 } from '@element-plus/icons-vue'
 import { getProject, submitProject } from '@/api/project'
+import { getTasks } from '@/api/task'
+import { getProjectReviews } from '@/api/review'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
@@ -186,6 +254,10 @@ const userStore = useUserStore()
 
 const loading = ref(false)
 const project = ref({})
+const taskStats = ref({ total: 0, done: 0, doing: 0, todo: 0, delayed: 0, completion_rate: 0 })
+const recentTasks = ref([])
+const reviews = ref([])
+const averageScore = ref(0)
 
 const statusMap = {
   draft: { text: '草稿', type: 'info' },
@@ -234,6 +306,29 @@ const canSubmit = computed(() => {
   return ['draft', 'need_modify'].includes(project.value.status)
 })
 
+const canManage = computed(() => {
+  if (!project.value.id) return false
+  if (userStore.isAdmin) return true
+  return project.value.leader_id === userStore.userInfo?.id
+})
+
+const priorityMap = {
+  low: { text: '低', type: 'info' },
+  medium: { text: '中', type: 'warning' },
+  high: { text: '高', type: 'danger' }
+}
+const priorityText = (p) => priorityMap[p]?.text || p
+const priorityType = (p) => priorityMap[p]?.type || 'info'
+
+const taskStatusIcon = (status) => {
+  const map = { done: CircleCheckFilled, doing: Loading, delayed: WarningFilled, cancelled: CircleCloseFilled, todo: Timer }
+  return map[status] || Timer
+}
+const taskStatusColor = (status) => {
+  const map = { done: '#67C23A', doing: '#409EFF', delayed: '#F56C6C', cancelled: '#909399', todo: '#E6A23C' }
+  return map[status] || '#909399'
+}
+
 const fetchProject = async () => {
   const id = route.params.id
   if (!id) return
@@ -250,6 +345,30 @@ const fetchProject = async () => {
     ElMessage.error('获取项目详情失败')
   } finally {
     loading.value = false
+  }
+}
+
+const fetchTasks = async () => {
+  try {
+    const res = await getTasks(route.params.id)
+    if (res.code === 200) {
+      taskStats.value = res.data.stats || { total: 0, done: 0, doing: 0, todo: 0, delayed: 0, completion_rate: 0 }
+      recentTasks.value = res.data.tasks || []
+    }
+  } catch (error) {
+    console.error('获取任务失败', error)
+  }
+}
+
+const fetchReviews = async () => {
+  try {
+    const res = await getProjectReviews(route.params.id)
+    if (res.code === 200) {
+      reviews.value = res.data.reviews || []
+      averageScore.value = res.data.average_score || 0
+    }
+  } catch (error) {
+    console.error('获取评审失败', error)
   }
 }
 
@@ -275,11 +394,11 @@ const handleSubmit = async () => {
 }
 
 const goToMaterials = () => {
-  ElMessage.info('材料管理功能开发中')
+  router.push(`/projects/${project.value.id}/files`)
 }
 
 const goToTasks = () => {
-  ElMessage.info('任务进度功能开发中')
+  router.push(`/projects/${project.value.id}/tasks`)
 }
 
 const goToTeam = () => {
@@ -288,6 +407,8 @@ const goToTeam = () => {
 
 onMounted(() => {
   fetchProject()
+  fetchTasks()
+  fetchReviews()
 })
 </script>
 
@@ -434,5 +555,116 @@ onMounted(() => {
   font-size: 13px;
   color: var(--text-secondary);
   margin-top: 4px;
+}
+
+.recent-tasks {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recent-task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.recent-task-title {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-task-title.task-done {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
+}
+
+.review-summary {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.review-score {
+  text-align: center;
+  padding: 16px 32px;
+  background: var(--primary-50);
+  border-radius: var(--radius-lg);
+}
+
+.score-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--primary-600);
+  line-height: 1;
+}
+
+.score-label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.review-item {
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.reviewer {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.review-score-tag {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-600);
+}
+
+.review-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.review-scores span {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.review-comment {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
 }
 </style>

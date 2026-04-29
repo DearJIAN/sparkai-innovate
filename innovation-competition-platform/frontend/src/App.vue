@@ -4,11 +4,14 @@
       <component :is="Component" />
     </transition>
   </router-view>
+  <!-- 全局引导系统 -->
+  <GuideSystem />
 </template>
 
 <script setup>
 import { onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
+import GuideSystem from '@/components/GuideSystem.vue'
 
 const userStore = useUserStore()
 
