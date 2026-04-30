@@ -22,7 +22,7 @@ const allRoutes = [
   // 学生专属
   { path: '/my-projects', name: 'MyProjects', component: () => import('@/views/projects/my-projects.vue'), meta: { title: '我的项目', icon: 'FolderOpened', roles: ['student'] } },
   { path: '/create-project', name: 'CreateProject', component: () => import('@/views/projects/create.vue'), meta: { title: '创建项目', icon: 'CirclePlusFilled', roles: ['student'] } },
-  { path: '/ai-assistant', name: 'AIAssistant', component: () => import('@/views/ai-assistant/index.vue'), meta: { title: 'AI 项目助手', icon: 'MagicStick', roles: ['student'] } },
+  { path: '/ai-assistant', name: 'AIAssistant', component: () => import('@/views/ai-assistant/index.vue'), meta: { title: 'AI 项目助手', icon: 'MagicStick', roles: ['student', 'teacher', 'judge', 'admin'] } },
 
   // 教师专属
   { path: '/guide-projects', name: 'GuideProjects', component: () => import('@/views/projects/guide-projects.vue'), meta: { title: '指导项目', icon: 'FolderOpened', roles: ['teacher'] } },

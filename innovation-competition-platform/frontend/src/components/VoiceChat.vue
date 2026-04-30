@@ -78,6 +78,9 @@ import { ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { marked } from 'marked'
 import { chatStream, voiceChatStream, uploadAsrAudio } from '@/api/ai'
 import { ElMessage } from 'element-plus'
+import { useLive2d } from '@/composables/useLive2d'
+
+const { notifyLive2dHook } = useLive2d()
 
 const emit = defineEmits(['close', 'stream-start', 'stream-delta', 'stream-end', 'reply'])
 
@@ -363,14 +366,6 @@ function stopSpeechMouthPulse() {
     clearInterval(speechPulseInterval)
     speechPulseInterval = null
   }
-}
-
-function notifyLive2dHook(name, payload) {
-  try {
-    const hooks = window.__voiceLive2dHooks
-    const fn = hooks && typeof hooks[name] === 'function' ? hooks[name] : null
-    if (fn) fn(payload)
-  } catch (_e) {}
 }
 
 function clearMessages() {
