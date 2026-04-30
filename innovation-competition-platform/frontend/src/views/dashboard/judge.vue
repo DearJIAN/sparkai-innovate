@@ -49,6 +49,10 @@
   </div>
 </template>
 
+<script setup>
+import { StarFilled, DocumentChecked, Odometer } from '@element-plus/icons-vue'
+</script>
+
 <style scoped>
 .stat-card {
   display: flex;

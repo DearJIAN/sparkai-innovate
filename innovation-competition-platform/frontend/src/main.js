@@ -8,6 +8,7 @@ import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import './styles/design-system.css'
+import './styles/global.css'
 
 const app = createApp(App)
 

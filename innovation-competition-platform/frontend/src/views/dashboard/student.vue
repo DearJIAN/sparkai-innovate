@@ -57,6 +57,10 @@
   </div>
 </template>
 
+<script setup>
+import { FolderOpened, Timer, Star } from '@element-plus/icons-vue'
+</script>
+
 <style scoped>
 .dashboard {
   padding-bottom: 20px;

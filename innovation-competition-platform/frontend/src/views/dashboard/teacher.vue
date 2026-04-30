@@ -49,6 +49,10 @@
   </div>
 </template>
 
+<script setup>
+import { FolderOpened, Check, UserFilled } from '@element-plus/icons-vue'
+</script>
+
 <style scoped>
 .stat-card {
   display: flex;

@@ -1,5 +1,9 @@
 from models.user import User
 from models.competition import Competition
+from models.competition_track import CompetitionTrack
+from models.competition_registration import CompetitionRegistration
+from models.registration_member import RegistrationMember
+from models.registration_material import RegistrationMaterial
 from models.project import Project
 from models.project_member import ProjectMember
 from models.project_file import ProjectFile
@@ -10,6 +14,10 @@ from models.ai_record import AiRecord
 __all__ = [
     'User',
     'Competition',
+    'CompetitionTrack',
+    'CompetitionRegistration',
+    'RegistrationMember',
+    'RegistrationMaterial',
     'Project',
     'ProjectMember',
     'ProjectFile',

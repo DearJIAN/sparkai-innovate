@@ -1,7 +1,10 @@
 <template>
   <div class="main-layout">
-    <!-- 侧边栏 -->
-    <aside class="sidebar" :class="{ collapsed: isCollapsed }">
+    <aside
+      v-if="showSidebar"
+      class="sidebar"
+      :class="{ collapsed: isCollapsed }"
+    >
       <div class="sidebar-header">
         <div class="logo">
           <el-icon size="28" color="var(--primary-400)"><Trophy /></el-icon>
@@ -10,18 +13,21 @@
       </div>
 
       <nav class="sidebar-nav">
-        <router-link
-          v-for="item in menuItems"
-          :key="item.path"
-          :to="item.path"
-          class="nav-item"
-          :class="{ active: $route.path === item.path }"
-        >
-          <el-icon size="18">
-            <component :is="item.icon" />
-          </el-icon>
-          <span v-show="!isCollapsed" class="nav-text">{{ item.title }}</span>
-        </router-link>
+        <template v-for="group in visibleMenuGroups" :key="group.label">
+          <div v-show="!isCollapsed" class="nav-group-label">{{ group.label }}</div>
+          <router-link
+            v-for="item in group.items"
+            :key="item.path"
+            :to="item.path"
+            class="nav-item"
+            :class="{ active: isMenuActive(item.path) }"
+          >
+            <el-icon size="18">
+              <component :is="item.icon" />
+            </el-icon>
+            <span v-show="!isCollapsed" class="nav-text">{{ item.title }}</span>
+          </router-link>
+        </template>
       </nav>
 
       <div class="sidebar-footer">
@@ -33,13 +39,30 @@
       </div>
     </aside>
 
-    <!-- 主内容区 -->
-    <div class="main-content" :class="{ expanded: isCollapsed }">
-      <!-- 顶部导航 -->
-      <header class="top-header">
+    <div
+      class="main-content"
+      :class="{ expanded: isCollapsed, 'no-sidebar': !showSidebar }"
+    >
+      <header class="top-header" :class="{ 'platform-header': !showSidebar }">
         <div class="header-left">
-          <h2 class="page-title">{{ currentPageTitle }}</h2>
+          <div class="header-logo" @click="router.push('/portal')">
+            <el-icon size="28" color="var(--primary-500)"><Trophy /></el-icon>
+            <span class="header-logo-text">双创竞赛服务平台</span>
+          </div>
+
+          <nav class="top-nav">
+            <router-link
+              v-for="item in topNavItems"
+              :key="item.path"
+              :to="item.path"
+              class="top-nav-item"
+              :class="{ active: isTopNavActive(item.path) }"
+            >
+              {{ item.title }}
+            </router-link>
+          </nav>
         </div>
+
         <div class="header-right">
           <el-dropdown @command="handleCommand" trigger="click">
             <div class="user-info">
@@ -52,8 +75,8 @@
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="profile">
-                  <el-icon><User /></el-icon>个人中心
+                <el-dropdown-item command="portal">
+                  <el-icon><HomeFilled /></el-icon>平台首页
                 </el-dropdown-item>
                 <el-dropdown-item divided command="logout">
                   <el-icon><SwitchButton /></el-icon>退出登录
@@ -64,8 +87,7 @@
         </div>
       </header>
 
-      <!-- 页面内容 -->
-      <main class="page-content">
+      <main class="page-content" :class="{ 'platform-page': isPlatformPage }">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" />
@@ -81,7 +103,12 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { roleRoutes } from '@/router'
+import {
+  Trophy, User, UserFilled, HomeFilled, SwitchButton, ArrowDown,
+  FolderOpened, CirclePlusFilled, MagicStick, StarFilled, DocumentChecked,
+  Expand, Fold, Document, Medal, School, Briefcase, Collection,
+  TrendCharts, Calendar, Setting, Edit, List
+} from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -89,15 +116,127 @@ const userStore = useUserStore()
 
 const isCollapsed = ref(false)
 
-const menuItems = computed(() => {
-  const role = userStore.userInfo?.role
-  return role && roleRoutes[role] ? roleRoutes[role] : []
+const platformPages = [
+  '/portal', '/competitions', '/training-camps', '/courses',
+  '/ai-assistant', '/industry-topics', '/my-registrations', '/certificates'
+]
+
+const isPlatformPage = computed(() => {
+  return platformPages.some(path => route.path === path || route.path.startsWith(path + '/'))
 })
 
-const currentPageTitle = computed(() => {
-  const current = menuItems.value.find(item => item.path === route.path)
-  return current?.meta?.title || '工作台'
+const showSidebar = computed(() => {
+  if (isPlatformPage.value) return false
+  return true
 })
+
+const topNavConfig = [
+  { path: '/portal', title: '首页', roles: ['student', 'teacher', 'judge', 'admin'] },
+  { path: '/competitions', title: '竞赛', roles: ['student', 'teacher', 'judge', 'admin'] },
+  { path: '/my-projects', title: '项目', roles: ['student'] },
+  { path: '/guide-projects', title: '项目', roles: ['teacher'] },
+  { path: '/pending-reviews', title: '评审', roles: ['judge'] },
+  { path: '/project-management', title: '管理', roles: ['admin'] },
+  { path: '/training-camps', title: '训练营', roles: ['student', 'teacher'] },
+  { path: '/courses', title: '课程', roles: ['student', 'teacher'] },
+  { path: '/ai-assistant', title: 'AI 助手', roles: ['student', 'teacher', 'judge', 'admin'] }
+]
+
+const topNavItems = computed(() => {
+  const role = userStore.userInfo?.role
+  if (!role) return []
+  return topNavConfig.filter(item => item.roles.includes(role))
+})
+
+const isTopNavActive = (path) => {
+  if (path === '/portal') return route.path === '/portal'
+  if (path === '/competitions') return route.path.startsWith('/competitions')
+  if (path === '/my-projects') return route.path.startsWith('/my-projects') || route.path.startsWith('/create-project') || route.path.startsWith('/projects/')
+  if (path === '/guide-projects') return route.path.startsWith('/guide-projects') || route.path.startsWith('/project-review')
+  if (path === '/pending-reviews') return route.path.startsWith('/pending-reviews') || route.path.startsWith('/review-history')
+  if (path === '/project-management') return route.path.startsWith('/project-management') || route.path.startsWith('/user-management') || route.path.startsWith('/competition-management') || route.path.startsWith('/review-management') || route.path.startsWith('/registration-management') || route.path.startsWith('/dashboard')
+  if (path === '/training-camps') return route.path.startsWith('/training-camps')
+  if (path === '/courses') return route.path.startsWith('/courses')
+  if (path === '/ai-assistant') return route.path.startsWith('/ai-assistant')
+  return route.path === path
+}
+
+const menuGroups = [
+  {
+    label: '概览',
+    roles: ['student', 'teacher', 'judge', 'admin'],
+    items: [
+      { path: '/dashboard', title: '工作台', icon: 'HomeFilled', roles: ['student', 'teacher', 'judge', 'admin'] }
+    ]
+  },
+  {
+    label: '竞赛',
+    roles: ['student', 'admin'],
+    items: [
+      { path: '/my-registrations', title: '我的赛事', icon: 'Medal', roles: ['student'] },
+      { path: '/competition-management', title: '比赛批次管理', icon: 'Trophy', roles: ['admin'] },
+      { path: '/registration-management', title: '报名管理', icon: 'Document', roles: ['admin'] }
+    ]
+  },
+  {
+    label: '项目',
+    roles: ['student', 'teacher', 'judge', 'admin'],
+    items: [
+      { path: '/my-projects', title: '我的项目', icon: 'FolderOpened', roles: ['student'] },
+      { path: '/create-project', title: '创建项目', icon: 'CirclePlusFilled', roles: ['student'] },
+      { path: '/guide-projects', title: '指导项目', icon: 'FolderOpened', roles: ['teacher'] },
+      { path: '/project-review', title: '项目审核', icon: 'DocumentChecked', roles: ['teacher'] },
+      { path: '/pending-reviews', title: '待评审项目', icon: 'StarFilled', roles: ['judge'] },
+      { path: '/review-history', title: '评审记录', icon: 'List', roles: ['judge'] },
+      { path: '/project-management', title: '项目管理', icon: 'FolderOpened', roles: ['admin'] },
+      { path: '/review-management', title: '评审管理', icon: 'StarFilled', roles: ['admin'] }
+    ]
+  },
+  {
+    label: '学习',
+    roles: ['student', 'teacher'],
+    items: [
+      { path: '/training-camps', title: '训练营', icon: 'School', roles: ['student', 'teacher'] },
+      { path: '/courses', title: '在线课程', icon: 'Collection', roles: ['student', 'teacher'] },
+      { path: '/industry-topics', title: '产业命题', icon: 'Briefcase', roles: ['student', 'teacher'] },
+      { path: '/certificates', title: '证书成果', icon: 'Medal', roles: ['student'] }
+    ]
+  },
+  {
+    label: '工具',
+    roles: ['student', 'teacher', 'judge', 'admin'],
+    items: [
+      { path: '/ai-assistant', title: 'AI 项目助手', icon: 'MagicStick', roles: ['student', 'teacher', 'judge', 'admin'] }
+    ]
+  },
+  {
+    label: '管理',
+    roles: ['admin'],
+    items: [
+      { path: '/user-management', title: '用户管理', icon: 'UserFilled', roles: ['admin'] },
+      { path: '/dashboard', title: '数据看板', icon: 'TrendCharts', roles: ['admin'] }
+    ]
+  }
+]
+
+const visibleMenuGroups = computed(() => {
+  const role = userStore.userInfo?.role
+  if (!role) return []
+  return menuGroups
+    .filter(group => group.roles.includes(role))
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => item.roles.includes(role))
+    }))
+    .filter(group => group.items.length > 0)
+})
+
+const isMenuActive = (path) => {
+  if (route.path === path) return true
+  if (path === '/my-projects' && route.path.startsWith('/projects/')) return true
+  if (path === '/my-projects' && route.path === '/create-project') return true
+  return false
+}
 
 const roleText = computed(() => {
   const map = {
@@ -125,10 +264,9 @@ const handleCommand = async (command) => {
       router.push('/login')
       ElMessage.success('已退出登录')
     } catch {
-      // 取消
     }
-  } else if (command === 'profile') {
-    // TODO: 个人中心
+  } else if (command === 'portal') {
+    router.push('/portal')
   }
 }
 </script>
@@ -140,7 +278,6 @@ const handleCommand = async (command) => {
   background-color: var(--bg-secondary);
 }
 
-/* 侧边栏 */
 .sidebar {
   width: var(--sidebar-width);
   background-color: var(--bg-sidebar);
@@ -152,6 +289,7 @@ const handleCommand = async (command) => {
   left: 0;
   bottom: 0;
   z-index: 100;
+  overflow-y: auto;
 }
 
 .sidebar.collapsed {
@@ -183,12 +321,22 @@ const handleCommand = async (command) => {
   overflow-y: auto;
 }
 
+.nav-group-label {
+  padding: 16px 16px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
 .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  margin-bottom: 4px;
+  padding: 10px 16px;
+  margin-bottom: 2px;
   border-radius: var(--radius-md);
   color: var(--text-sidebar);
   text-decoration: none;
@@ -236,7 +384,6 @@ const handleCommand = async (command) => {
   color: var(--text-inverse);
 }
 
-/* 主内容区 */
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
@@ -249,7 +396,10 @@ const handleCommand = async (command) => {
   margin-left: var(--sidebar-collapsed-width);
 }
 
-/* 顶部导航 */
+.main-content.no-sidebar {
+  margin-left: 0;
+}
+
 .top-header {
   height: var(--header-height);
   background-color: var(--bg-primary);
@@ -263,10 +413,63 @@ const handleCommand = async (command) => {
   z-index: 50;
 }
 
-.page-title {
-  font-size: 20px;
+.top-header.platform-header {
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.header-logo:hover {
+  opacity: 0.8;
+}
+
+.header-logo-text {
+  font-family: var(--font-heading);
+  font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.top-nav-item {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.top-nav-item:hover {
+  color: var(--primary-600);
+  background-color: var(--primary-50);
+}
+
+.top-nav-item.active {
+  color: var(--primary-600);
+  background-color: var(--primary-50);
+  font-weight: 600;
 }
 
 .user-info {
@@ -310,10 +513,33 @@ const handleCommand = async (command) => {
   margin-left: 4px;
 }
 
-/* 页面内容 */
 .page-content {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
+}
+
+.page-content.platform-page {
+  padding: 0;
+}
+
+@media (max-width: 1024px) {
+  .top-nav {
+    display: none;
+  }
+
+  .header-left {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-logo-text {
+    display: none;
+  }
+
+  .user-meta {
+    display: none;
+  }
 }
 </style>

@@ -16,6 +16,7 @@ class Project(db.Model):
     competition_id = db.Column(db.Integer, db.ForeignKey('competitions.id'), nullable=True)
     start_date = db.Column(db.Date, nullable=True)
     end_date = db.Column(db.Date, nullable=True)
+    progress = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 

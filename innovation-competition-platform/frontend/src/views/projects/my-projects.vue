@@ -1,8 +1,38 @@
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <h2 class="page-title">我的项目</h2>
-      <el-button type="primary" :icon="Plus" @click="$router.push('/create-project')">
+    <!-- 顶部统计 -->
+    <div class="stats-header">
+      <div class="stats-content">
+        <div class="stat-item">
+          <el-icon size="28" color="#0ea5e9"><FolderOpened /></el-icon>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label">项目总数</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <el-icon size="28" color="#f59e0b"><Timer /></el-icon>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.inProgress }}</div>
+            <div class="stat-label">进行中</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <el-icon size="28" color="#10b981"><CircleCheck /></el-icon>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.completed }}</div>
+            <div class="stat-label">已完成</div>
+          </div>
+        </div>
+        <div class="stat-item">
+          <el-icon size="28" color="#8b5cf6"><Medal /></el-icon>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.registered }}</div>
+            <div class="stat-label">已报名</div>
+          </div>
+        </div>
+      </div>
+      <el-button type="primary" :icon="Plus" size="large" @click="$router.push('/create-project')">
         创建项目
       </el-button>
     </div>
@@ -42,6 +72,15 @@
           <el-option label="孵化运营" value="incubation" />
         </el-select>
 
+        <el-select v-model="filterCompetition" placeholder="关联竞赛" clearable style="width: 200px" @change="handleSearch">
+          <el-option
+            v-for="comp in competitions"
+            :key="comp.id"
+            :label="comp.name"
+            :value="comp.id"
+          />
+        </el-select>
+
         <el-button type="primary" plain @click="handleSearch">查询</el-button>
         <el-button @click="resetFilter">重置</el-button>
       </div>
@@ -49,7 +88,11 @@
 
     <!-- 项目列表 -->
     <el-card class="list-card" shadow="never" v-loading="loading">
-      <el-empty v-if="projects.length === 0" description="暂无项目" />
+      <el-empty v-if="projects.length === 0" description="暂无项目">
+        <el-button type="primary" @click="$router.push('/create-project')">
+          创建第一个项目
+        </el-button>
+      </el-empty>
 
       <div v-else class="project-list">
         <div
@@ -58,43 +101,83 @@
           class="project-card"
           @click="goToDetail(project.id)"
         >
-          <div class="project-header">
-            <h3 class="project-name">{{ project.name }}</h3>
-            <el-tag :type="statusType(project.status)" size="small">
-              {{ statusText(project.status) }}
-            </el-tag>
+          <div class="project-main">
+            <div class="project-header">
+              <h3 class="project-name">{{ project.name }}</h3>
+              <div class="project-badges">
+                <el-tag :type="statusType(project.status)" size="small">
+                  {{ statusText(project.status) }}
+                </el-tag>
+                <el-tag size="small" class="stage-tag">
+                  {{ stageText(project.stage) }}
+                </el-tag>
+              </div>
+            </div>
+
+            <p class="project-desc">{{ project.description || '暂无描述' }}</p>
+
+            <div class="project-meta">
+              <div class="meta-item">
+                <el-icon><CollectionTag /></el-icon>
+                <span>{{ project.track || '未分类' }}</span>
+              </div>
+              <div class="meta-item">
+                <el-icon><Trophy /></el-icon>
+                <span>{{ project.competition?.name || '未关联竞赛' }}</span>
+              </div>
+              <div class="meta-item">
+                <el-icon><User /></el-icon>
+                <span>{{ project.member_count || 1 }} 名成员</span>
+              </div>
+              <div class="meta-item">
+                <el-icon><Document /></el-icon>
+                <span>{{ project.file_count || 0 }} 份材料</span>
+              </div>
+            </div>
+
+            <!-- 进度条 -->
+            <div class="project-progress" v-if="project.progress !== undefined">
+              <div class="progress-header">
+                <span class="progress-label">项目进度</span>
+                <span class="progress-value">{{ project.progress }}%</span>
+              </div>
+              <el-progress
+                :percentage="project.progress"
+                :status="project.progress === 100 ? 'success' : ''"
+                :stroke-width="8"
+                :show-text="false"
+              />
+            </div>
           </div>
 
-          <p class="project-desc">{{ project.description || '暂无描述' }}</p>
-
-          <div class="project-meta">
-            <div class="meta-item">
-              <el-icon><CollectionTag /></el-icon>
-              <span>{{ project.track || '未分类' }}</span>
+          <div class="project-sidebar">
+            <div class="sidebar-section">
+              <span class="sidebar-label">负责人</span>
+              <span class="sidebar-value">{{ project.leader?.real_name || project.leader?.username || '-' }}</span>
             </div>
-            <div class="meta-item">
-              <el-icon><Timer /></el-icon>
-              <span>{{ stageText(project.stage) }}</span>
+            <div class="sidebar-section">
+              <span class="sidebar-label">更新时间</span>
+              <span class="sidebar-value">{{ formatDate(project.updated_at) }}</span>
             </div>
-            <div class="meta-item">
-              <el-icon><User /></el-icon>
-              <span>负责人: {{ project.leader?.real_name || project.leader?.username || '-' }}</span>
+            <div class="sidebar-section">
+              <span class="sidebar-label">创建时间</span>
+              <span class="sidebar-value">{{ formatDate(project.created_at) }}</span>
             </div>
-          </div>
-
-          <div class="project-footer">
-            <span class="update-time">更新于 {{ formatDate(project.updated_at) }}</span>
-            <div class="project-actions" @click.stop>
+            <div class="sidebar-actions" @click.stop>
               <el-button
                 v-if="project.status === 'draft' || project.status === 'need_modify'"
                 type="primary"
-                link
                 size="small"
                 @click="handleSubmit(project)"
               >
                 提交评审
               </el-button>
-              <el-button type="primary" link size="small" @click="goToDetail(project.id)">
+              <el-button
+                type="primary"
+                size="small"
+                plain
+                @click="goToDetail(project.id)"
+              >
                 查看详情
               </el-button>
             </div>
@@ -119,7 +202,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Search, CollectionTag, Timer, User } from '@element-plus/icons-vue'
+import {
+  Plus, Search, CollectionTag, Timer, User,
+  FolderOpened, CircleCheck, Medal, Document, Trophy
+} from '@element-plus/icons-vue'
 import { getProjects, submitProject } from '@/api/project'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -134,6 +220,20 @@ const pageSize = ref(10)
 const searchKeyword = ref('')
 const filterStatus = ref('')
 const filterStage = ref('')
+const filterCompetition = ref('')
+
+const competitions = ref([
+  { id: 1, name: '2026 大学生创新创业计划训练赛' },
+  { id: 2, name: '2026 AI 应用创新设计大赛' },
+  { id: 3, name: '2026 数字经济与商业模式创新挑战赛' }
+])
+
+const stats = ref({
+  total: 0,
+  inProgress: 0,
+  completed: 0,
+  registered: 0
+})
 
 const statusMap = {
   draft: { text: '草稿', type: 'info' },
@@ -173,12 +273,21 @@ const fetchProjects = async () => {
       per_page: pageSize.value,
       keyword: searchKeyword.value,
       status: filterStatus.value,
-      stage: filterStage.value
+      stage: filterStage.value,
+      competition_id: filterCompetition.value
     }
     const res = await getProjects(params)
     if (res.code === 200) {
       projects.value = res.data.projects || []
       total.value = res.data.total || 0
+
+      // 更新统计
+      stats.value = {
+        total: res.data.total || 0,
+        inProgress: projects.value.filter(p => ['draft', 'submitted', 'teacher_review', 'judging'].includes(p.status)).length,
+        completed: projects.value.filter(p => p.status === 'passed').length,
+        registered: projects.value.filter(p => p.competition_id).length
+      }
     }
   } catch (error) {
     console.error(error)
@@ -196,6 +305,7 @@ const resetFilter = () => {
   searchKeyword.value = ''
   filterStatus.value = ''
   filterStage.value = ''
+  filterCompetition.value = ''
   currentPage.value = 1
   fetchProjects()
 }
@@ -240,17 +350,45 @@ onMounted(() => {
   padding-bottom: 20px;
 }
 
-.page-header {
+/* 统计头部 */
+.stats-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  padding: 20px 24px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
 }
 
-.page-title {
-  font-size: 20px;
-  font-weight: 600;
+.stats-content {
+  display: flex;
+  gap: 40px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
   color: var(--text-primary);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
 }
 
 .filter-card {
@@ -275,10 +413,11 @@ onMounted(() => {
 }
 
 .project-card {
+  display: flex;
   background: var(--bg-primary);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  overflow: hidden;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -286,6 +425,21 @@ onMounted(() => {
 .project-card:hover {
   border-color: var(--primary-300);
   box-shadow: var(--shadow-md);
+}
+
+.project-main {
+  flex: 1;
+  padding: 20px;
+}
+
+.project-sidebar {
+  width: 200px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .project-header {
@@ -302,6 +456,17 @@ onMounted(() => {
   margin: 0;
 }
 
+.project-badges {
+  display: flex;
+  gap: 8px;
+}
+
+.stage-tag {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: none;
+}
+
 .project-desc {
   font-size: 14px;
   color: var(--text-secondary);
@@ -315,8 +480,9 @@ onMounted(() => {
 
 .project-meta {
   display: flex;
-  gap: 24px;
+  gap: 20px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .meta-item {
@@ -327,21 +493,50 @@ onMounted(() => {
   color: var(--text-secondary);
 }
 
-.project-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-light);
+/* 进度条 */
+.project-progress {
+  margin-top: 12px;
 }
 
-.update-time {
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.progress-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.progress-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-600);
+}
+
+/* 侧边栏 */
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-label {
   font-size: 12px;
   color: var(--text-tertiary);
 }
 
-.project-actions {
+.sidebar-value {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.sidebar-actions {
+  margin-top: auto;
   display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -351,5 +546,27 @@ onMounted(() => {
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid var(--border-light);
+}
+
+@media (max-width: 768px) {
+  .stats-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .stats-content {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .project-card {
+    flex-direction: column;
+  }
+
+  .project-sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border-light);
+  }
 }
 </style>

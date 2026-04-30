@@ -17,84 +17,65 @@ const publicRoutes = [
   }
 ]
 
-// 学生菜单
-const studentMenus = [
-  { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/student.vue'), meta: { title: '工作台', icon: 'HomeFilled' } },
-  { path: '/my-projects', name: 'MyProjects', component: () => import('@/views/projects/my-projects.vue'), meta: { title: '我的项目', icon: 'FolderOpened' } },
-  { path: '/create-project', name: 'CreateProject', component: () => import('@/views/projects/create.vue'), meta: { title: '创建项目', icon: 'CirclePlusFilled' } },
+// 所有路由配置（不带角色前缀）
+const allRoutes = [
+  // 学生专属
+  { path: '/my-projects', name: 'MyProjects', component: () => import('@/views/projects/my-projects.vue'), meta: { title: '我的项目', icon: 'FolderOpened', roles: ['student'] } },
+  { path: '/create-project', name: 'CreateProject', component: () => import('@/views/projects/create.vue'), meta: { title: '创建项目', icon: 'CirclePlusFilled', roles: ['student'] } },
+  { path: '/ai-assistant', name: 'AIAssistant', component: () => import('@/views/ai-assistant/index.vue'), meta: { title: 'AI 项目助手', icon: 'MagicStick', roles: ['student'] } },
+
+  // 教师专属
+  { path: '/guide-projects', name: 'GuideProjects', component: () => import('@/views/projects/guide-projects.vue'), meta: { title: '指导项目', icon: 'FolderOpened', roles: ['teacher'] } },
+  { path: '/project-review', name: 'ProjectReview', component: () => import('@/views/reviews/teacher-review.vue'), meta: { title: '项目审核', icon: 'Check', roles: ['teacher'] } },
+
+  // 评委专属
+  { path: '/pending-reviews', name: 'PendingReviews', component: () => import('@/views/reviews/pending.vue'), meta: { title: '待评审项目', icon: 'StarFilled', roles: ['judge'] } },
+  { path: '/review-history', name: 'ReviewHistory', component: () => import('@/views/reviews/history.vue'), meta: { title: '评审记录', icon: 'DocumentChecked', roles: ['judge'] } },
+
+  // 管理员专属
+  { path: '/user-management', name: 'UserManagement', component: () => import('@/views/admin/users.vue'), meta: { title: '用户管理', icon: 'UserFilled', roles: ['admin'] } },
+  { path: '/project-management', name: 'ProjectManagement', component: () => import('@/views/admin/projects.vue'), meta: { title: '项目管理', icon: 'FolderOpened', roles: ['admin'] } },
+  { path: '/competition-management', name: 'CompetitionManagement', component: () => import('@/views/competitions/index.vue'), meta: { title: '比赛批次管理', icon: 'Trophy', roles: ['admin'] } },
+  { path: '/registration-management', name: 'RegistrationManagement', component: () => import('@/views/admin/RegistrationManagement.vue'), meta: { title: '报名管理', icon: 'Document', roles: ['admin'] } },
+  { path: '/review-management', name: 'ReviewManagement', component: () => import('@/views/admin/reviews.vue'), meta: { title: '评审管理', icon: 'StarFilled', roles: ['admin'] } },
+
+  // 平台页面（所有角色可访问，不显示侧边栏）
+  { path: '/portal', name: 'Portal', component: () => import('@/views/portal/PortalHome.vue'), meta: { title: '平台首页', icon: 'HomeFilled' } },
+  { path: '/competitions', name: 'Competitions', component: () => import('@/views/portal/CompetitionSquare.vue'), meta: { title: '竞赛广场', icon: 'Trophy' } },
+  { path: '/competitions/:id', name: 'CompetitionDetail', component: () => import('@/views/portal/CompetitionDetail.vue'), meta: { title: '竞赛详情', icon: 'Trophy', hidden: true } },
+  { path: '/competitions/:id/register', name: 'CompetitionRegister', component: () => import('@/views/portal/CompetitionRegister.vue'), meta: { title: '竞赛报名', icon: 'Edit', hidden: true, roles: ['student'] } },
+  { path: '/my-registrations', name: 'MyRegistrations', component: () => import('@/views/portal/MyRegistrations.vue'), meta: { title: '我的赛事', icon: 'Medal', roles: ['student'] } },
+  { path: '/training-camps', name: 'TrainingCamps', component: () => import('@/views/portal/TrainingCamps.vue'), meta: { title: '训练营', icon: 'School' } },
+  { path: '/courses', name: 'Courses', component: () => import('@/views/portal/Courses.vue'), meta: { title: '在线课程', icon: 'Collection' } },
+  { path: '/industry-topics', name: 'IndustryTopics', component: () => import('@/views/portal/IndustryTopics.vue'), meta: { title: '产业命题', icon: 'Briefcase' } },
+  { path: '/certificates', name: 'Certificates', component: () => import('@/views/portal/Certificates.vue'), meta: { title: '证书成果', icon: 'Medal', roles: ['student'] } },
+
+  // 通用路由（所有角色可访问）
+  { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/index.vue'), meta: { title: '工作台', icon: 'HomeFilled' } },
   { path: '/projects/:id', name: 'ProjectDetail', component: () => import('@/views/projects/detail.vue'), meta: { title: '项目详情', icon: 'Document', hidden: true } },
   { path: '/projects/:id/edit', name: 'ProjectEdit', component: () => import('@/views/projects/edit.vue'), meta: { title: '编辑项目', icon: 'Edit', hidden: true } },
   { path: '/projects/:id/members', name: 'ProjectMembers', component: () => import('@/views/projects/members.vue'), meta: { title: '团队成员', icon: 'User', hidden: true } },
   { path: '/projects/:id/files', name: 'ProjectFiles', component: () => import('@/views/projects/files.vue'), meta: { title: '项目材料', icon: 'Document', hidden: true } },
   { path: '/projects/:id/tasks', name: 'ProjectTasks', component: () => import('@/views/projects/tasks.vue'), meta: { title: '任务进度', icon: 'List', hidden: true } },
-  { path: '/ai-assistant', name: 'AIAssistant', component: () => import('@/views/ai-assistant/index.vue'), meta: { title: 'AI 项目助手', icon: 'MagicStick' } }
+  { path: '/reviews/:id', name: 'ReviewDetail', component: () => import('@/views/reviews/detail.vue'), meta: { title: '项目评审', icon: 'StarFilled', hidden: true } }
 ]
 
-// 教师菜单
-const teacherMenus = [
-  { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/teacher.vue'), meta: { title: '工作台', icon: 'HomeFilled' } },
-  { path: '/guide-projects', name: 'GuideProjects', component: () => import('@/views/projects/guide-projects.vue'), meta: { title: '指导项目', icon: 'FolderOpened' } },
-  { path: '/project-review', name: 'ProjectReview', component: () => import('@/views/reviews/teacher-review.vue'), meta: { title: '项目审核', icon: 'Check' } },
-  { path: '/projects/:id', name: 'ProjectDetail', component: () => import('@/views/projects/detail.vue'), meta: { title: '项目详情', icon: 'Document', hidden: true } }
-]
-
-// 评委菜单
-const judgeMenus = [
-  { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/judge.vue'), meta: { title: '工作台', icon: 'HomeFilled' } },
-  { path: '/pending-reviews', name: 'PendingReviews', component: () => import('@/views/reviews/pending.vue'), meta: { title: '待评审项目', icon: 'StarFilled' } },
-  { path: '/review-history', name: 'ReviewHistory', component: () => import('@/views/reviews/history.vue'), meta: { title: '评审记录', icon: 'DocumentChecked' } },
-  { path: '/reviews/:id', name: 'ReviewDetail', component: () => import('@/views/reviews/detail.vue'), meta: { title: '项目评审', icon: 'StarFilled', hidden: true } },
-  { path: '/projects/:id', name: 'ProjectDetail', component: () => import('@/views/projects/detail.vue'), meta: { title: '项目详情', icon: 'Document', hidden: true } }
-]
-
-// 管理员菜单
-const adminMenus = [
-  { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/admin.vue'), meta: { title: '数据看板', icon: 'Odometer' } },
-  { path: '/user-management', name: 'UserManagement', component: () => import('@/views/admin/users.vue'), meta: { title: '用户管理', icon: 'UserFilled' } },
-  { path: '/project-management', name: 'ProjectManagement', component: () => import('@/views/admin/projects.vue'), meta: { title: '项目管理', icon: 'FolderOpened' } },
-  { path: '/competition-management', name: 'CompetitionManagement', component: () => import('@/views/competitions/index.vue'), meta: { title: '比赛批次管理', icon: 'Trophy', roles: ['admin'] } },
-  { path: '/review-management', name: 'ReviewManagement', component: () => import('@/views/admin/reviews.vue'), meta: { title: '评审管理', icon: 'StarFilled' } },
-  { path: '/projects/:id', name: 'ProjectDetail', component: () => import('@/views/projects/detail.vue'), meta: { title: '项目详情', icon: 'Document', hidden: true } },
-  { path: '/projects/:id/edit', name: 'ProjectEdit', component: () => import('@/views/projects/edit.vue'), meta: { title: '编辑项目', icon: 'Edit', hidden: true } }
-]
-
-// 角色路由映射
-const roleRoutes = {
-  student: studentMenus,
-  teacher: teacherMenus,
-  judge: judgeMenus,
-  admin: adminMenus
-}
-
-// 构建动态路由
-function buildRoutes() {
-  const routes = [...publicRoutes]
-
-  // 为每个角色创建路由配置
-  Object.keys(roleRoutes).forEach(role => {
-    const menus = roleRoutes[role]
-    routes.push({
-      path: '/',
-      component: () => import('@/layouts/MainLayout.vue'),
-      redirect: '/dashboard',
-      meta: { role },
-      children: menus
-    })
-  })
-
-  // 404 页面
-  routes.push({
-    path: '/:pathMatch(.*)*',
-    name: 'NotFound',
-    component: () => import('@/views/error/404.vue')
-  })
-
-  return routes
-}
-
+// 创建路由实例
 const router = createRouter({
   history: createWebHistory(),
-  routes: buildRoutes()
+  routes: [
+    ...publicRoutes,
+    {
+      path: '/',
+      component: () => import('@/layouts/MainLayout.vue'),
+      children: allRoutes
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: () => import('@/views/error/404.vue')
+    }
+  ]
 })
 
 // 路由守卫
@@ -108,7 +89,11 @@ router.beforeEach((to, from, next) => {
 
   // 公共页面直接放行
   if (to.meta.public) {
-    next()
+    if (userStore.token && (to.path === '/login' || to.path === '/register')) {
+      next('/portal')
+    } else {
+      next()
+    }
     return
   }
 
@@ -134,19 +119,9 @@ router.beforeEach((to, from, next) => {
 function checkPermission(to, next, userStore) {
   const userRole = userStore.userInfo?.role
 
-  // 检查角色权限
-  if (to.meta.role && userRole !== to.meta.role) {
-    // 如果用户已登录但角色不匹配，根据实际角色重定向
-    if (userRole && roleRoutes[userRole]) {
-      next('/dashboard')
-    } else {
-      next('/login')
-    }
-    return
-  }
-
   // 检查路由是否需要特定角色
   if (to.meta.roles && !to.meta.roles.includes(userRole)) {
+    // 角色无权访问，跳转到工作台
     next('/dashboard')
     return
   }
@@ -154,5 +129,4 @@ function checkPermission(to, next, userStore) {
   next()
 }
 
-export { roleRoutes }
 export default router

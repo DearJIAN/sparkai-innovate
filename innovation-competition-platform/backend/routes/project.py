@@ -2,6 +2,8 @@ from flask import Blueprint, request
 from sqlalchemy import or_
 from models.project import Project
 from models.project_member import ProjectMember
+from models.project_file import ProjectFile
+from models.project_task import ProjectTask
 from models.user import User
 from extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -33,7 +35,7 @@ def _check_project_access(project, user):
     return False
 
 
-@project_bp.route('/', methods=['GET'])
+@project_bp.route('', methods=['GET'])
 @jwt_required()
 def get_projects():
     """获取项目列表（按角色过滤）"""
@@ -99,7 +101,7 @@ def get_projects():
     })
 
 
-@project_bp.route('/', methods=['POST'])
+@project_bp.route('', methods=['POST'])
 @jwt_required()
 def create_project():
     """创建项目（仅学生）"""
@@ -152,8 +154,8 @@ def get_project(project_id):
 
     # 获取关联数据
     members = ProjectMember.query.filter_by(project_id=project.id).all()
-    files_count = ProjectMember.query.filter_by(project_id=project.id).count()
-    tasks_count = ProjectMember.query.filter_by(project_id=project.id).count()
+    files_count = ProjectFile.query.filter_by(project_id=project.id).count()
+    tasks_count = ProjectTask.query.filter_by(project_id=project.id).count()
 
     result = project.to_dict()
     result['members'] = [m.to_dict() for m in members]

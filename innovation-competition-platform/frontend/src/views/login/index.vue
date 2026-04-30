@@ -12,6 +12,10 @@
           <div class="brand-features">
             <div class="feature-item">
               <el-icon size="20" color="var(--primary-400)"><CircleCheck /></el-icon>
+              <span>竞赛发现与报名</span>
+            </div>
+            <div class="feature-item">
+              <el-icon size="20" color="var(--primary-400)"><CircleCheck /></el-icon>
               <span>项目申报与管理</span>
             </div>
             <div class="feature-item">
@@ -25,6 +29,17 @@
             <div class="feature-item">
               <el-icon size="20" color="var(--primary-400)"><CircleCheck /></el-icon>
               <span>AI 智能辅助</span>
+            </div>
+          </div>
+
+          <!-- 快速登录提示 -->
+          <div class="quick-login-hint">
+            <p class="hint-title">演示账号</p>
+            <div class="hint-accounts">
+              <span class="hint-account" @click="fillAccount('student1', 'student123')">学生</span>
+              <span class="hint-account" @click="fillAccount('teacher1', 'teacher123')">老师</span>
+              <span class="hint-account" @click="fillAccount('judge1', 'judge123')">评委</span>
+              <span class="hint-account" @click="fillAccount('admin', 'admin123')">管理员</span>
             </div>
           </div>
         </div>
@@ -48,7 +63,7 @@
                 v-model="form.username"
                 placeholder="用户名"
                 size="large"
-                :prefix-icon="User"
+                :prefix-icon="UserIcon"
                 class="custom-input"
               />
             </el-form-item>
@@ -59,7 +74,7 @@
                 type="password"
                 placeholder="密码"
                 size="large"
-                :prefix-icon="Lock"
+                :prefix-icon="LockIcon"
                 show-password
                 class="custom-input"
               />
@@ -93,6 +108,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
+import { User as UserIcon, Lock as LockIcon } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -114,6 +130,11 @@ const rules = {
   ]
 }
 
+const fillAccount = (username, password) => {
+  form.username = username
+  form.password = password
+}
+
 const handleLogin = async () => {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
@@ -122,7 +143,8 @@ const handleLogin = async () => {
 
   if (result.success) {
     ElMessage.success('登录成功')
-    router.push('/')
+    // 登录成功后统一跳转到平台首页
+    router.push('/portal')
   } else {
     ElMessage.error(result.message)
   }
@@ -291,6 +313,46 @@ const handleLogin = async () => {
 
 .link-primary:hover {
   color: var(--primary-700);
+}
+
+/* 快速登录提示 */
+.quick-login-hint {
+  margin-top: 40px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hint-title {
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.hint-accounts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hint-account {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--gray-300);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hint-account:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-inverse);
+  border-color: var(--primary-400);
 }
 
 /* 响应式 */

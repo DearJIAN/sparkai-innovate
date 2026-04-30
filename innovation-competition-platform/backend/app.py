@@ -1,12 +1,16 @@
 import os
 import sys
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from sqlalchemy import text
 from config import config
 from extensions import db, migrate, jwt, cors
 
 # 导入所有模型，确保 Flask-Migrate 能识别
-from models import User, Competition, Project, ProjectMember, ProjectFile, ProjectTask, Review, AiRecord
+from models import (
+    User, Competition, CompetitionTrack, CompetitionRegistration,
+    RegistrationMember, RegistrationMaterial,
+    Project, ProjectMember, ProjectFile, ProjectTask, Review, AiRecord
+)
 
 
 def create_app(config_name=None):
@@ -33,9 +37,15 @@ def create_app(config_name=None):
     
     # 注册蓝图
     register_blueprints(app)
-    
+
     # 注册错误处理
     register_error_handlers(app)
+
+    # 静态文件服务 - 上传文件
+    @app.route('/uploads/<path:filename>')
+    def uploaded_file(filename):
+        upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
+        return send_from_directory(upload_folder, filename)
     
     # 健康检查
     @app.route('/api/health')
@@ -70,6 +80,7 @@ def register_blueprints(app):
     from routes.dashboard import dashboard_bp
     from routes.ai import ai_bp
     from routes.competition import competition_bp
+    from routes.registration import registration_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api/users')
@@ -83,6 +94,7 @@ def register_blueprints(app):
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
     app.register_blueprint(ai_bp, url_prefix='/api/ai')
     app.register_blueprint(competition_bp, url_prefix='/api')
+    app.register_blueprint(registration_bp, url_prefix='/api')
 
 
 def register_error_handlers(app):

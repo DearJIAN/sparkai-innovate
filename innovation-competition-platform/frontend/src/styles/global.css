@@ -1,0 +1,241 @@
+/* Global Styles - UI UX Pro Max */
+
+/* Reset & Base */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  line-height: 1.6;
+}
+
+/* Element Plus 主题覆盖 */
+.el-button {
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.el-button--primary {
+  --el-button-bg-color: var(--primary-600);
+  --el-button-border-color: var(--primary-600);
+  --el-button-hover-bg-color: var(--primary-700);
+  --el-button-hover-border-color: var(--primary-700);
+}
+
+.el-button--success {
+  --el-button-bg-color: var(--success-600);
+  --el-button-border-color: var(--success-600);
+}
+
+.el-button--warning {
+  --el-button-bg-color: var(--warning-600);
+  --el-button-border-color: var(--warning-600);
+}
+
+.el-button--danger {
+  --el-button-bg-color: var(--danger-600);
+  --el-button-border-color: var(--danger-600);
+}
+
+.el-input__wrapper {
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 1px var(--border-light) inset;
+}
+
+.el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--primary-400) inset;
+}
+
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--primary-600) inset;
+}
+
+.el-select .el-input__wrapper {
+  border-radius: var(--radius-md);
+}
+
+.el-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast);
+}
+
+.el-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.el-card__header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  font-weight: 600;
+}
+
+.el-tag {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.el-table {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.el-table th {
+  background-color: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.el-table--striped .el-table__body tr.el-table__row--striped td {
+  background-color: var(--bg-secondary);
+}
+
+.el-dialog {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.el-dialog__header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-light);
+  margin-right: 0;
+}
+
+.el-dialog__body {
+  padding: 24px;
+}
+
+.el-dialog__footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-light);
+}
+
+.el-form-item__label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.el-pagination {
+  --el-pagination-button-bg-color: var(--bg-primary);
+  --el-pagination-hover-color: var(--primary-600);
+}
+
+.el-pagination .el-pager li {
+  border-radius: var(--radius-sm);
+}
+
+.el-menu {
+  border-right: none;
+}
+
+.el-menu-item {
+  border-radius: var(--radius-md);
+  margin: 4px 8px;
+}
+
+.el-steps--simple {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 16px 24px;
+}
+
+.el-timeline-item__node {
+  border-radius: 50%;
+}
+
+.el-alert {
+  border-radius: var(--radius-lg);
+}
+
+.el-upload--picture-card {
+  border-radius: var(--radius-lg);
+  border-color: var(--border-light);
+}
+
+.el-upload--picture-card:hover {
+  border-color: var(--primary-400);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* Fade Transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--transition-normal);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Slide Transition */
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform var(--transition-normal), opacity var(--transition-normal);
+}
+
+.slide-enter-from {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+
+.slide-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+/* Page Container */
+.page-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Card Grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 16px;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}
