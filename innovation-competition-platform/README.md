@@ -4,6 +4,8 @@
 
 一个面向高校的**创新创业竞赛全流程服务平台**，覆盖竞赛发现、报名、项目创建、团队管理、材料上传、任务进度、评审打分、AI 辅助的完整流程。平台采用**前后端分离架构**，支持学生、指导老师、评委、管理员四种角色，提供竞赛广场、项目工作室、训练营、在线课程、产业命题等多元化功能。
 
+平台集成了 **Live2D 虚拟形象「火花」**、**语音交互**、**AI 智能对话**等特色功能，为用户提供沉浸式智能辅助体验。
+
 ## 技术栈
 
 ### 前端
@@ -14,6 +16,8 @@
 - **Vue Router** - 前端路由管理
 - **Axios** - HTTP 客户端
 - **ECharts** - 数据可视化图表库
+- **marked** - Markdown 渲染库
+- **Live2D Widget** - Live2D 看板娘组件
 
 ### 后端
 - **Python Flask** - 轻量级 Web 框架
@@ -24,6 +28,39 @@
 - **MySQL** - 关系型数据库
 - **PyMySQL** - MySQL 驱动
 - **python-dotenv** - 环境变量管理
+- **volcengine-python-sdk[ark]** - 火山方舟 AI SDK
+- **opencc-python-reimplemented** - 简繁转换
+- **langchain / langchain-core** - AI 编排框架
+- **websockets** - WebSocket 客户端（实时语音对话）
+
+## 特色功能
+
+### Live2D 虚拟形象「火花」
+- 全局浮动 Live2D 看板娘，固定在页面右下角
+- 10 种基础表情 + 2 种叠加效果（月卡/水印）
+- AI 对话时自动切换表情（开心/害羞/生气/难过/晕/惊讶）
+- 语音朗读时口型驱动动画
+- 可拖拽、可隐藏、可切换表情
+
+### AI 智能对话
+- 基于火山方舟大模型（doubao-seed）的真实 AI 对话
+- 支持 SSE 流式输出，打字机效果
+- 会话管理（6 轮上下文记忆，6 小时 TTL）
+- 智能回答清洗（过滤思考过程、去重、提取最终答案）
+- 快捷问题按钮
+
+### 语音交互
+- Chrome/Edge：Web Speech API 浏览器原生语音识别
+- Firefox：录音上传后端 ASR（豆包 ASR / faster-whisper 回退）
+- TTS 语音合成（火山 TTS API + 浏览器 SpeechSynthesis）
+- 语音识别结果自动繁转简（OpenCC）
+- 可拖拽语音对话面板
+
+### AI 分析工具
+- 项目简介生成（AI 驱动，Markdown 格式输出）
+- 商业计划书建议（AI 驱动）
+- 风险分析（AI 驱动）
+- AI 输出结果 Markdown 渲染 + 一键复制 + 朗读
 
 ## 项目结构
 
@@ -33,7 +70,6 @@ innovation-competition-platform/
 │   ├── app.py              # 应用入口
 │   ├── config.py           # 配置文件
 │   ├── .env                # 环境变量（本地开发）
-│   ├── .env.example        # 环境变量示例
 │   ├── requirements.txt    # Python 依赖
 │   ├── extensions.py       # 扩展初始化
 │   ├── seed.py             # 测试数据初始化脚本
@@ -59,59 +95,58 @@ innovation-competition-platform/
 │   │   ├── task.py         # 任务接口
 │   │   ├── review.py       # 评审接口
 │   │   ├── dashboard.py    # 看板接口
-│   │   ├── ai.py           # AI 接口
+│   │   ├── ai.py           # AI 接口（聊天/语音/ASR/TTS/分析）
 │   │   ├── competition.py  # 竞赛接口
 │   │   └── registration.py # 报名接口
 │   ├── services/           # 业务逻辑
-│   │   └── ai_service.py   # AI 服务（Mock）
+│   │   ├── ai_service.py           # AI 服务（火山方舟 + 会话管理 + 流式输出）
+│   │   ├── tts_service.py          # TTS 语音合成服务（火山 TTS）
+│   │   ├── volc_realtime_bridge.py # 火山实时语音对话桥
+│   │   └── volc_realtime_protocol.py # 火山实时语音二进制协议
 │   ├── utils/              # 工具函数
 │   │   ├── response.py     # 统一响应格式
 │   │   └── decorators.py   # 装饰器
 │   ├── uploads/            # 文件上传目录
-│   │   └── project_<id>/   # 按项目分目录存储
 │   └── migrations/         # 数据库迁移
 │
 ├── frontend/               # Vue 3 前端
 │   ├── package.json
 │   ├── vite.config.js
 │   ├── index.html
+│   ├── public/
+│   │   ├── live2d/                  # Live2D 模型资源
+│   │   │   └── huahuo/             # 「火花」模型
+│   │   │       ├── 火花.model3.json
+│   │   │       ├── 火花.moc3
+│   │   │       ├── 火花.physics3.json
+│   │   │       ├── 火花.cdi3.json
+│   │   │       ├── Expressions/    # 表情文件（12个）
+│   │   │       ├── Motions/        # 动作文件
+│   │   │       └── 火花.4096/      # 高清纹理
+│   │   └── live2d-widget-dist/     # Live2D Widget SDK
+│   │       ├── waifu.css
+│   │       ├── waifu-tips.js
+│   │       ├── autoload.js
+│   │       └── waifu-huahuo.json
 │   └── src/
 │       ├── api/            # API 接口封装
 │       │   ├── auth.js
 │       │   ├── user.js
 │       │   ├── project.js
-│       │   ├── member.js
-│       │   ├── file.js
-│       │   ├── task.js
-│       │   ├── review.js
-│       │   ├── dashboard.js
-│       │   ├── ai.js
-│       │   └── competition.js
-│       ├── assets/         # 静态资源
+│       │   ├── ai.js       # AI API（聊天/语音/ASR/TTS/流式）
+│       │   └── ...
 │       ├── components/     # 公共组件
-│       │   └── GuideSystem.vue
+│       │   ├── GuideSystem.vue
+│       │   ├── Live2dWidget.vue   # Live2D 看板娘组件
+│       │   └── VoiceChat.vue      # 语音交互面板组件
 │       ├── layouts/        # 布局组件
-│       │   └── MainLayout.vue
+│       │   └── MainLayout.vue     # 主布局（集成 Live2D）
 │       ├── router/         # 路由配置
-│       │   └── index.js
 │       ├── stores/         # Pinia 状态管理
-│       │   ├── user.js
-│       │   └── guide.js
 │       ├── styles/         # 全局样式
-│       │   ├── variables.css
-│       │   ├── design-system.css
-│       │   └── global.css
 │       ├── views/          # 页面视图
-│       │   ├── login/            # 登录注册
-│       │   ├── dashboard/        # 数据看板（分角色）
-│       │   ├── portal/           # 平台首页、竞赛广场等
-│       │   ├── projects/         # 项目管理
-│       │   ├── reviews/          # 评审管理
-│       │   ├── ai-assistant/     # AI 助手
-│       │   ├── competitions/     # 比赛管理
-│       │   ├── admin/            # 管理员页面
-│       │   └── error/            # 错误页面
-│       ├── utils/          # 工具函数
+│       │   ├── ai-assistant/     # AI 助手（双标签页：分析工具 + 对话）
+│       │   └── ...
 │       ├── App.vue
 │       └── main.js
 │
@@ -148,16 +183,28 @@ CREATE DATABASE IF NOT EXISTS innovation_competition
 ```bash
 cd backend
 cp .env.example .env
-# 编辑 .env 文件，修改数据库连接信息
+# 编辑 .env 文件，修改数据库连接信息和 AI API 配置
 ```
 
-`.env` 文件示例：
+`.env` 文件关键配置：
 ```env
-SECRET_KEY=your-secret-key-here
+# 数据库
 DATABASE_URL=mysql+pymysql://root:123456@localhost:3306/innovation_competition?charset=utf8mb4
-JWT_SECRET_KEY=your-jwt-secret-key-here
-FLASK_ENV=development
-FLASK_DEBUG=1
+
+# AI 对话 - 火山方舟
+ARK_API_KEY=your-ark-api-key
+ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+ARK_MODEL=doubao-seed-1-6-251015
+
+# 实时语音对话
+VOICE_REALTIME_APP_ID=your-app-id
+VOICE_REALTIME_APP_KEY=your-app-key
+VOICE_REALTIME_TOKEN=your-token
+
+# 语音识别 ASR
+ASR_PROVIDER=doubao
+DOUBAO_ASR_APP_ID=your-asr-app-id
+DOUBAO_ASR_ACCESS_TOKEN=your-asr-access-token
 ```
 
 ### 3. 后端启动
@@ -215,6 +262,42 @@ python seed.py
 | judge1 | judge123 | 评委 | 孙评委 |
 | judge2 | judge123 | 评委 | 周评委 |
 
+## AI 接口文档
+
+### AI 分析工具
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/ai/project-summary` | POST | 生成项目简介 |
+| `/api/ai/business-plan-advice` | POST | 商业计划书建议 |
+| `/api/ai/risk-analysis` | POST | 风险分析 |
+| `/api/ai/records` | GET | AI 使用记录 |
+
+### AI 对话
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/ai/chat` | POST | 文本聊天（非流式） |
+| `/api/ai/chat/stream` | POST | 文本聊天（SSE 流式） |
+| `/api/ai/voice/chat/stream` | POST | 语音聊天（SSE 流式，优先火山实时语音） |
+
+### 语音交互
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/ai/asr` | POST | 语音识别（豆包 ASR / faster-whisper） |
+| `/api/ai/tts/synthesize` | POST | TTS 语音合成 |
+| `/api/ai/tts/audio/<filename>` | GET | 获取合成音频 |
+| `/api/ai/voice/config` | GET | 语音配置信息 |
+
+### Live2D
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/ai/expressions` | GET | 获取表情列表 |
+| `/api/ai/model-info` | GET | 获取模型信息 |
+| `/api/ai/health` | GET | AI 服务健康检查 |
+
 ## 平台功能模块
 
 ### 侧边栏功能入口（按角色）
@@ -226,72 +309,15 @@ python seed.py
 | 评委 | 工作台、待评审项目、评审记录、AI 项目助手 |
 | 管理员 | 工作台、比赛批次管理、报名管理、项目管理、评审管理、用户管理、数据看板、AI 项目助手 |
 
-### 平台首页 (/portal)
-- 双创竞赛服务平台总入口
-- 角色化功能卡片（学生/老师/评委/管理员）
-- 推荐竞赛展示
-- 快捷操作入口
-
-### 竞赛广场 (/competitions)
-- 浏览所有可报名竞赛
-- 按分类、级别、状态筛选
-- 搜索竞赛
-- 竞赛卡片展示（海报、信息、报名数）
-
-### 竞赛详情 (/competitions/:id)
-- 竞赛头图与基本信息
-- 赛道设置
-- 时间安排（时间线）
-- 奖项设置
-- 材料要求
-- 报名按钮
-
-### 竞赛报名 (/competitions/:id/register)
-- 五步报名流程：选择赛道 → 队伍信息 → 队员信息 → 上传材料 → 确认报名
-- 支持关联已有项目
-- 队员信息录入
-- 材料上传
-
-### 我的赛事 (/my-registrations)
-- 查看所有报名记录
-- 报名状态统计
-- 继续完善草稿
-- 查看报名详情
-
-### 训练营 (/training-camps)
-- 创新创业基础训练营
-- 商业计划书写作训练营
-- 路演表达训练营
-- AI 项目孵化训练营
-
-### 在线课程 (/courses)
-- 创业基础、市场调研、商业模式设计
-- 项目路演技巧
-- 创业法律与知识产权
-
-### 产业命题 (/industry-topics)
-- 企业真实命题展示
-- 命题背景与需求说明
-- 交付物要求
-- 承接命题
-
-### 项目工作室 (/my-projects)
-- 项目统计卡片
-- 搜索与筛选
-- 项目进度展示
-- 创建新项目
-
 ### AI 助手 (/ai-assistant)
-- 生成项目简介
-- 商业计划书建议
-- 风险分析
+- **AI 分析工具**：项目简介生成、商业计划书建议、风险分析
+- **AI 对话**：流式聊天、语音输入、快捷问题
+- **Live2D 联动**：对话时表情自动切换、语音朗读口型驱动
+- **语音交互面板**：可拖拽浮动面板、语音识别、TTS 朗读
 
-### 管理员功能
-- 用户管理
-- 项目管理
-- 比赛批次管理
-- 报名管理（审核/驳回）
-- 评审管理
+### 其他功能模块
+
+详见项目代码中的路由文件和页面组件。
 
 ## 数据库模型
 
@@ -309,65 +335,6 @@ python seed.py
 | ProjectTask | 项目任务 | project_id, title, description, assignee_id, status, priority, deadline, completed_at |
 | Review | 评审记录 | project_id, judge_id, innovation_score, feasibility_score, market_score, team_score, business_score, technology_score, presentation_score, total_score, comment |
 | AiRecord | AI 使用记录 | user_id, project_id, type, prompt, result |
-
-## API 接口文档
-
-### 认证接口
-
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/auth/register` | POST | 用户注册 |
-| `/api/auth/login` | POST | 用户登录 |
-| `/api/auth/me` | GET | 获取当前用户信息 |
-| `/api/auth/logout` | POST | 登出 |
-
-### 竞赛广场接口（公开）
-
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/public/competitions` | GET | 获取竞赛列表 |
-| `/api/public/competitions/<id>` | GET | 获取竞赛详情 |
-| `/api/public/competitions/<id>/tracks` | GET | 获取竞赛赛道 |
-| `/api/public/competition-categories` | GET | 获取竞赛分类 |
-
-### 报名接口
-
-| 接口 | 方法 | 说明 | 权限 |
-|------|------|------|------|
-| `/api/registrations` | POST | 创建报名草稿 | student |
-| `/api/registrations/<id>` | GET | 查看报名详情 | student |
-| `/api/registrations/<id>` | PUT | 更新报名信息 | student |
-| `/api/registrations/<id>/members` | POST | 添加队员 | student |
-| `/api/registrations/<id>/materials` | POST | 上传材料 | student |
-| `/api/registrations/<id>/submit` | POST | 提交报名 | student |
-| `/api/my-registrations` | GET | 我的报名列表 | student |
-| `/api/admin/registrations` | GET | 所有报名（管理员） | admin |
-| `/api/admin/registrations/<id>/approve` | POST | 审核通过 | admin |
-| `/api/admin/registrations/<id>/reject` | POST | 驳回报名 | admin |
-
-### 项目接口
-
-| 接口 | 方法 | 说明 | 权限 |
-|------|------|------|------|
-| `/api/projects` | GET | 获取项目列表 | 所有登录用户 |
-| `/api/projects` | POST | 创建项目 | 学生/管理员 |
-| `/api/projects/<id>` | GET | 查看项目详情 | 项目相关人 |
-| `/api/projects/<id>` | PUT | 编辑项目 | 负责人/管理员 |
-| `/api/projects/<id>` | DELETE | 删除项目 | 负责人/管理员 |
-| `/api/projects/<id>/submit` | POST | 提交项目评审 | 负责人/管理员 |
-
-### 其他接口
-
-详见项目代码中的路由文件。
-
-## 项目状态流转
-
-```
-draft -> submitted -> teacher_review -> judging -> passed/rejected
-  ^         ^
-  |         |
-need_modify  |
-```
 
 ## 用户角色
 
@@ -393,35 +360,26 @@ need_modify  |
 3. 检查 `.env` 文件中的 `DATABASE_URL` 配置
 4. 确认用户名和密码正确
 
-### 2. 前端跨域问题
+### 2. AI 对话失败
 
 **解决**：
-- 后端已配置 Flask-CORS，默认允许所有来源
-- 检查后端服务是否正常运行
+1. 检查 `.env` 中的 `ARK_API_KEY` 是否正确
+2. 确认火山方舟 API 可访问
+3. 检查网络连接
 
-### 3. 文件上传失败
-
-**解决**：
-1. 检查文件类型是否在支持列表中
-2. 确认文件大小不超过 4GB
-3. 检查 `backend/uploads` 目录是否有写入权限
-
-### 4. JWT 认证失败
+### 3. Live2D 模型加载失败
 
 **解决**：
-1. 检查请求头是否包含 `Authorization: Bearer <token>`
-2. 确认 token 未过期
-3. 重新登录获取新 token
+1. 确认 `frontend/public/live2d/huahuo/` 目录存在
+2. 检查模型文件完整性
+3. 清除浏览器缓存重试
 
-## 扩展开发
+### 4. 语音识别不可用
 
-### 接入真实 AI API
-
-当前 AI 功能使用 Mock 数据，如需接入真实 AI：
-
-1. 在 `backend/services/ai_service.py` 中替换生成逻辑
-2. 添加 API Key 配置到 `.env` 文件
-3. 调用 OpenAI / 文心一言 / 通义千问 等 API
+**解决**：
+1. Chrome/Edge 浏览器原生支持 Web Speech API
+2. Firefox 需要后端 ASR 服务，检查 `.env` 中的 ASR 配置
+3. 确保使用 HTTPS 或 localhost（麦克风权限要求）
 
 ## 许可证
 

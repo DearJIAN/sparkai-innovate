@@ -95,6 +95,7 @@
         </router-view>
       </main>
     </div>
+    <Live2dWidget ref="live2dRef" />
   </div>
 </template>
 
@@ -103,6 +104,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import Live2dWidget from '@/components/Live2dWidget.vue'
 import {
   Trophy, User, UserFilled, HomeFilled, SwitchButton, ArrowDown,
   FolderOpened, CirclePlusFilled, MagicStick, StarFilled, DocumentChecked,
