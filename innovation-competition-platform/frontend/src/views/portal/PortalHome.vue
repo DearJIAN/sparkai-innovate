@@ -28,15 +28,15 @@
         <p class="banner-desc">覆盖创新创业、人工智能、数字经济、乡村振兴、产业命题等方向</p>
         <div class="banner-stats">
           <div class="banner-stat">
-            <span class="stat-num">50+</span>
+            <span class="stat-num">{{ homeStats.competitions }}+</span>
             <span class="stat-text">竞赛活动</span>
           </div>
           <div class="banner-stat">
-            <span class="stat-num">1000+</span>
+            <span class="stat-num">{{ homeStats.teams }}+</span>
             <span class="stat-text">参赛团队</span>
           </div>
           <div class="banner-stat">
-            <span class="stat-num">10+</span>
+            <span class="stat-num">{{ homeStats.tracks }}+</span>
             <span class="stat-text">赛道方向</span>
           </div>
         </div>
@@ -150,6 +150,7 @@ import {
   MagicStick, TrendCharts, ArrowRight, Medal, School,
   Briefcase, Collection, Calendar
 } from '@element-plus/icons-vue'
+import { getDashboardStats } from '@/api/dashboard'
 
 // 导入本地竞赛图片
 import imgAI from '@/assets/images/competitions/2026 AI 应用创新设计大赛.png'
@@ -199,6 +200,13 @@ const cardSectionVisible = ref(false)
 const compSectionVisible = ref(false)
 const quickSectionVisible = ref(false)
 
+// 首页统计数据（动态加载）
+const homeStats = ref({
+  competitions: 0,
+  teams: 0,
+  tracks: 0
+})
+
 const navigateTo = (path) => {
   if (path) router.push(path)
 }
@@ -225,9 +233,28 @@ const particleStyle = (i) => {
 // IntersectionObserver 懒加载非首屏粒子/区域
 let observer = null
 
+const loadHomeStats = async () => {
+  try {
+    const res = await getDashboardStats()
+    if (res.code === 200 && res.data) {
+      homeStats.value = {
+        competitions: res.data.competition_count || 0,
+        teams: res.data.team_count || 0,
+        tracks: res.data.track_count || 7
+      }
+    }
+  } catch (e) {
+    // 使用默认值
+    homeStats.value = { competitions: 50, teams: 1000, tracks: 10 }
+  }
+}
+
 onMounted(() => {
   // 启动全局数字雨背景（铺满整个页面宽度）
   initGlobalRain(globalRainCanvas)
+
+  // 加载首页统计数据
+  loadHomeStats()
 
   observer = new IntersectionObserver(
     (entries) => {

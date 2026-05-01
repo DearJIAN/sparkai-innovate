@@ -14,13 +14,14 @@
 
 | 技术 | 版本 | 说明 |
 |------|------|------|
-| Vue | ^3.5.32 | 渐进式 JavaScript 框架（Composition API） |
+| Vue | ^3.5.32 | 渐进式 JavaScript 框架（Composition API + `<script setup>`） |
 | Vite | ^8.0.10 | 下一代前端构建工具 |
+| @vitejs/plugin-vue | ^6.0.6 | Vite Vue 插件 |
 | Element Plus | ^2.13.7 | 基于 Vue 3 的组件库 |
 | @element-plus/icons-vue | ^2.3.2 | Element Plus 图标库 |
 | Pinia | ^3.0.4 | Vue 状态管理方案 |
-| Vue Router | ^5.0.6 | 前端路由管理 |
-| Axios | ^1.15.2 | HTTP 客户端 |
+| Vue Router | ^5.0.6 | 前端路由管理（createWebHistory） |
+| Axios | ^1.15.2 | HTTP 客户端（baseURL: `/api`，30s 超时） |
 | ECharts | ^6.0.0 | 数据可视化图表库 |
 | marked | ^18.0.2 | Markdown 渲染库（AI 输出格式化） |
 | Live2D Widget | - | Live2D 看板娘组件（CDN + 本地 SDK） |
@@ -29,20 +30,21 @@
 
 | 技术 | 版本 | 说明 |
 |------|------|------|
-| Flask | 3.0.3 | 轻量级 Web 框架 |
+| Flask | 3.0.3 | 轻量级 Web 框架（应用工厂模式） |
 | Flask-SQLAlchemy | 3.1.1 | ORM 数据库工具 |
-| Flask-Migrate | 4.0.7 | 数据库迁移工具 |
+| Flask-Migrate | 4.0.7 | 数据库迁移工具（Alembic） |
 | Flask-JWT-Extended | 4.6.0 | JWT 认证（Access 24h / Refresh 7d） |
-| Flask-CORS | 4.0.1 | 跨域支持 |
+| Flask-CORS | 4.0.1 | 跨域支持（仅允许 localhost:5173） |
 | PyMySQL | 1.1.1 | MySQL 驱动 |
 | cryptography | 42.0.8 | 加密库 |
 | python-dotenv | 1.0.1 | 环境变量管理 |
-| Werkzeug | 3.0.3 | WSGI 工具库 |
+| Werkzeug | 3.0.3 | WSGI 工具库（密码哈希 / 安全文件名） |
 | volcengine-python-sdk[ark] | - | 火山方舟 AI SDK |
 | opencc-python-reimplemented | - | 简繁转换（ASR 结果处理） |
 | langchain / langchain-core | - | AI 编排框架 |
 | websockets | - | WebSocket 客户端（实时语音对话 / ASR） |
 | requests | - | HTTP 请求库（TTS 合成） |
+| Pillow | - | 图像处理（seed.py 海报自动生成） |
 | MySQL | 8.0+ | 关系型数据库 |
 
 ---
@@ -68,6 +70,7 @@
 - 智能回答清洗（过滤思考过程、去重、提取最终答案标记后的内容、半文重复检测）
 - 快捷问题按钮（分析项目创新性 / 商业计划书 / 竞赛评审 / 团队组建）
 - AI 助手页面双标签页设计：**AI 分析工具** + **AI 对话**
+- 流式输出重试机制（最大重试 2 次，递增间隔 1s/2s）+ 3 分钟超时控制
 
 ### 语音交互
 
@@ -96,8 +99,9 @@
 ### 全局引导系统
 
 - 首次登录引导（`GuideSystem.vue`）
-- 高亮指引 + 拖拽弹窗
+- 高亮指引 + 拖拽弹窗 + 路由自动跳转（`routePath` 配置）
 - 引导状态持久化（Pinia `guide.js`）
+- 四角色独立引导步骤（学生 14 步 / 教师 / 评委 / 管理员）
 
 ### 双模式布局
 
@@ -105,89 +109,115 @@
 - 工作台页面（项目 / 评审 / 管理等）：左侧边栏 + 顶部导航
 - 侧边栏可折叠，响应式适配
 
+### 数字雨背景动画
+
+- 全局 Canvas 数字雨效果（《黑客帝国》风格）
+- 十六进制字符 + 编程符号，头部高亮 + 拖尾残影
+- 水平扫描线增强科幻感
+- 全屏铺满，动态高度检测
+- IntersectionObserver 懒加载触发
+
 ---
 
 ## 项目结构
 
 ```
 innovation-competition-platform/
+├── start.bat                         # 一键启动脚本（自动检测依赖 + 启动前后端）
+├── README.md                         # 项目文档
+│
 ├── backend/                          # Flask 后端
-│   ├── app.py                        # 应用入口（应用工厂模式）
-│   ├── config.py                     # 配置文件（Development/Production/Testing）
+│   ├── app.py                        # 应用入口（应用工厂模式 + 蓝图注册 + 错误处理）
+│   ├── config.py                     # 配置文件（Development/Production/Testing 三环境）
 │   ├── extensions.py                 # 扩展初始化（db/migrate/jwt/cors）
-│   ├── seed.py                       # 测试数据初始化脚本（含海报生成）
+│   ├── seed.py                       # 测试数据初始化脚本（含 Pillow 海报生成）
 │   ├── seed_competitions.py          # 竞赛数据种子脚本
 │   ├── .env                          # 环境变量（本地开发，含 AI/ASR/TTS 配置）
-│   ├── .env.example                  # 环境变量模板
+│   ├── .env.example                  # 环境变量模板（基础配置）
 │   ├── requirements.txt              # Python 依赖
 │   ├── test_all_api.py               # API 测试脚本
 │   ├── test_file_api.py              # 文件接口测试
 │   ├── test_task_api.py              # 任务接口测试
 │   │
 │   ├── models/                       # 数据模型（12 个）
-│   │   ├── user.py                   # 用户信息
-│   │   ├── competition.py            # 竞赛信息
-│   │   ├── competition_track.py      # 竞赛赛道
-│   │   ├── competition_registration.py # 竞赛报名
-│   │   ├── registration_member.py    # 报名队员
-│   │   ├── registration_material.py  # 报名材料
-│   │   ├── project.py                # 项目信息
-│   │   ├── project_member.py         # 项目成员
-│   │   ├── project_file.py           # 项目文件
-│   │   ├── project_task.py           # 项目任务
-│   │   ├── review.py                 # 评审记录
-│   │   └── ai_record.py             # AI 使用记录
+│   │   ├── __init__.py               # 模型统一导出
+│   │   ├── user.py                   # 用户信息（users 表）
+│   │   ├── competition.py            # 竞赛信息（competitions 表）
+│   │   ├── competition_track.py      # 竞赛赛道（competition_tracks 表）
+│   │   ├── competition_registration.py # 竞赛报名（competition_registrations 表）
+│   │   ├── registration_member.py    # 报名队员（registration_members 表）
+│   │   ├── registration_material.py  # 报名材料（registration_materials 表）
+│   │   ├── project.py                # 项目信息（projects 表）
+│   │   ├── project_member.py         # 项目成员（project_members 表）
+│   │   ├── project_file.py           # 项目文件（project_files 表）
+│   │   ├── project_task.py           # 项目任务（project_tasks 表）
+│   │   ├── review.py                 # 评审记录（reviews 表）
+│   │   └── ai_record.py             # AI 使用记录（ai_records 表）
 │   │
 │   ├── routes/                       # API 路由（13 个蓝图）
-│   │   ├── auth.py                   # /api/auth    认证接口
-│   │   ├── user.py                   # /api/users   用户接口
-│   │   ├── project.py                # /api/projects 项目接口
+│   │   ├── __init__.py               # 蓝图包初始化
+│   │   ├── auth.py                   # /api/auth    认证接口（注册/登录/当前用户/登出）
+│   │   ├── user.py                   # /api/users   用户接口（列表/详情）
+│   │   ├── project.py                # /api/projects 项目接口（CRUD/提交）
 │   │   ├── member.py                 # /api         成员接口
 │   │   ├── file.py                   # /api         文件接口
 │   │   ├── material.py               # /api/materials 材料接口
 │   │   ├── team.py                   # /api/teams   团队接口
 │   │   ├── task.py                   # /api         任务接口
 │   │   ├── review.py                 # /api         评审接口
-│   │   ├── dashboard.py              # /api/dashboard 看板接口
+│   │   ├── dashboard.py              # /api/dashboard 看板接口（统计/最近数据）
 │   │   ├── ai.py                     # /api/ai      AI 接口（聊天/语音/ASR/TTS/分析/表情/健康）
-│   │   ├── competition.py            # /api         竞赛接口
-│   │   └── registration.py           # /api         报名接口
+│   │   ├── competition.py            # /api         竞赛接口（公开+管理+赛道）
+│   │   └── registration.py           # /api         报名接口（学生+管理员）
 │   │
 │   ├── services/                     # 业务逻辑
+│   │   ├── __init__.py
 │   │   ├── ai_service.py             # AI 核心（火山方舟 SDK + 会话管理 + 流式输出 + 回答清洗）
 │   │   ├── tts_service.py            # TTS 语音合成（火山 TTS HTTP API + 文件缓存 + 缓存统计/清理）
 │   │   ├── volc_realtime_bridge.py   # 火山实时语音对话桥（WebSocket + 流式回复 + 回答清洗）
 │   │   └── volc_realtime_protocol.py # 火山实时语音二进制协议（编解码 + Gzip）
 │   │
 │   ├── utils/                        # 工具函数
-│   │   ├── response.py               # 统一响应格式（success/error）
-│   │   └── decorators.py             # 装饰器
+│   │   ├── __init__.py
+│   │   ├── response.py               # 统一响应格式（success/error → {code, message, data}）
+│   │   └── decorators.py             # 装饰器（require_roles / require_min_role / jwt_required_custom）
 │   │
 │   ├── uploads/                      # 文件上传目录
-│   │   └── competition_posters/      # 竞赛海报（seed.py 自动生成）
-│   └── migrations/                   # 数据库迁移
+│   │   ├── competition_posters/      # 竞赛海报（seed.py 自动生成）
+│   │   └── .gitkeep
+│   └── migrations/                   # 数据库迁移（Alembic）
+│       ├── versions/
+│       │   └── 448f0412e5bb_initial_migration_with_all_models.py
+│       ├── alembic.ini
+│       ├── env.py
+│       └── script.py.mako
 │
 ├── frontend/                         # Vue 3 前端
 │   ├── package.json                  # 依赖配置
-│   ├── vite.config.js                # Vite 配置（代理 /api + /uploads -> localhost:5000）
+│   ├── vite.config.js                # Vite 配置（代理 /api + /uploads → localhost:5000，CSP header）
 │   ├── index.html                    # HTML 入口（标题：创新创业竞赛服务平台）
+│   ├── README.md                     # 前端说明
 │   │
 │   ├── public/
+│   │   ├── favicon.svg               # 网站图标
+│   │   ├── icons.svg                 # 图标集
 │   │   ├── live2d/                   # Live2D 模型资源
 │   │   │   ├── huahuo/              # 「火花」模型
 │   │   │   │   ├── 火花.model3.json  # 模型配置
 │   │   │   │   ├── 火花.moc3         # 模型数据
 │   │   │   │   ├── 火花.physics3.json # 物理引擎
 │   │   │   │   ├── 火花.cdi3.json    # 参数定义
+│   │   │   │   ├── model_list.json   # 模型列表
 │   │   │   │   ├── icon.png          # 模型图标
 │   │   │   │   ├── 按键设置说明.png    # 按键说明图
 │   │   │   │   ├── Expressions/      # 12 个表情文件
 │   │   │   │   ├── Motions/          # 2 个动作文件（循环/睡觉）
-│   │   │   │   └── 火花.4096/        # 高清纹理
+│   │   │   │   └── 火花.4096/        # 高清纹理（texture_00/01.png）
 │   │   │   ├── huahuo-clean/         # 清理版模型（备用）
+│   │   │   │   └── README.md
 │   │   │   └── huahuo-packages.json  # 模型包配置
 │   │   └── live2d-widget-dist/       # Live2D Widget SDK
-│   │       ├── chunk/                # SDK 分块
+│   │       ├── chunk/                # SDK 分块（index.js/index2.js + source maps）
 │   │       ├── autoload.js           # 自动加载脚本
 │   │       ├── waifu-huahuo.json     # 看板娘配置
 │   │       ├── waifu-huahuo.clean.json # 清理版配置
@@ -201,8 +231,8 @@ innovation-competition-platform/
 │       ├── style.css                 # 全局基础样式
 │       │
 │       ├── api/                      # API 接口封装（11 个模块）
-│       │   ├── request.js            # Axios 基础配置（拦截器/Token/错误处理）
-│       │   ├── auth.js               # 认证 API
+│       │   ├── request.js            # Axios 基础配置（baseURL:/api，30s超时，Token拦截器，401自动跳转）
+│       │   ├── auth.js               # 认证 API（login/register/getCurrentUser）
 │       │   ├── project.js            # 项目 API
 │       │   ├── member.js             # 成员 API
 │       │   ├── file.js               # 文件 API
@@ -214,50 +244,57 @@ innovation-competition-platform/
 │       │   └── ai.js                 # AI API（聊天/语音/ASR/TTS/流式/分析）
 │       │
 │       ├── components/               # 公共组件
-│       │   ├── GuideSystem.vue       # 全局引导系统（首次登录引导/高亮/拖拽弹窗）
-│       │   ├── Live2dWidget.vue      # Live2D 看板娘组件（表情/口型/情绪联动/完整清理）
+│       │   ├── GuideSystem.vue       # 全局引导系统（首次登录引导/高亮/拖拽弹窗/路由跳转）
+│       │   ├── HuahuoAssistant.vue   # Live2D 虚拟形象「火花」（全屏拖拽/AI对话/语音/表情联动/3分钟超时/完整清理）
 │       │   ├── VoiceChat.vue         # 语音交互面板（流式对话/语音识别/TTS/可拖拽/深色毛玻璃）
+│       │   ├── Live2dWidget.vue      # Live2D 看板娘组件（旧版，已被 HuahuoAssistant 替代）
+│       │   ├── TestButton.vue        # 测试按钮组件
+│       │   ├── TestButtonDemo.vue    # 测试按钮演示
 │       │   └── HelloWorld.vue        # 示例组件
 │       │
 │       ├── composables/              # 组合函数
 │       │   └── useLive2d.js          # Live2D 表情/情绪联动工具（detectEmotionByText/getExpressionByEmotion/notifyLive2dHook）
 │       │
 │       ├── layouts/
-│       │   └── MainLayout.vue        # 主布局（双模式：平台页无侧边栏/工作台有侧边栏 + Live2D 集成）
+│       │   └── MainLayout.vue        # 主布局（双模式：平台页无侧边栏/工作台有侧边栏 + Live2D 集成 + 导航/侧边栏/活跃状态）
 │       │
 │       ├── router/
-│       │   └── index.js              # 路由配置（公共/学生/教师/评委/管理员/平台/通用路由 + 守卫）
+│       │   └── index.js              # 路由配置（公共/学生/教师/评委/管理员/平台/通用路由 + beforeEach 守卫 + 角色权限检查）
 │       │
 │       ├── stores/                   # Pinia 状态管理
-│       │   ├── user.js               # 用户状态（token/userInfo/角色权限/初始化）
-│       │   └── guide.js              # 引导系统状态
+│       │   ├── user.js               # 用户状态（token/userInfo/角色权限计算属性/初始化/登录登出）
+│       │   └── guide.js              # 引导系统状态（步骤配置/当前步骤/完成状态持久化）
 │       │
 │       ├── styles/
-│       │   ├── design-system.css     # 设计系统变量（Cyan 主色调/暗色侧边栏/暗黑模式预留）
+│       │   ├── design-system.css     # 设计系统变量（Cyan 主色调/暗色侧边栏/暗黑模式预留/间距/圆角/过渡/布局变量）
 │       │   └── global.css            # 全局样式（Element Plus 覆盖/滚动条/过渡动画/布局类）
 │       │
 │       ├── assets/                   # 静态资源
+│       │   ├── hero.png              # 首页主图
+│       │   ├── vite.svg              # Vite 图标
+│       │   ├── vue.svg               # Vue 图标
 │       │   └── images/               # 图片资源
-│       │       ├── competitions/     # 竞赛海报图（与比赛名称一对一匹配）
-│       │       ├── training-camps/   # 训练营图片
-│       │       └── courses/          # 在线课程图片
+│       │       ├── competitions/     # 竞赛海报图（10 张，与比赛名称一对一匹配）
+│       │       ├── certificates/     # 证书与获奖图片（5 张证书 + 2 张获奖）
+│       │       ├── training-camps/   # 训练营图片（4 张）
+│       │       └── courses/          # 在线课程图片（5 张）
 │       │
 │       └── views/                    # 页面视图（42 个 Vue 文件）
 │           ├── ai-assistant/         # AI 助手（双标签页：分析工具 + 对话）
 │           │   └── index.vue
 │           ├── admin/                # 管理员页面（5 个）
-│           │   ├── users.vue         # 用户管理
-│           │   ├── projects.vue      # 项目管理
-│           │   ├── competitions.vue  # 竞赛管理（比赛批次）
-│           │   ├── RegistrationManagement.vue # 报名管理
+│           │   ├── users.vue         # 用户管理（搜索/角色筛选/状态筛选/CRUD弹窗）
+│           │   ├── projects.vue      # 项目管理（6维统计/搜索/阶段筛选/评分颜色分级）
+│           │   ├── competitions.vue  # 竞赛管理（比赛批次/统计卡片/创建编辑启用停用）
+│           │   ├── RegistrationManagement.vue # 报名管理（审核/驳回/统计）
 │           │   └── reviews.vue       # 评审管理
 │           ├── competitions/         # 竞赛管理
 │           │   └── index.vue
 │           ├── dashboard/            # 工作台（5 个角色看板）
 │           │   ├── index.vue         # 看板主页（根据角色动态加载）
 │           │   ├── student.vue       # 学生看板
-│           │   ├── teacher.vue       # 教师看板
-│           │   ├── judge.vue         # 评委看板
+│           │   ├── teacher.vue       # 教师看板（指导项目数/待审核/学生数）
+│           │   ├── judge.vue         # 评委看板（待评审/已评审/评分分布图）
 │           │   └── admin.vue         # 管理员看板
 │           ├── error/
 │           │   └── 404.vue           # 404 页面
@@ -266,27 +303,28 @@ innovation-competition-platform/
 │           │   └── register.vue      # 注册页
 │           ├── materials/
 │           │   └── index.vue         # 材料管理
-│           ├── portal/               # 平台页面（11 个，无侧边栏）
-│           │   ├── PortalHome.vue    # 平台首页
-│           │   ├── CompetitionSquare.vue # 竞赛广场
-│           │   ├── CompetitionDetail.vue # 竞赛详情
-│           │   ├── CompetitionRegister.vue # 竞赛报名
-│           │   ├── MyRegistrations.vue # 我的赛事
-│           │   ├── TrainingCamps.vue # 训练营
-│           │   ├── TrainingCampDetail.vue # 训练营详情
-│           │   ├── Courses.vue       # 在线课程
-│           │   ├── CourseDetail.vue   # 课程详情
-│           │   ├── IndustryTopics.vue # 产业命题
-│           │   └── Certificates.vue  # 证书成果
+│           ├── portal/               # 平台页面（12 个，无侧边栏）
+│           │   ├── PortalHome.vue    # 平台首页（全局数字雨背景 + 功能入口 + 推荐竞赛 + 动态统计）
+│           │   ├── CompetitionSquare.vue # 竞赛广场（深蓝渐变 Banner + 双光球呼吸动画 + 海报封面卡片）
+│           │   ├── CompetitionDetail.vue # 竞赛详情（海报占满宽度 + 完整时间/奖项/材料 + 智能内容生成）
+│           │   ├── CompetitionRegister.vue # 竞赛报名（快速填充 + 团队信息 + 队员管理）
+│           │   ├── MyRegistrations.vue # 我的赛事（海报封面卡片 + 状态跟踪）
+│           │   ├── TrainingCamps.vue # 训练营（紫罗兰渐变 Banner + 光球漂浮动画 + 海报封面）
+│           │   ├── TrainingCampDetail.vue # 训练营详情（海报占满宽度 + 课程大纲 + 讲师团队）
+│           │   ├── Courses.vue       # 在线课程（翠绿渐变 Banner + 光球浮动动画 + 海报封面）
+│           │   ├── CourseDetail.vue   # 课程详情（海报占满宽度 + 章节目录 + 学习计划）
+│           │   ├── IndustryTopics.vue # 产业命题（承接命题跳转填写页）
+│           │   ├── AcceptTopic.vue   # 承接命题（填写承接信息 + 快速填充 + 跳转创建项目）
+│           │   └── Certificates.vue  # 证书成果（查看详情弹窗 + 证书图片）
 │           ├── projects/             # 项目页面（9 个）
-│           │   ├── my-projects.vue   # 我的项目
-│           │   ├── create.vue        # 创建项目
+│           │   ├── my-projects.vue   # 我的项目（onActivated 自动刷新）
+│           │   ├── create.vue        # 创建项目（快速填充 + 数据预处理 + 详细错误处理）
 │           │   ├── detail.vue        # 项目详情
 │           │   ├── edit.vue          # 编辑项目
 │           │   ├── members.vue       # 团队成员
 │           │   ├── files.vue         # 项目材料
 │           │   ├── tasks.vue         # 任务进度
-│           │   ├── guide-projects.vue # 指导项目
+│           │   ├── guide-projects.vue # 指导项目（审核弹窗 + 反馈弹窗）
 │           │   └── index.vue         # 项目列表
 │           ├── reviews/              # 评审页面（5 个）
 │           │   ├── pending.vue       # 待评审项目
@@ -299,9 +337,8 @@ innovation-competition-platform/
 │           └── teams/
 │               └── index.vue         # 团队列表
 │
-├── image/                            # 项目截图
-│   └── README/
-└── README.md
+└── image/                            # 项目截图
+    └── README/
 ```
 
 ---
@@ -310,23 +347,40 @@ innovation-competition-platform/
 
 | 依赖 | 版本要求 | 说明 |
 |------|----------|------|
-| Python | 3.10+ | 后端运行环境 |
+| Python | 3.10+ | 后端运行环境（推荐使用 `newyolo` conda 环境） |
 | Node.js | 18+ | 前端构建环境 |
 | MySQL | 8.0+ | 关系型数据库 |
 | ffmpeg | - | 音频格式转换（ASR 功能需要，需加入系统 PATH） |
+| conda | - | Python 环境管理（推荐 `newyolo` 环境） |
+
+> **重要**：本项目指定使用 `newyolo` conda 环境，Python 解释器路径为 `D:\TOOLS\anaconda\envs\newyolo\python.exe`。`start.bat` 已配置使用此环境。
 
 ---
 
 ## 快速开始
 
-### 1. 克隆项目
+### 方式一：一键启动（推荐）
+
+双击项目根目录的 `start.bat`，脚本会自动：
+1. 停止占用 5000/5173 端口的旧进程
+2. 检测并安装前端依赖（首次运行时 `npm install`）
+3. 使用 `newyolo` conda 环境启动后端服务（端口 5000）
+4. 启动前端开发服务器（端口 5173）
+
+启动完成后访问：
+- 前端：http://localhost:5173
+- 后端：http://localhost:5000
+
+### 方式二：手动启动
+
+#### 1. 克隆项目
 
 ```bash
 git clone <repository-url>
 cd innovation-competition-platform
 ```
 
-### 2. MySQL 数据库初始化
+#### 2. MySQL 数据库初始化
 
 ```sql
 CREATE DATABASE IF NOT EXISTS innovation_competition
@@ -334,7 +388,7 @@ CREATE DATABASE IF NOT EXISTS innovation_competition
   DEFAULT COLLATE utf8mb4_unicode_ci;
 ```
 
-### 3. 配置环境变量
+#### 3. 配置环境变量
 
 ```bash
 cd backend
@@ -390,16 +444,15 @@ DOUBAO_ASR_CHANNEL=1
 DOUBAO_ASR_LANGUAGE=zh-CN
 ```
 
-### 4. 后端启动
+> **注意**：`.env.example` 仅包含基础配置（Flask/MySQL/JWT），AI/ASR/TTS 相关配置需手动添加。
+
+#### 4. 后端启动
 
 ```bash
 cd backend
 
-# 创建虚拟环境
-python -m venv venv
-
-# 激活虚拟环境（Windows）
-venv\Scripts\activate
+# 激活 conda 环境（推荐 newyolo）
+conda activate newyolo
 
 # 安装依赖
 pip install -r requirements.txt
@@ -415,7 +468,9 @@ python app.py
 
 后端服务默认运行在 http://localhost:5000
 
-### 5. 前端启动
+> **启动流程**：`app.py` → `create_app()` → 加载配置 → 初始化扩展 → 注册蓝图 → 注册错误处理 → `init_database()` 检查数据库连接并创建表 → `app.run(host='0.0.0.0', port=5000, debug=True)`
+
+#### 5. 前端启动
 
 ```bash
 cd frontend
@@ -425,7 +480,9 @@ npm run dev
 
 前端服务默认运行在 http://localhost:5173
 
-### 6. 初始化测试数据
+> **Vite 代理配置**：`/api` 和 `/uploads` 请求代理到 `http://localhost:5000`，CSP header 允许 `unsafe-eval`（Live2D SDK 需要）。
+
+#### 6. 初始化测试数据
 
 ```bash
 cd backend
@@ -434,9 +491,9 @@ python seed.py
 
 seed.py 会自动创建：
 - 8 个测试用户（4 种角色）
-- 10 个竞赛（含赛道、海报自动生成）
+- 10 个竞赛（含赛道、Pillow 海报自动生成）
 - 2 个项目
-- 8 条报名记录（含队员信息）
+- 8 条报名记录（含队员信息，多种状态：draft/submitted/approved/rejected）
 
 ---
 
@@ -444,126 +501,259 @@ seed.py 会自动创建：
 
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
+| `SECRET_KEY` | `dev-secret-key-change-in-production` | Flask 密钥（生产环境必须修改） |
+| `SQLALCHEMY_DATABASE_URI` | `mysql+pymysql://root:123456@localhost:3306/innovation_competition?charset=utf8mb4` | 数据库连接字符串 |
+| `SQLALCHEMY_TRACK_MODIFICATIONS` | False | 关闭修改追踪 |
 | `SQLALCHEMY_ENGINE_OPTIONS.pool_size` | 10 | 数据库连接池大小 |
 | `SQLALCHEMY_ENGINE_OPTIONS.pool_recycle` | 3600 | 连接回收时间（秒） |
 | `SQLALCHEMY_ENGINE_OPTIONS.pool_pre_ping` | True | 连接前检测可用性 |
+| `JWT_SECRET_KEY` | `dev-jwt-secret-key-change-in-production` | JWT 签名密钥（生产环境必须修改） |
 | `JWT_ACCESS_TOKEN_EXPIRES` | 24 小时 | Access Token 有效期 |
 | `JWT_REFRESH_TOKEN_EXPIRES` | 7 天 | Refresh Token 有效期 |
 | `MAX_CONTENT_LENGTH` | 4 GB | 文件上传大小限制 |
 | `DEFAULT_PAGE_SIZE` | 10 | 默认分页大小 |
 | `MAX_PAGE_SIZE` | 100 | 最大分页大小 |
 | `UPLOAD_FOLDER` | backend/uploads | 文件上传目录 |
-| `ALLOWED_EXTENSIONS` | png/jpg/doc/pdf/mp4/zip 等 | 允许上传的文件类型 |
+| `ALLOWED_EXTENSIONS` | png/jpg/jpeg/gif/bmp/doc/docx/ppt/pptx/pdf/mp4/avi/mov/wmv/mkv/zip/rar/7z | 允许上传的文件类型 |
+
+### CORS 配置
+
+后端 CORS 仅允许以下来源访问 API：
+- `http://localhost:5173`
+- `http://127.0.0.1:5173`
+
+允许的方法：GET / POST / PUT / DELETE / OPTIONS
+允许的请求头：Content-Type / Authorization
+
+### 环境配置类
+
+| 配置类 | 说明 | 数据库 |
+|--------|------|--------|
+| `DevelopmentConfig` | 开发环境（DEBUG=True） | MySQL |
+| `ProductionConfig` | 生产环境（DEBUG=False） | MySQL |
+| `TestingConfig` | 测试环境（TESTING=True） | SQLite 内存数据库 |
 
 ---
 
 ## 演示账号
 
-| 用户名 | 密码 | 角色 | 说明 |
-|--------|------|------|------|
-| admin | admin123 | 管理员 | 系统管理员 |
-| student1 | student123 | 学生 | 张三 |
-| student2 | student123 | 学生 | 李四 |
-| student3 | student123 | 学生 | 王五 |
-| teacher1 | teacher123 | 指导老师 | 赵老师 |
-| teacher2 | teacher123 | 指导老师 | 钱老师 |
-| judge1 | judge123 | 评委 | 孙评委 |
-| judge2 | judge123 | 评委 | 周评委 |
+| 用户名 | 密码 | 角色 | 真实姓名 | 邮箱 |
+|--------|------|------|----------|------|
+| admin | admin123 | 管理员 | 管理员 | admin@example.com |
+| student1 | student123 | 学生 | 张三 | student1@example.com |
+| student2 | student123 | 学生 | 李四 | student2@example.com |
+| student3 | student123 | 学生 | 王五 | student3@example.com |
+| teacher1 | teacher123 | 指导老师 | 赵老师 | teacher1@example.com |
+| teacher2 | teacher123 | 指导老师 | 钱老师 | teacher2@example.com |
+| judge1 | judge123 | 评委 | 孙评委 | judge1@example.com |
+| judge2 | judge123 | 评委 | 周评委 | judge2@example.com |
 
 ---
 
 ## API 接口文档
 
+### 统一响应格式
+
+所有 API 返回统一的 JSON 格式：
+
+```json
+// 成功响应
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": { ... }
+}
+
+// 错误响应
+{
+  "code": 400/401/403/404/409/500,
+  "message": "错误描述",
+  "data": null
+}
+```
+
 ### 认证接口 `/api/auth`
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/auth/login` | POST | 用户登录（返回 JWT Token） |
-| `/api/auth/register` | POST | 用户注册 |
-| `/api/auth/refresh` | POST | 刷新 Token |
+| 接口 | 方法 | 认证 | 说明 |
+|------|------|------|------|
+| `/api/auth/register` | POST | 无 | 用户注册（username/password 必填，email/role/real_name/phone/college/major 可选） |
+| `/api/auth/login` | POST | 无 | 用户登录（返回 `{token, user}`，JWT Token 存 localStorage） |
+| `/api/auth/me` | GET | JWT | 获取当前登录用户信息 |
+| `/api/auth/logout` | POST | JWT | 登出（前端清除 Token） |
+
+**注册请求示例**：
+```json
+{
+  "username": "student1",
+  "password": "123456",
+  "email": "student@example.com",
+  "role": "student",
+  "real_name": "张三",
+  "phone": "13800000000",
+  "college": "计算机学院",
+  "major": "软件工程"
+}
+```
+
+**登录响应示例**：
+```json
+{
+  "code": 200,
+  "message": "登录成功",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "user": {
+      "id": 1,
+      "username": "admin",
+      "role": "admin",
+      "real_name": "管理员",
+      ...
+    }
+  }
+}
+```
+
+**注册校验规则**：
+- 用户名至少 3 个字符，不可重复
+- 密码至少 6 个字符
+- 邮箱不可重复（可选）
+- 角色只能是：student / teacher / judge / admin（默认 student）
+- 账号被禁用时无法登录（返回 403）
 
 ### 用户接口 `/api/users`
 
+| 接口 | 方法 | 认证 | 权限 | 说明 |
+|------|------|------|------|------|
+| `/api/users/` | GET | JWT | admin | 获取所有用户列表 |
+| `/api/users/<id>` | GET | JWT | 本人或admin | 获取用户详情 |
+
+### 竞赛接口
+
+#### 公开接口（无需登录）
+
 | 接口 | 方法 | 说明 |
 |------|------|------|
-| `/api/users/profile` | GET | 获取当前用户信息 |
-| `/api/users/profile` | PUT | 更新用户信息 |
+| `/api/public/competitions` | GET | 获取可报名竞赛列表（支持 keyword/category/level/status/page/per_page 参数） |
+| `/api/public/competitions/:id` | GET | 获取竞赛详情（含赛道信息，自动增加浏览量） |
+| `/api/public/competitions/:id/tracks` | GET | 获取竞赛赛道列表 |
+| `/api/public/competition-categories` | GET | 获取竞赛分类列表（10 个分类） |
 
-### 竞赛接口 `/api/competitions`
+#### 管理员接口
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/competitions` | GET | 获取竞赛列表 |
-| `/api/competitions/:id` | GET | 获取竞赛详情 |
-| `/api/competitions` | POST | 创建竞赛（管理员） |
+| 接口 | 方法 | 权限 | 说明 |
+|------|------|------|------|
+| `/api/competitions` | GET | JWT | 获取竞赛列表（支持 status 筛选） |
+| `/api/competitions` | POST | admin | 创建竞赛 |
+| `/api/competitions/:id` | PUT | admin | 更新竞赛 |
+| `/api/competitions/:id` | DELETE | admin | 删除竞赛 |
+| `/api/competitions/:id/tracks` | POST | admin | 创建赛道 |
+
+### 报名接口
+
+#### 学生接口
+
+| 接口 | 方法 | 权限 | 说明 |
+|------|------|------|------|
+| `/api/registrations` | POST | student | 创建报名草稿（competition_id/track_id 必填） |
+| `/api/registrations/:id` | GET | student | 查看报名详情（仅自己的） |
+| `/api/registrations/:id` | PUT | student | 更新报名信息（已提交不可修改） |
+| `/api/registrations/:id/members` | POST | student | 添加队员 |
+| `/api/registration-members/:id` | PUT | student | 编辑队员 |
+| `/api/registration-members/:id` | DELETE | student | 删除队员 |
+| `/api/registrations/:id/materials` | POST | student | 上传报名材料（multipart/form-data） |
+| `/api/registration-materials/:id` | DELETE | student | 删除报名材料 |
+| `/api/registrations/:id/submit` | POST | student | 提交报名（team_name 必填） |
+| `/api/my-registrations` | GET | student | 查看我的报名列表（含竞赛名/赛道名/海报） |
+
+#### 管理员接口
+
+| 接口 | 方法 | 权限 | 说明 |
+|------|------|------|------|
+| `/api/admin/registrations` | GET | admin | 获取所有报名记录（支持 competition_id/status/keyword/page/per_page） |
+| `/api/admin/registrations/:id` | GET | admin | 查看报名详情 |
+| `/api/admin/registrations/:id/approve` | POST | admin | 审核通过报名 |
+| `/api/admin/registrations/:id/reject` | POST | admin | 驳回报名（可附 remark） |
+| `/api/admin/registrations/statistics` | GET | admin | 报名统计数据 |
 
 ### 项目接口 `/api/projects`
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/projects` | GET | 获取项目列表（按角色过滤） |
-| `/api/projects/:id` | GET | 获取项目详情 |
-| `/api/projects` | POST | 创建项目 |
-| `/api/projects/:id` | PUT | 更新项目 |
+| 接口 | 方法 | 权限 | 说明 |
+|------|------|------|------|
+| `/api/projects` | GET | JWT | 获取项目列表（按角色过滤：学生看自己参与/负责的，教师看指导的，评委看已提交的，admin 看全部） |
+| `/api/projects` | POST | student/admin | 创建项目（name 必填，stage 默认 idea，status 默认 draft） |
+| `/api/projects/:id` | GET | JWT | 获取项目详情（含成员/文件数/任务数，需权限检查） |
+| `/api/projects/:id` | PUT | JWT | 更新项目（仅负责人或 admin，评审阶段不可修改） |
+| `/api/projects/:id` | DELETE | JWT | 删除项目（仅 draft 状态，仅负责人或 admin） |
+| `/api/projects/:id/submit` | POST | JWT | 提交项目进入评审（draft/need_modify → submitted） |
+
+**项目查询参数**：keyword / status / stage / track / page / per_page
 
 ### AI 分析工具 `/api/ai`
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/ai/project-summary` | POST | 生成项目简介（AI 驱动，失败回退模板） |
-| `/api/ai/business-plan-advice` | POST | 商业计划书建议（AI 驱动，失败回退模板） |
-| `/api/ai/risk-analysis` | POST | 风险分析（AI 驱动，失败回退模板） |
-| `/api/ai/records` | GET | AI 使用记录 |
+| 接口 | 方法 | 认证 | 说明 |
+|------|------|------|------|
+| `/api/ai/project-summary` | POST | JWT | 生成项目简介（AI 驱动，失败回退模板） |
+| `/api/ai/business-plan-advice` | POST | JWT | 商业计划书建议（AI 驱动，失败回退模板） |
+| `/api/ai/risk-analysis` | POST | JWT | 风险分析（AI 驱动，失败回退模板） |
+| `/api/ai/records` | GET | JWT | AI 使用记录（按时间倒序） |
 
 ### AI 对话 `/api/ai`
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/ai/chat` | POST | 文本聊天（非流式） |
-| `/api/ai/chat/stream` | POST | 文本聊天（SSE 流式，text/event-stream） |
-| `/api/ai/voice/chat/stream` | POST | 语音聊天（SSE 流式，优先火山实时语音，回退文本模型） |
+| 接口 | 方法 | 认证 | 说明 |
+|------|------|------|------|
+| `/api/ai/chat` | POST | JWT | 文本聊天（非流式，返回 reply/sessionId/model/mode） |
+| `/api/ai/chat/stream` | POST | JWT | 文本聊天（SSE 流式，text/event-stream） |
+| `/api/ai/voice/chat/stream` | POST | JWT | 语音聊天（SSE 流式，优先火山实时语音，回退文本模型） |
+
+**请求参数**：`message`（必填）/ `question` / `scene`（默认"创新创业平台"）/ `sessionId`
 
 **SSE 流式响应协议**：
 
 ```
 sessionId:<session-id>     # 首行返回会话 ID
 delta:<text-chunk>         # 增量文本
-error:<error-message>      # 错误信息
+error:<error-message>      # 错误信息（不中断流）
 done:1                     # 流结束标记
 ```
 
 ### 语音交互 `/api/ai`
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/ai/asr` | POST | 语音识别（multipart/form-data，豆包 ASR / faster-whisper 回退） |
-| `/api/ai/tts/synthesize` | POST | TTS 语音合成（火山 TTS，返回音频 URL） |
-| `/api/ai/tts/audio/<filename>` | GET | 获取合成音频文件（MP3） |
-| `/api/ai/voice/config` | GET | 语音配置信息（发音人/bot 名称/输入模式） |
+| 接口 | 方法 | 认证 | 说明 |
+|------|------|------|------|
+| `/api/ai/asr` | POST | JWT | 语音识别（multipart/form-data，豆包 ASR / faster-whisper 回退，返回 text/provider/model） |
+| `/api/ai/tts/synthesize` | POST | JWT | TTS 语音合成（火山 TTS，返回 audio_url） |
+| `/api/ai/tts/audio/<filename>` | GET | 无 | 获取合成音频文件（MP3） |
+| `/api/ai/voice/config` | GET | JWT | 语音配置信息（realtime_configured/speaker/bot_name/input_mod） |
 
 ### Live2D / 健康 `/api/ai`
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/ai/expressions` | GET | 获取表情列表（base 10 个 + overlay 2 个） |
-| `/api/ai/model-info` | GET | 获取 Live2D 模型信息（名称/路径） |
-| `/api/ai/health` | GET | AI 服务健康检查（chat_configured / voice_realtime_configured / model） |
+| 接口 | 方法 | 认证 | 说明 |
+|------|------|------|------|
+| `/api/ai/expressions` | GET | 无 | 获取表情列表（base 10 个 + overlay 2 个含概率） |
+| `/api/ai/model-info` | GET | 无 | 获取 Live2D 模型信息（name: huahuo, path: /live2d/huahuo/火花.model3.json） |
+| `/api/ai/health` | GET | 无 | AI 服务健康检查（chat_configured / voice_realtime_configured / model） |
+
+### 看板接口 `/api/dashboard`
+
+| 接口 | 方法 | 权限 | 说明 |
+|------|------|------|------|
+| `/api/dashboard/stats` | GET | admin | 管理员统计数据（用户/项目/文件/评审/竞赛/AI 使用，含角色分布/阶段分布/赛道分布） |
+| `/api/dashboard/recent` | GET | admin | 最近数据（最近 5 个项目/文件/评审） |
+
+### 系统接口
+
+| 接口 | 方法 | 认证 | 说明 |
+|------|------|------|------|
+| `/api/health` | GET | 无 | 系统健康检查（数据库连接状态，503 表示降级） |
+| `/uploads/<path:filename>` | GET | 无 | 静态文件访问（上传文件，含海报/报名材料等） |
 
 ### 其他接口
 
 | 接口前缀 | 说明 |
 |----------|------|
-| `/api/dashboard` | 数据看板（统计信息） |
+| `/api/` | 成员（member.py）/ 文件（file.py）/ 任务（task.py）/ 评审（review.py） |
 | `/api/teams` | 团队管理 |
 | `/api/materials` | 材料管理 |
-| `/api/` | 成员 / 文件 / 任务 / 评审 / 报名等 |
-
-### 系统接口
-
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/health` | GET | 系统健康检查（数据库连接状态） |
-| `/uploads/<path:filename>` | GET | 静态文件访问（上传文件） |
 
 ---
 
@@ -588,13 +778,13 @@ done:1                     # 流结束标记
 | `/courses` | portal/Courses.vue | 在线课程 |
 | `/courses/:id` | portal/CourseDetail.vue | 课程详情 |
 | `/industry-topics` | portal/IndustryTopics.vue | 产业命题 |
+| `/accept-topic/:id` | portal/AcceptTopic.vue | 承接命题（填写承接信息） |
 
 ### 通用路由（所有角色）
 
 | 路径 | 组件 | 说明 |
 |------|------|------|
 | `/dashboard` | dashboard/index.vue | 工作台（按角色加载不同看板） |
-| `/ai-assistant` | ai-assistant/index.vue | AI 项目助手（分析工具 + 对话） |
 | `/projects/:id` | projects/detail.vue | 项目详情 |
 | `/projects/:id/edit` | projects/edit.vue | 编辑项目 |
 | `/projects/:id/members` | projects/members.vue | 团队成员 |
@@ -636,35 +826,308 @@ done:1                     # 流结束标记
 | `/registration-management` | admin/RegistrationManagement.vue | 报名管理 |
 | `/review-management` | admin/reviews.vue | 评审管理 |
 
+### 路由守卫逻辑
+
+1. **页面标题**：自动设置为 `{title} - 创新创业平台`
+2. **公共页面**：已登录用户访问 /login 或 /register 时重定向到 /portal
+3. **登录检查**：未登录用户重定向到 /login
+4. **用户信息加载**：首次访问时调用 `userStore.init()` 加载用户信息
+5. **角色权限检查**：路由 `meta.roles` 指定允许访问的角色，无权限时重定向到 /dashboard
+6. **404 匹配**：未匹配路由显示 404 页面
+
 ---
 
 ## 数据库模型
 
-| 模型 | 说明 | 主要字段 |
-|------|------|----------|
-| User | 用户信息 | username, password_hash, role, real_name, email, is_active |
-| Competition | 竞赛信息 | name, description, organizer, category, level, status, start_date, end_date, registration_start, registration_end, competition_start, competition_end, tags, target_audience, requirements, awards, schedule, poster_url, registration_count |
-| CompetitionTrack | 竞赛赛道 | competition_id, name, description, team_min, team_max, material_requirements |
-| CompetitionRegistration | 竞赛报名 | competition_id, track_id, leader_id, team_name, school, college, major, teacher_name, teacher_phone, contact_phone, contact_email, status, remark, submitted_at |
-| RegistrationMember | 报名队员 | registration_id, name, student_no, college, major, role_in_team |
-| RegistrationMaterial | 报名材料 | registration_id, material_type, file_name, file_path |
-| Project | 项目信息 | name, description, status, stage, track, category, leader_id, teacher_id, competition_id, progress |
-| ProjectMember | 项目成员 | project_id, user_id, member_name, role_in_project, responsibility |
-| ProjectFile | 项目文件 | project_id, filename, original_name, file_type, material_type, file_size, storage_path, uploader_id |
-| ProjectTask | 项目任务 | project_id, title, description, assignee_id, status, priority, deadline, completed_at |
-| Review | 评审记录 | project_id, judge_id, innovation_score, feasibility_score, market_score, team_score, business_score, technology_score, presentation_score, total_score, comment |
-| AiRecord | AI 使用记录 | user_id, project_id, type, prompt, result |
+### 表结构总览
+
+| 模型 | 表名 | 说明 |
+|------|------|------|
+| User | users | 用户信息 |
+| Competition | competitions | 竞赛信息 |
+| CompetitionTrack | competition_tracks | 竞赛赛道 |
+| CompetitionRegistration | competition_registrations | 竞赛报名 |
+| RegistrationMember | registration_members | 报名队员 |
+| RegistrationMaterial | registration_materials | 报名材料 |
+| Project | projects | 项目信息 |
+| ProjectMember | project_members | 项目成员 |
+| ProjectFile | project_files | 项目文件 |
+| ProjectTask | project_tasks | 项目任务 |
+| Review | reviews | 评审记录 |
+| AiRecord | ai_records | AI 使用记录 |
+
+### 模型详细字段
+
+#### User（用户信息）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 用户 ID |
+| username | String(80) | 用户名（唯一，索引） |
+| password_hash | String(255) | 密码哈希（Werkzeug generate_password_hash） |
+| real_name | String(50) | 真实姓名 |
+| email | String(120) | 邮箱（唯一） |
+| phone | String(20) | 手机号 |
+| role | String(20) | 角色（student/teacher/judge/admin，默认 student） |
+| college | String(100) | 学院 |
+| major | String(100) | 专业 |
+| avatar | String(255) | 头像 URL |
+| is_active | Boolean | 是否启用（默认 True） |
+| created_at | DateTime | 创建时间 |
+| updated_at | DateTime | 更新时间 |
+
+**关系**：projects（负责的项目）/ teacher_projects（指导的项目）/ reviews（评审记录）/ tasks（分配的任务）/ ai_records（AI 使用记录）
+
+**方法**：`set_password(password)` / `check_password(password)` / `is_admin()` / `is_teacher()` / `is_judge()` / `is_student()`
+
+#### Competition（竞赛信息）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 竞赛 ID |
+| name | String(200) | 竞赛名称 |
+| description | Text | 竞赛描述 |
+| organizer | String(200) | 主办方 |
+| category | String(50) | 分类（创新创业/人工智能/数字经济/乡村振兴/电子商务/软件开发/智能制造/职业规划/公益实践/产业命题） |
+| level | String(20) | 级别（校级/省级/国家级/企业命题） |
+| registration_start | DateTime | 报名开始时间 |
+| registration_end | DateTime | 报名截止时间 |
+| competition_start | DateTime | 比赛开始时间 |
+| competition_end | DateTime | 比赛结束时间 |
+| status | String(20) | 状态（draft/active/ended/archived/upcoming） |
+| poster_url | String(500) | 海报 URL |
+| tags | String(500) | 标签（逗号分隔，to_dict 时转为数组） |
+| target_audience | String(500) | 目标受众 |
+| requirements | Text | 参赛要求 |
+| awards | Text | 奖项设置 |
+| schedule | Text | 赛程安排 |
+| view_count | Integer | 浏览量（默认 0） |
+| registration_count | Integer | 报名数（默认 0） |
+| created_at | DateTime | 创建时间 |
+| updated_at | DateTime | 更新时间 |
+
+**关系**：projects / tracks（级联删除）/ registrations（级联删除）
+
+#### CompetitionTrack（竞赛赛道）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 赛道 ID |
+| competition_id | Integer (FK) | 所属竞赛 |
+| name | String | 赛道名称 |
+| description | Text | 赛道描述 |
+| category | String | 赛道分类 |
+| team_min | Integer | 最小团队人数（默认 1） |
+| team_max | Integer | 最大团队人数（默认 5） |
+| material_requirements | Text | 材料要求 |
+| status | String | 赛道状态（默认 open） |
+
+#### CompetitionRegistration（竞赛报名）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 报名 ID |
+| competition_id | Integer (FK) | 竞赛 ID |
+| track_id | Integer (FK) | 赛道 ID |
+| project_id | Integer | 关联项目 ID |
+| leader_id | Integer (FK) | 队长用户 ID |
+| team_name | String | 队伍名称 |
+| school | String | 学校 |
+| college | String | 学院 |
+| major | String | 专业 |
+| teacher_name | String | 指导老师姓名 |
+| teacher_phone | String | 指导老师电话 |
+| contact_phone | String | 联系电话 |
+| contact_email | String | 联系邮箱 |
+| status | String | 状态（draft/submitted/approved/rejected/withdrawn） |
+| remark | Text | 备注（驳回原因等） |
+| submitted_at | DateTime | 提交时间 |
+| created_at | DateTime | 创建时间 |
+| updated_at | DateTime | 更新时间 |
+
+**关系**：members / materials
+
+#### RegistrationMember（报名队员）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 队员 ID |
+| registration_id | Integer (FK) | 报名记录 ID |
+| name | String | 姓名 |
+| student_no | String | 学号 |
+| college | String | 学院 |
+| major | String | 专业 |
+| phone | String | 手机号 |
+| email | String | 邮箱 |
+| role_in_team | String | 队内角色（leader/member，默认 member） |
+
+#### RegistrationMaterial（报名材料）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 材料 ID |
+| registration_id | Integer (FK) | 报名记录 ID |
+| uploader_id | Integer (FK) | 上传者 ID |
+| material_type | String | 材料类型 |
+| file_name | String | 文件名（UUID 重命名） |
+| original_name | String | 原始文件名 |
+| file_path | String | 文件存储路径 |
+| file_type | String | 文件扩展名 |
+| file_size | Integer | 文件大小（字节） |
+
+#### Project（项目信息）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 项目 ID |
+| name | String(100) | 项目名称 |
+| description | Text | 项目描述 |
+| category | String(50) | 项目类别 |
+| track | String(50) | 所属赛道 |
+| stage | String(30) | 当前阶段（idea/prototype/proof/development/production，默认 idea） |
+| status | String(30) | 项目状态（draft/submitted/teacher_review/need_modify/judging/passed/rejected，默认 draft） |
+| leader_id | Integer (FK → users) | 负责人 ID |
+| teacher_id | Integer (FK → users) | 指导老师 ID |
+| competition_id | Integer (FK → competitions) | 关联竞赛 ID |
+| start_date | Date | 开始日期 |
+| end_date | Date | 结束日期 |
+| progress | Integer | 进度百分比（默认 0） |
+| created_at | DateTime | 创建时间 |
+| updated_at | DateTime | 更新时间 |
+
+**关系**：members（级联删除）/ files（级联删除）/ tasks（级联删除）/ reviews（级联删除）/ ai_records
+
+#### ProjectMember（项目成员）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 成员 ID |
+| project_id | Integer (FK) | 项目 ID |
+| user_id | Integer (FK) | 用户 ID |
+| member_name | String | 成员姓名 |
+| role_in_project | String | 项目角色 |
+| responsibility | String | 职责 |
+
+#### ProjectFile（项目文件）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 文件 ID |
+| project_id | Integer (FK) | 项目 ID |
+| filename | String | 文件名 |
+| original_name | String | 原始文件名 |
+| file_type | String | 文件类型 |
+| material_type | String | 材料类型 |
+| file_size | Integer | 文件大小 |
+| storage_path | String | 存储路径 |
+| uploader_id | Integer (FK) | 上传者 ID |
+
+#### ProjectTask（项目任务）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 任务 ID |
+| project_id | Integer (FK) | 项目 ID |
+| title | String | 任务标题 |
+| description | Text | 任务描述 |
+| assignee_id | Integer (FK → users) | 负责人 ID |
+| status | String | 任务状态 |
+| priority | String | 优先级 |
+| deadline | DateTime | 截止日期 |
+| completed_at | DateTime | 完成时间 |
+
+#### Review（评审记录）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 评审 ID |
+| project_id | Integer (FK) | 项目 ID |
+| judge_id | Integer (FK → users) | 评委 ID |
+| innovation_score | Integer | 创新性评分 |
+| feasibility_score | Integer | 可行性评分 |
+| market_score | Integer | 市场评分 |
+| team_score | Integer | 团队评分 |
+| business_score | Integer | 商业评分 |
+| technology_score | Integer | 技术评分 |
+| presentation_score | Integer | 展示评分 |
+| total_score | Float | 总分 |
+| comment | Text | 评审意见 |
+
+#### AiRecord（AI 使用记录）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 记录 ID |
+| user_id | Integer (FK → users) | 用户 ID |
+| project_id | Integer (FK → projects) | 项目 ID |
+| type | String | 类型（summary/business_advice/risk_analysis） |
+| prompt | Text | 输入提示 |
+| result | Text | AI 输出结果 |
+| created_at | DateTime | 创建时间 |
 
 ---
 
-## 用户角色
+## 用户角色与权限
 
-| 角色 | 标识 | 说明 | 侧边栏菜单 |
-|------|------|------|------------|
-| 学生 | `student` | 项目负责人 / 团队成员 | 工作台、我的赛事、我的项目、创建项目、训练营、在线课程、产业命题、证书成果、AI 助手 |
-| 指导老师 | `teacher` | 项目指导 | 工作台、指导项目、项目审核、训练营、在线课程、产业命题、AI 助手 |
-| 评委 | `judge` | 项目评审 | 工作台、待评审项目、评审记录、AI 助手 |
-| 管理员 | `admin` | 系统管理 | 工作台、比赛批次管理、报名管理、项目管理、评审管理、用户管理、数据看板、AI 助手 |
+### 角色定义
+
+| 角色 | 标识 | 层级 | 说明 |
+|------|------|------|------|
+| 学生 | `student` | 1 | 项目负责人 / 团队成员 |
+| 指导老师 | `teacher` | 2 | 项目指导 |
+| 评委 | `judge` | 3 | 项目评审 |
+| 管理员 | `admin` | 4 | 系统管理 |
+
+### 权限控制
+
+后端使用 `require_roles` 装饰器进行角色权限控制：
+
+```python
+from utils.decorators import require_roles
+
+@competition_bp.route('/competitions', methods=['POST'])
+@jwt_required()
+@require_roles('admin')
+def create_competition():
+    ...
+```
+
+还提供 `require_min_role` 装饰器用于层级权限控制（如：`require_min_role('teacher')` 允许 teacher/judge/admin 访问）。
+
+### 侧边栏菜单
+
+| 角色 | 侧边栏菜单 |
+|------|------------|
+| 学生 | 工作台、我的赛事、我的项目、创建项目、训练营、在线课程、产业命题、证书成果、AI 助手 |
+| 指导老师 | 工作台、指导项目、项目审核、训练营、在线课程、产业命题、AI 助手 |
+| 评委 | 工作台、待评审项目、评审记录、AI 助手 |
+| 管理员 | 工作台、比赛批次管理、报名管理、项目管理、评审管理、用户管理、数据看板、AI 助手 |
+
+---
+
+## 设计系统
+
+### CSS 变量体系
+
+项目使用 `design-system.css` 定义统一的设计变量：
+
+| 类别 | 变量前缀 | 说明 |
+|------|----------|------|
+| 主色调 | `--primary-50` ~ `--primary-900` | Cyan 专业色系（#06b6d4） |
+| 中性色 | `--gray-50` ~ `--gray-900` | 灰色系（Tailwind 风格） |
+| 语义色 | `--success/warning/danger/info` | 成功/警告/危险/信息色 |
+| 背景 | `--bg-primary/secondary/tertiary/sidebar` | 页面/侧边栏背景色 |
+| 文字 | `--text-primary/secondary/tertiary/inverse/sidebar` | 多层级文字色 |
+| 阴影 | `--shadow-sm/md/lg/xl` | 4 级阴影 |
+| 字体 | `--font-heading/body` | Poppins + Open Sans + 中文回退 |
+| 间距 | `--space-1` ~ `--space-12` | 0.25rem ~ 3rem |
+| 圆角 | `--radius-sm/md/lg/xl` | 0.375rem ~ 1rem |
+| 过渡 | `--transition-fast/normal/slow` | 150ms/200ms/300ms |
+| 布局 | `--sidebar-width/collapsed-width/header-height` | 240px/64px/64px |
+
+### 暗黑模式预留
+
+通过 `data-theme="dark"` 属性切换暗黑模式变量（尚未启用）。
 
 ---
 
@@ -675,9 +1138,12 @@ done:1                     # 流结束标记
 - 代码注释使用中文
 - 提交信息清晰描述改动内容
 - 共享逻辑抽取为 composable（`src/composables/`）
-- 统一响应格式：`{ code, data, message }`
+- 统一响应格式：`{ code, data, message }`（`utils/response.py`）
 - AI 回答清洗逻辑前后端一致（`sanitize_answer_text`）
 - Live2D 表情 / 情绪联动通过 `window.__voiceLive2dHooks` 和 `window.__syncExpressionState` 全局桥接
+- 密码使用 Werkzeug `generate_password_hash` / `check_password_hash` 加密
+- 文件名使用 `werkzeug.utils.secure_filename` 安全处理 + UUID 重命名
+- 权限控制使用 `require_roles` 装饰器，支持角色层级（`ROLE_HIERARCHY`）
 
 ---
 
@@ -686,24 +1152,28 @@ done:1                     # 流结束标记
 ### 1. 数据库连接失败
 
 1. 检查 MySQL 服务是否已启动
-2. 确认数据库 `innovation_competition` 已创建
+2. 确认数据库 `innovation_competition` 已创建（`utf8mb4` 字符集）
 3. 检查 `.env` 文件中的 `DATABASE_URL` 配置
 4. 确认用户名和密码正确
+5. 检查 MySQL 连接池配置（pool_size: 10, pool_recycle: 3600）
 
 ### 2. AI 对话失败
 
 1. 检查 `.env` 中的 `ARK_API_KEY` 是否正确
 2. 确认火山方舟 API 可访问
 3. 检查网络连接
-4. 访问 `/api/ai/health` 查看配置状态
+4. 访问 `/api/ai/health` 查看配置状态（chat_configured / voice_realtime_configured / model）
+5. AI 对话超时已设为 3 分钟（CHUNK_TIMEOUT = 180000ms），含重试机制（最多 2 次）
 
 ### 3. Live2D 模型加载失败
 
 1. 确认 `frontend/public/live2d/huahuo/` 目录存在
-2. 检查模型文件完整性（火花.model3.json / 火花.moc3 / 火花.physics3.json）
+2. 检查模型文件完整性（火花.model3.json / 火花.moc3 / 火花.physics3.json / 火花.cdi3.json）
 3. 清除浏览器缓存重试
 4. 检查浏览器控制台是否有 CORS 或 MIME 类型错误
 5. 确认 Vite 代理配置正确（`/api` 和 `/uploads` 代理到后端）
+6. 确认 CSP header 允许 `unsafe-eval`（Vite 配置中已设置）
+7. 检查 `frontend/public/live2d-widget-dist/` 目录完整性
 
 ### 4. 语音识别不可用
 
@@ -711,27 +1181,237 @@ done:1                     # 流结束标记
 2. Firefox 需要后端 ASR 服务，检查 `.env` 中的 ASR 配置
 3. 确保使用 HTTPS 或 localhost（麦克风权限要求）
 4. 检查 ffmpeg 是否已安装并加入系统 PATH（音频格式转换需要）
+5. ASR 回退机制：豆包 ASR → faster-whisper（需安装 faster-whisper 库）
 
 ### 5. 前端构建失败
 
 1. 确认 Node.js 版本 >= 18
 2. 删除 `node_modules` 后重新 `npm install`
 3. 检查是否有语法错误（如括号表达式中的尾随逗号）
-4. 确认 `useLive2d.js` 中使用数组而非括号表达式
+4. 确认 `useLive2d.js` 中使用数组而非括号表达式（`META_LINE_PREFIXES` / `META_LINE_KEYWORDS` / `ANSWER_MARKERS`）
 
 ### 6. TTS 语音合成失败
 
 1. 检查 `.env` 中的 `VOICE_REALTIME_TOKEN` 和 `VOICE_REALTIME_APP_ID` 是否正确
 2. 确认火山 TTS API 可访问
 3. 检查 `backend/services/tts_cache/` 目录是否有写入权限
+4. TTS 缓存：MD5 键 + 7 天 TTL，可通过 `get_tts_cache_stats` / `clear_tts_cache` 管理
+
+### 7. 项目创建 500 错误
+
+1. 检查 `teacher_id` 和 `competition_id` 是否为有效整数（空字符串需传 `null`）
+2. 日期格式需为 `YYYY-MM-DD` 字符串
+3. 使用「快速填充」按钮生成合规数据测试
+4. 查看浏览器控制台 `[CreateProject]` 日志确认请求数据格式
+
+### 8. 数字雨动画不显示
+
+1. 确认 `globalRainCanvas` ref 已定义
+2. 检查 `.global-rain-canvas` 的 `z-index: 0` 低于内容区域的 `z-index: 1`
+3. 确认 Canvas 的 `pointer-events: none` 不影响交互
+4. 检查浏览器是否支持 Canvas API
+5. 确认 IntersectionObserver 懒加载触发正常
+
+### 9. Live2D 拖拽按钮不跟随形象
+
+1. 确认 `applyModelPosition` 函数中同步更新了 `live2d-drag-handle` 位置
+2. 检查 `localStorage` 中 `huahuoModelPos` 是否有残留的 `bottom` 定位数据（需清除）
+3. 确认 `#waifu` 使用 `top` 定位而非 `bottom`
+
+### 10. CORS 跨域问题
+
+1. 确认前端运行在 `http://localhost:5173` 或 `http://127.0.0.1:5173`
+2. 后端 CORS 仅允许这两个来源
+3. 生产环境需修改 `app.py` 中的 CORS 配置
+
+### 11. JWT Token 过期
+
+1. Access Token 有效期 24 小时，过期后需重新登录
+2. 前端 Axios 拦截器自动检测 401 响应，清除 Token 并跳转登录页
+3. 登录接口返回的 Token 存储在 `localStorage`
+
+---
+
+## 当前开发状态
+
+### 已完成功能模块
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| 用户认证 | ✅ 完成 | 注册/登录/JWT Token/角色权限/账号禁用 |
+| 竞赛广场 | ✅ 完成 | 公开竞赛列表/详情/海报/时间安排/奖项设置/分类筛选/浏览量统计 |
+| 竞赛管理 | ✅ 完成 | 管理员 CRUD/赛道管理/状态控制 |
+| 竞赛报名 | ✅ 完成 | 学生报名/队员管理/材料上传/提交/管理员审核/驳回/统计 |
+| 训练营 | ✅ 完成 | 列表/详情/海报/章节大纲/讲师信息 |
+| 在线课程 | ✅ 完成 | 列表/详情/海报/章节视频/进度跟踪 |
+| 产业命题 | ✅ 完成 | 命题列表/承接填写页/跳转创建项目 |
+| 项目管理 | ✅ 完成 | 创建/编辑/详情/成员/文件/任务/提交评审/删除 |
+| AI 智能对话 | ✅ 完成 | 流式输出/重试机制/3分钟超时/会话管理/回答清洗 |
+| AI 分析工具 | ✅ 完成 | 项目简介/商业计划书/风险分析 |
+| 语音交互 | ✅ 完成 | ASR/TTS/实时语音对话/可拖拽面板 |
+| Live2D 虚拟形象 | ✅ 完成 | 全屏拖拽/表情联动/口型驱动/位置持久化/拖拽按钮跟随 |
+| 证书成果 | ✅ 完成 | 证书列表/获奖记录/查看详情弹窗/证书图片 |
+| 我的赛事 | ✅ 完成 | 报名列表/海报封面/状态跟踪 |
+| 全局引导系统 | ✅ 完成 | 首次登录引导/步骤导航/路由跳转/状态持久化 |
+| 数据看板 | ✅ 完成 | 4 角色看板/统计图表/动态数据/最近数据 |
+| 管理后台 | ✅ 完成 | 用户/项目/竞赛/报名/评审管理 |
+| 首页数字雨 | ✅ 完成 | 全局 Canvas 数字雨背景/科幻风格/扫描线/全屏铺满 |
+| Banner 动画 | ✅ 完成 | 竞赛/训练营/课程各具独特渐变色+光球动画 |
+| 一键启动 | ✅ 完成 | start.bat 自动检测依赖+启动前后端 |
+
+### 正在进行的开发任务
+
+| 任务 | 优先级 | 说明 |
+|------|--------|------|
+| 进度条横向滚动 | 高 | 多步骤流程场景的横向拖拽/滑动查看 |
+| 产业命题后端 API | 中 | 承接命题数据持久化、命题 CRUD 接口 |
+| 训练营/课程学习进度 | 中 | 视频观看进度、章节完成状态 |
+| 评审打分优化 | 中 | 多维度评分、评分模板、评审意见模板 |
+| 移动端适配 | 低 | 响应式布局优化、触屏交互 |
+
+### 未来规划
+
+- **消息通知系统**：站内信、竞赛状态变更通知、报名审核通知
+- **数据导出**：报名表 Excel 导出、评审结果导出、证书 PDF 下载
+- **团队协作**：项目讨论区、文件版本管理、任务看板
+- **AI 能力扩展**：项目匹配推荐、竞赛策略分析、路演稿生成
+- **性能优化**：前端懒加载、后端缓存、CDN 静态资源
+- **暗黑模式**：设计系统已预留暗黑模式变量，待实现切换逻辑
+
+---
+
+## 调试指南
+
+### 前端调试
+
+#### 开发工具
+
+| 工具 | 用途 | 访问方式 |
+|------|------|----------|
+| Vue DevTools | 组件树/状态/路由/事件/Pinia Store | 浏览器扩展 |
+| Chrome DevTools | 网络/性能/内存/Console | F12 |
+| Vite DevServer | HMR/代理/构建 | `npm run dev` |
+
+#### 常用调试命令
+
+```bash
+# 前端开发服务器（HMR 热更新）
+cd frontend && npm run dev
+
+# 前端生产构建
+cd frontend && npm run build
+
+# 检查前端依赖安全
+cd frontend && npm audit
+```
+
+#### 关键调试日志
+
+| 日志前缀 | 位置 | 说明 |
+|----------|------|------|
+| `[AI Stream]` | HuahuoAssistant.vue | AI 流式对话重试/超时/错误 |
+| `[CreateProject]` | create.vue | 项目创建请求数据/错误详情 |
+| `[Live2D]` | HuahuoAssistant.vue | 模型加载/表情切换/拖拽位置 |
+
+#### 前端断点调试技巧
+
+1. **Vue 组件状态**：在 Vue DevTools 中查看组件 props/data/computed
+2. **API 请求**：Chrome DevTools → Network → 筛选 `XHR/Fetch`
+3. **路由跳转**：在 `router/index.js` 的 `beforeEach` 守卫中添加 `console.log`
+4. **Pinia Store**：Vue DevTools → Pinia 面板查看状态快照
+5. **Live2D 问题**：检查 `window.__voiceLive2dHooks` 和 `window.__syncExpressionState` 全局对象
+6. **Token 问题**：检查 `localStorage.getItem('token')` 是否存在
+7. **CSP 问题**：检查浏览器控制台 Content-Security-Policy 违规报告
+
+### 后端调试
+
+#### 常用调试命令
+
+```bash
+# 后端开发服务器（debug 模式自动重载）
+cd backend && python app.py
+
+# 使用 conda 环境
+conda activate newyolo
+cd backend && python app.py
+
+# 初始化/重置数据库
+cd backend && flask db upgrade
+
+# 运行 API 测试
+cd backend && python test_all_api.py
+
+# 检查 AI 服务健康状态
+curl http://localhost:5000/api/ai/health
+
+# 检查系统健康状态
+curl http://localhost:5000/api/health
+```
+
+#### 后端日志说明
+
+| 日志内容 | 说明 |
+|----------|------|
+| `SQLAlchemy` 查询日志 | 设置 `SQLALCHEMY_ECHO=True` 开启 |
+| AI 会话管理日志 | 会话创建/清理/过期检查 |
+| TTS 缓存统计 | 缓存命中率/文件数量/总大小 |
+| 流式对话日志 | SSE 连接/断开/错误 |
+| 数据库连接日志 | `init_database()` 输出连接状态 |
+
+#### 数据库调试
+
+```bash
+# 进入 MySQL 命令行
+mysql -u root -p innovation_competition
+
+# 查看所有表
+SHOW TABLES;
+
+# 查看用户列表
+SELECT id, username, role, real_name, is_active FROM users;
+
+# 查看竞赛列表
+SELECT id, name, level, status, view_count, registration_count FROM competitions;
+
+# 查看报名统计
+SELECT status, COUNT(*) as count FROM competition_registrations GROUP BY status;
+
+# 重置数据库（危险操作）
+DROP DATABASE innovation_competition;
+CREATE DATABASE innovation_competition DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;
+cd backend && flask db upgrade && python seed.py
+```
+
+### 快速填充功能
+
+多个页面提供「快速填充」按钮用于调试，点击后自动填入合规的测试数据：
+
+| 页面 | 填充内容 |
+|------|----------|
+| 创建项目 | 项目名称/类别/赛道/简介/指导老师/日期（5 个预设名称随机选择） |
+| 竞赛报名 | 团队名称/学校/学院/专业/队员信息（3 名测试队员） |
+| 承接命题 | 负责人/电话/团队人数/方案/优势 |
+
+### 环境变量检查清单
+
+| 变量 | 必需 | 说明 |
+|------|------|------|
+| `DATABASE_URL` | ✅ | MySQL 连接字符串 |
+| `SECRET_KEY` | ✅ | Flask 密钥 |
+| `JWT_SECRET_KEY` | ✅ | JWT 签名密钥 |
+| `ARK_API_KEY` | ❌ | AI 对话（不配置则 AI 功能不可用） |
+| `ARK_BASE_URL` | ❌ | 火山方舟 API 地址 |
+| `ARK_MODEL` | ❌ | AI 模型名称 |
+| `VOICE_REALTIME_*` | ❌ | 实时语音对话（不配置则回退文本模式） |
+| `DOUBAO_ASR_*` | ❌ | 语音识别（不配置则仅 Chrome 原生 ASR） |
 
 ---
 
 ## 版本变更记录
 
-### v2.10.0 - 2026-05-01（当前版本）
+### v3.0.0 - 2026-05-01（当前版本）
 
-> Live2D拖拽按钮常驻、侧边栏选中状态修复、创建项目快速填充、产业命题承接功能
+> AI流式输出优化、项目创建修复、引导内容更新、产业命题承接、动态数据、头部卡片动画
 
 #### 详情页海报被导航栏遮盖修复
 
@@ -953,6 +1633,66 @@ done:1                     # 流结束标记
   - 通过 URL query 参数传递产业命题信息（`topic_id`、`topic_title`、`topic_company`），为后续预填充项目信息做准备
   - 取消承接时不执行任何操作
 
+#### AI 对话流式输出稳定性优化
+
+- **问题根因**：原流式输出代码在遇到网络抖动、API 返回空数组或响应中断时直接报错，无重试机制
+- **修复方案**：
+  - **重试机制**：最大重试 2 次，每次重试间隔递增（1s、2s）
+  - **超时控制**：单 chunk 接收超时 3 分钟（180000ms），超时自动触发重试
+  - **缓冲区处理**：完善 decoder 缓冲区管理，确保最后一行数据不丢失
+  - **错误隔离**：服务端返回的 `error:` 行不再中断流，继续读取后续内容
+  - **完整保存**：使用 `fullResponse` 变量累计完整回复，避免 `streamingText` 重置导致内容丢失
+  - **空响应保护**：检查 `response.body` 是否存在，不存在时抛出明确错误
+
+#### 项目创建失败问题修复（500 错误）
+
+- **问题根因**：快速填充生成的 `teacher_id` 和 `competition_id` 为字符串，后端期望整数或 null；空字符串传给后端导致 500 错误
+- **修复方案**：
+  - **数据预处理**：提交前将 `teacher_id` / `competition_id` 从字符串转为整数，空字符串转为 `null`
+  - **格式校验**：日期对象转为 `YYYY-MM-DD` 字符串格式
+  - **详细错误提示**：区分 500/400/401/403/网络错误，给出针对性提示
+  - **调试日志**：提交前 `console.log` 完整请求数据，便于排查
+
+#### 引导窗口内容适配更新
+
+- **问题根因**：引导步骤仍引用 v2.0 旧功能（工作台数据看板、成员管理、材料上传等），与当前平台功能不匹配
+- **修复方案**：
+  - 更新为 v3.0 功能路径：首页 → 竞赛广场 → 我的赛事 → 训练营 → 课程 → 产业命题 → 项目管理 → 证书成果 → AI 助手
+  - 删除已移除的功能（工作台数据看板、成员管理、材料上传等）
+  - 补充新增功能：我的赛事、产业命题、证书成果
+  - 每步引导文案与当前页面功能一致
+
+#### 产业命题承接流程完善
+
+- **新增页面**：`AcceptTopic.vue` 承接命题填写页面
+  - 表单字段：负责人姓名、联系电话（手机号校验）、团队人数、预计完成时间、项目方案概述、团队优势、备注
+  - 顶部展示命题信息（企业、标题、周期、奖金）
+  - 一键快速填充按钮（调试辅助）
+  - 确认承接后跳转创建项目页面，URL 传递命题信息
+- **路由配置**：新增 `/accept-topic/:id` 路由
+- **IndustryTopics.vue**：点击「承接命题」跳转至填写页面（而非直接确认弹窗）
+
+#### 项目列表动态更新
+
+- **问题根因**：从创建项目页面返回「我的项目」时，列表不自动刷新
+- **修复方案**：`my-projects.vue` 添加 `onActivated` 钩子，页面从 keep-alive 恢复时自动调用 `fetchProjects()`
+
+#### 系统数值动态化
+
+- **问题根因**：首页 Banner 统计（50+ 竞赛、1000+ 团队、10+ 赛道）为硬编码
+- **修复方案**：
+  - 调用 `getDashboardStats()` API 获取实时数据
+  - 添加 `homeStats` 响应式数据对象
+  - API 失败时回退到默认值
+  - 模板使用 `{{ homeStats.competitions }}+` 动态绑定
+
+#### 页面头部卡片渐变色 + 动画优化
+
+- **竞赛广场**：深蓝渐变 `#1e3a5f → #0c4a6e → #0ea5e9` + 双光球呼吸动画 `bannerPulse`
+- **训练营**：紫罗兰渐变 `#312e81 → #4338ca → #7c3aed` + 光球漂浮动画 `campGlow`（带位移）
+- **在线课程**：翠绿渐变 `#064e3b → #059669 → #10b981` + 光球上下浮动动画 `courseFloat`
+- **动画实现**：纯 CSS `@keyframes` + `::before/::after` 伪元素，无需额外库
+
 #### 修改文件清单
 
 | 文件 | 修改内容 |
@@ -960,13 +1700,24 @@ done:1                     # 流结束标记
 | `CompetitionDetail.vue` | 移除 padding-top:64px；海报 aspect-ratio:16/9 占满宽度；去掉 poster-fallback 中央文字 |
 | `TrainingCampDetail.vue` | 移除 padding-top:64px；海报 object-fit:contain + aspect-ratio:16/9 |
 | `CourseDetail.vue` | 移除 padding-top:64px；海报 object-fit:contain + aspect-ratio:16/9 |
-| `HuahuoAssistant.vue` | 拖拽按钮 v-if 改为常驻；panel-open 类控制透明度隐藏；transition 添加 opacity |
+| `HuahuoAssistant.vue` | 拖拽按钮 v-if 改为常驻；panel-open 类控制透明度隐藏；流式输出重试+超时机制（3分钟） |
 | `MainLayout.vue` | isMenuActive 修复：/create-project 独立匹配，/my-projects 不再匹配 /create-project |
-| `create.vue` | 添加 quickFillProject 函数；快速填充栏 UI；导入 MagicStick 图标 |
-| `IndustryTopics.vue` | 添加 handleAccept 函数；底部对齐样式修复；承接确认弹窗 + 跳转创建项目 |
-| `PortalHome.vue` | 导入竞赛图片映射；推荐竞赛卡片改用海报封面；竞赛名移到下方信息区；全局数字雨替换分段画布；速度加快 |
+| `create.vue` | 添加 quickFillProject 函数；快速填充栏 UI；handleSubmit 数据预处理+详细错误处理 |
+| `IndustryTopics.vue` | 底部对齐样式修复；handleAccept 跳转至填写页面 |
+| `AcceptTopic.vue` | 新增：产业命题承接填写页面，含表单、校验、快速填充 |
+| `PortalHome.vue` | 推荐竞赛卡片改用海报封面；全局数字雨；动态加载首页统计数据 |
+| `my-projects.vue` | 添加 onActivated 钩子实现返回时自动刷新 |
+| `guide.js` | 引导步骤更新为 v3.0 功能路径 |
+| `CompetitionSquare.vue` | Banner 渐变色+双光球呼吸动画 |
+| `TrainingCamps.vue` | Banner 紫罗兰渐变色+光球漂浮动画 |
+| `Courses.vue` | Banner 翠绿渐变色+光球浮动动画 |
+| `router/index.js` | 新增 /accept-topic/:id 路由 |
 
 ---
+
+### v2.10.0 - 2026-05-01
+
+> Live2D拖拽按钮常驻、侧边栏选中状态修复、创建项目快速填充、产业命题承接功能
 
 ### v2.9.0 - 2026-05-01
 

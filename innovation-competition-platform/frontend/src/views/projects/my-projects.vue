@@ -200,7 +200,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Plus, Search, CollectionTag, Timer, User,
@@ -341,6 +341,11 @@ const handleSubmit = async (project) => {
 }
 
 onMounted(() => {
+  fetchProjects()
+})
+
+// 页面从其他页面返回时重新加载数据（keep-alive 场景）
+onActivated(() => {
   fetchProjects()
 })
 </script>

@@ -421,9 +421,41 @@ function startLearning() {
 }
 
 .camps-banner {
-  background: linear-gradient(135deg, #0c4a6e 0%, #075985 50%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #312e81 0%, #4338ca 40%, #7c3aed 100%);
   padding: 50px 40px;
   border-radius: 0 0 40px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.camps-banner::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -15%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(167,139,250,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: campGlow 7s ease-in-out infinite;
+}
+
+.camps-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -40%;
+  left: -15%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(196,181,253,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: campGlow 9s ease-in-out infinite reverse;
+}
+
+@keyframes campGlow {
+  0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.5; }
+  33% { transform: scale(1.1) translate(20px, -10px); opacity: 0.8; }
+  66% { transform: scale(1.05) translate(-10px, 15px); opacity: 1; }
 }
 
 .banner-content {

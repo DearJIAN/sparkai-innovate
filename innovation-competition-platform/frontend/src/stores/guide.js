@@ -57,74 +57,76 @@ export const useGuideStore = defineStore('guide', () => {
     const steps = {
       student: [
         {
-          title: '欢迎使用创新创业平台 v2.0',
-          content: '欢迎来到双创竞赛服务平台！本次更新集成了 Live2D 虚拟形象「火花」、AI 智能对话、语音交互、训练营和在线课程等全新功能。让我带你快速了解所有功能。',
+          title: '欢迎使用创新创业平台 v3.0',
+          content: '欢迎来到双创竞赛服务平台！本平台集竞赛报名、项目管理、AI助手、训练营、在线课程、产业命题、证书成果于一体。让我带你快速了解所有功能。',
           target: null,
           position: 'center'
         },
         {
-          title: '平台导航栏',
-          content: '顶部导航栏可以快速切换不同模块：首页、竞赛广场、项目、训练营、课程、AI助手等。点击即可跳转。',
-          target: '.top-header',
-          position: 'bottom'
-        },
-        {
-          title: '工作台数据看板',
-          content: '这里展示了你的项目概览、待办任务数和最新动态，帮助你快速了解当前状态。',
-          target: '.page-title',
+          title: '平台首页',
+          content: '首页展示平台数据统计、功能入口快捷导航、推荐竞赛和快捷操作。点击功能卡片可快速跳转到对应模块。',
+          target: '.portal-banner',
           position: 'bottom',
-          routePath: '/dashboard'
+          routePath: '/'
         },
         {
-          title: '创建新项目',
-          content: '在"我的项目"页面，点击"创建项目"按钮即可开始你的创新创业之旅。填写项目信息后可邀请团队成员加入。',
-          target: '.nav-item[href="/create-project"], a[href*="create-project"]',
-          position: 'right',
-          routePath: '/my-projects'
-        },
-        {
-          title: '竞赛广场与报名',
-          content: '在竞赛广场浏览所有可用赛事，查看详情页的时间安排、奖项设置等信息。点击"立即报名"参与比赛。',
-          target: '.top-nav-item[href="/competitions"], .nav-item[href*="competitions"]',
+          title: '竞赛广场',
+          content: '浏览所有可用赛事，查看竞赛详情页的时间安排、奖项设置、赛道信息。点击"立即报名"参与比赛，支持团队报名。',
+          target: '.top-nav-item[href="/competitions"]',
           position: 'bottom',
           routePath: '/competitions'
         },
         {
+          title: '我的赛事',
+          content: '查看你已报名的所有竞赛，跟踪报名状态、团队信息和材料提交进度。',
+          target: '.top-nav-item[href="/my-registrations"]',
+          position: 'bottom',
+          routePath: '/my-registrations'
+        },
+        {
           title: '创新创业训练营',
-          content: '全新的训练营模块！提供4大主题训练营：创新基础、商业计划书写作、路演表达、AI项目孵化。每个训练营包含完整的大纲、章节和讲师信息。点击"开始学习"即可进入。',
+          content: '提供4大主题训练营：创新基础、商业计划书写作、路演表达、AI项目孵化。每个训练营包含完整大纲、章节视频和讲师信息。点击"开始学习"进入学习。',
           target: '.top-nav-item[href="/training-camps"]',
           position: 'bottom',
           routePath: '/training-camps'
         },
         {
           title: '在线课程中心',
-          content: '系统化的在线课程体系：创业基础、市场调研方法、商业模式设计、路演技巧、法律知识等。点击"查看课程"了解详情并开始学习。',
+          content: '系统化课程体系：创业基础、市场调研、商业模式设计、路演技巧、法律知识等。支持视频学习和进度跟踪。',
           target: '.top-nav-item[href="/courses"]',
           position: 'bottom',
           routePath: '/courses'
         },
         {
-          title: 'AI 助手「火花」- 全局浮动伙伴',
-          content: '左下角的 Live2D 看板娘「火花」是你的 AI 助手入口！点击她即可打开对话面板。支持文字/语音输入、AI 流式对话、语音朗读。面板内还可切换到"AI 分析"模式，生成项目简介、商业建议和风险分析。',
+          title: '产业命题',
+          content: '查看企业发布的真实命题，了解命题需求、周期和奖励。点击"承接命题"即可开始项目对接。',
+          target: '.top-nav-item[href="/industry-topics"]',
+          position: 'bottom',
+          routePath: '/industry-topics'
+        },
+        {
+          title: '项目管理',
+          content: '创建和管理你的创新创业项目。填写项目信息、选择赛道和阶段，邀请团队成员协作。',
+          target: '.top-nav-item[href="/my-projects"]',
+          position: 'bottom',
+          routePath: '/my-projects'
+        },
+        {
+          title: '证书与成果',
+          content: '查看你获得的训练营结业证书和竞赛获奖记录。所有证书支持查看详情和下载。',
+          target: '.top-nav-item[href="/certificates"]',
+          position: 'bottom',
+          routePath: '/certificates'
+        },
+        {
+          title: 'AI 助手「火花」',
+          content: '左下角的 Live2D 看板娘「火花」是你的 AI 助手！点击打开对话面板，支持文字/语音输入、AI 流式对话、语音朗读。还可切换"AI 分析"模式生成项目简介、商业建议和风险分析。',
           target: '#waifu',
           position: 'right'
         },
         {
-          title: '团队成员管理',
-          content: '在成员管理页面添加团队成员、分配角色和分工，打造高效协作的创业团队。',
-          target: null,
-          position: 'center',
-          routePath: '/projects/1/members'
-        },
-        {
-          title: '材料上传与任务管理',
-          content: '上传项目申报书、商业计划书、路演PPT等材料，创建任务跟踪项目进度，确保按时完成各阶段目标。',
-          target: null,
-          position: 'center'
-        },
-        {
           title: '开始你的创新创业之旅',
-          content: '现在你已经了解了平台的所有核心功能！从创建项目开始，利用 AI 助手优化方案，参加训练营提升能力，最终在竞赛中脱颖而出。祝你好运！',
+          content: '现在你已经了解了平台的所有核心功能！从浏览竞赛开始，利用 AI 助手优化方案，参加训练营提升能力，创建项目参与竞赛，最终获得证书和奖项。祝你好运！',
           target: null,
           position: 'center'
         }

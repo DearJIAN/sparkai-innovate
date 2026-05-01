@@ -49,6 +49,7 @@ const allRoutes = [
   { path: '/courses', name: 'Courses', component: () => import('@/views/portal/Courses.vue'), meta: { title: '在线课程', icon: 'Collection' } },
   { path: '/courses/:id', name: 'CourseDetail', component: () => import('@/views/portal/CourseDetail.vue'), meta: { title: '课程详情', icon: 'Collection', hidden: true } },
   { path: '/industry-topics', name: 'IndustryTopics', component: () => import('@/views/portal/IndustryTopics.vue'), meta: { title: '产业命题', icon: 'Briefcase' } },
+  { path: '/accept-topic/:id', name: 'AcceptTopic', component: () => import('@/views/portal/AcceptTopic.vue'), meta: { title: '承接命题', icon: 'Briefcase', hidden: true, roles: ['student'] } },
   { path: '/certificates', name: 'Certificates', component: () => import('@/views/portal/Certificates.vue'), meta: { title: '证书成果', icon: 'Medal', roles: ['student'] } },
 
   // 通用路由（所有角色可访问）

@@ -312,9 +312,40 @@ const handlePageChange = (page) => {
 
 /* Banner */
 .square-banner {
-  background: linear-gradient(135deg, #0c4a6e 0%, #075985 50%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #0c4a6e 40%, #0ea5e9 100%);
   padding: 50px 40px;
   border-radius: 0 0 40px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.square-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: bannerPulse 6s ease-in-out infinite;
+}
+
+.square-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: bannerPulse 8s ease-in-out infinite reverse;
+}
+
+@keyframes bannerPulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
 }
 
 .banner-content {

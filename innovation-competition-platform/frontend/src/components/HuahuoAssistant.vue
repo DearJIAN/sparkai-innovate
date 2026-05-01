@@ -828,36 +828,89 @@ async function sendMessage() {
   streamingText.value = ''
   currentReplyText.value = ''
   notifyLive2dHook('onStreamStart')
-  try {
-    const response = await chatStream(text, sessionId.value)
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
-      for (const line of lines) {
-        if (line.startsWith('sessionId:')) sessionId.value = line.slice(10).trim()
-        else if (line.startsWith('delta:')) {
-          const delta = line.slice(6)
-          streamingText.value += delta
-          currentReplyText.value += delta
-          notifyLive2dHook('onDelta', { text: delta })
-        } else if (line.startsWith('error:')) ElMessage.error(line.slice(6))
+
+  let fullResponse = ''
+  const MAX_RETRY = 2
+  let retryCount = 0
+  let success = false
+
+  while (retryCount <= MAX_RETRY && !success) {
+    try {
+      const response = await chatStream(text, sessionId.value)
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      if (!response.body) throw new Error('响应体为空')
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let lastChunkTime = Date.now()
+      const CHUNK_TIMEOUT = 180000 // 3分钟超时
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        lastChunkTime = Date.now()
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed) continue
+
+          if (trimmed.startsWith('sessionId:')) {
+            sessionId.value = trimmed.slice(10).trim()
+          } else if (trimmed.startsWith('delta:')) {
+            const delta = trimmed.slice(6)
+            streamingText.value += delta
+            fullResponse += delta
+            currentReplyText.value = fullResponse
+            notifyLive2dHook('onDelta', { text: delta })
+          } else if (trimmed.startsWith('error:')) {
+            const errMsg = trimmed.slice(6)
+            console.error('[AI Stream] Server error:', errMsg)
+            // 不中断，继续读取后续内容
+          }
+        }
+
+        // 检查超时
+        if (Date.now() - lastChunkTime > CHUNK_TIMEOUT) {
+          throw new Error('数据接收超时')
+        }
       }
+
+      // 处理缓冲区剩余内容
+      if (buffer.trim()) {
+        const trimmed = buffer.trim()
+        if (trimmed.startsWith('delta:')) {
+          const delta = trimmed.slice(6)
+          streamingText.value += delta
+          fullResponse += delta
+        }
+      }
+
+      success = true
+    } catch (err) {
+      retryCount++
+      console.error(`[AI Stream] Attempt ${retryCount} failed:`, err.message)
+      if (retryCount > MAX_RETRY) {
+        ElMessage.error('AI 对话服务暂时不可用，请稍后重试')
+        break
+      }
+      // 等待后重试
+      await new Promise(r => setTimeout(r, 1000 * retryCount))
     }
-    if (streamingText.value) messages.value.push({ role: 'assistant', content: streamingText.value })
-  } catch (err) {
-    ElMessage.error('发送失败：' + err.message)
-  } finally {
-    isStreaming.value = false
-    streamingText.value = ''
-    notifyLive2dHook('onStreamEnd')
   }
+
+  // 保存完整回复到消息列表
+  if (fullResponse) {
+    messages.value.push({ role: 'assistant', content: fullResponse })
+  }
+
+  isStreaming.value = false
+  streamingText.value = ''
+  notifyLive2dHook('onStreamEnd')
 }
 
 function sendQuickQuestion(q) { inputText.value = q; sendMessage() }

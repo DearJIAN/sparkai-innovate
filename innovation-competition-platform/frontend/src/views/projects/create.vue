@@ -201,19 +201,74 @@ const handleSubmit = async () => {
 
   submitting.value = true
   try {
+    // 数据预处理
     const data = { ...form }
-    if (data.teacher_id) data.teacher_id = parseInt(data.teacher_id)
-    if (data.competition_id) data.competition_id = parseInt(data.competition_id)
+
+    // 处理 teacher_id：空字符串转为 null，非空转为整数
+    if (data.teacher_id && String(data.teacher_id).trim()) {
+      const tid = parseInt(data.teacher_id)
+      if (isNaN(tid) || tid <= 0) {
+        ElMessage.warning('指导老师 ID 必须是有效的正整数')
+        submitting.value = false
+        return
+      }
+      data.teacher_id = tid
+    } else {
+      data.teacher_id = null
+    }
+
+    // 处理 competition_id：空字符串转为 null，非空转为整数
+    if (data.competition_id && String(data.competition_id).trim()) {
+      const cid = parseInt(data.competition_id)
+      if (isNaN(cid) || cid <= 0) {
+        ElMessage.warning('比赛批次 ID 必须是有效的正整数')
+        submitting.value = false
+        return
+      }
+      data.competition_id = cid
+    } else {
+      data.competition_id = null
+    }
+
+    // 处理日期：确保是字符串格式
+    if (data.start_date && typeof data.start_date === 'object') {
+      data.start_date = data.start_date.toISOString().split('T')[0]
+    }
+    if (data.end_date && typeof data.end_date === 'object') {
+      data.end_date = data.end_date.toISOString().split('T')[0]
+    }
+
+    console.log('[CreateProject] Submitting data:', JSON.stringify(data))
 
     const res = await createProject(data)
-    if (res.code === 201) {
+    if (res.code === 201 || res.code === 200) {
       ElMessage.success('项目创建成功')
       router.push('/my-projects')
     } else {
       ElMessage.error(res.message || '创建失败')
     }
   } catch (error) {
-    const message = error.response?.data?.message || '创建失败'
+    console.error('[CreateProject] Error:', error)
+    let message = '创建失败'
+    if (error.response) {
+      const status = error.response.status
+      const serverMsg = error.response.data?.message || error.response.data?.error
+      if (status === 500) {
+        message = serverMsg || '服务器内部错误，请检查输入数据格式是否正确'
+      } else if (status === 400) {
+        message = serverMsg || '请求参数错误，请检查必填项'
+      } else if (status === 401) {
+        message = '登录已过期，请重新登录'
+      } else if (status === 403) {
+        message = '权限不足，无法创建项目'
+      } else {
+        message = serverMsg || `请求失败 (${status})`
+      }
+    } else if (error.request) {
+      message = '网络连接失败，请检查网络后重试'
+    } else {
+      message = error.message || '创建失败'
+    }
     ElMessage.error(message)
   } finally {
     submitting.value = false
