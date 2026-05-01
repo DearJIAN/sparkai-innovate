@@ -24,7 +24,7 @@
           <div class="project-desc">{{ project.description || '暂无描述' }}</div>
           <div class="project-footer">
             <span>提交时间: {{ formatDate(project.created_at) }}</span>
-            <el-button type="primary" size="small">开始评审</el-button>
+            <el-button type="primary" size="small" @click="goToReview(project.id)">开始评审</el-button>
           </div>
         </div>
       </div>

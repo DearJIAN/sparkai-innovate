@@ -173,6 +173,36 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Calendar, User, Document } from '@element-plus/icons-vue'
 import { getMyRegistrations } from '@/api/registration'
 
+// 导入本地竞赛图片
+import imgAI from '@/assets/images/competitions/2026 AI 应用创新设计大赛.png'
+import imgRural from '@/assets/images/competitions/2026 乡村振兴公益创业实践赛.png'
+import imgEnterprise from '@/assets/images/competitions/2026 企业真实命题创新挑战赛.png'
+import imgInnovation from '@/assets/images/competitions/2026 大学生创新创业计划训练赛.png'
+import imgCareer from '@/assets/images/competitions/2026 大学生职业规划与就业能力大赛.png'
+import imgDigital from '@/assets/images/competitions/2026 数字经济与商业模式创新挑战赛.png'
+import imgSmartMfg from '@/assets/images/competitions/2026 智能制造与物联网应用赛.png'
+import imgEcommerce from '@/assets/images/competitions/2026 校园电子商务运营挑战赛.png'
+import imgSoftware from '@/assets/images/competitions/2026 软件工程创新项目挑战赛.png'
+import imgRedDream from '@/assets/images/competitions/2026 青年红色筑梦公益项目赛.png'
+
+const competitionImages = {
+  'AI 应用创新设计大赛': imgAI,
+  '乡村振兴公益创业实践赛': imgRural,
+  '企业真实命题创新挑战赛': imgEnterprise,
+  '大学生创新创业计划训练赛': imgInnovation,
+  '大学生职业规划与就业能力大赛': imgCareer,
+  '数字经济与商业模式创新挑战赛': imgDigital,
+  '智能制造与物联网应用赛': imgSmartMfg,
+  '校园电子商务运营挑战赛': imgEcommerce,
+  '软件工程创新项目挑战赛': imgSoftware,
+  '青年红色筑梦公益项目赛': imgRedDream
+}
+
+const getLocalImage = (name) => {
+  const key = name.replace(/^2026\s*/, '')
+  return competitionImages[key] || null
+}
+
 const router = useRouter()
 
 const stats = ref({
@@ -190,13 +220,16 @@ const loadData = async () => {
     const res = await getMyRegistrations()
     if (res.code === 200) {
       const data = res.data.registrations || []
-      registrations.value = data.map(reg => ({
-        ...reg,
-        gradient: reg.poster_url ? '' : 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
-        posterStyle: reg.poster_url 
-          ? { backgroundImage: `url(${reg.poster_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-          : { background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)' }
-      }))
+      registrations.value = data.map(reg => {
+        const localImage = getLocalImage(reg.competitionName)
+        return {
+          ...reg,
+          localImage,
+          posterStyle: localImage || reg.poster_url
+            ? { backgroundImage: `url(${localImage || reg.poster_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+            : { background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)' }
+        }
+      })
 
       stats.value = {
         total: data.length,

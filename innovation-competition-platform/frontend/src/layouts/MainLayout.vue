@@ -1,5 +1,52 @@
 <template>
   <div class="main-layout">
+    <!-- 移动端遮罩层 -->
+    <transition name="fade-overlay">
+      <div
+        v-if="mobileMenuOpen"
+        class="mobile-overlay"
+        @click="closeMobileMenu"
+      />
+    </transition>
+
+    <!-- 移动端侧滑菜单 -->
+    <transition name="slide-menu">
+      <aside
+        v-if="mobileMenuOpen"
+        class="mobile-sidebar"
+      >
+        <div class="mobile-sidebar-header">
+          <div class="logo">
+            <el-icon size="28" color="var(--primary-400)"><Trophy /></el-icon>
+            <span class="logo-text">创新创业平台</span>
+          </div>
+          <button class="mobile-close-btn" @click="closeMobileMenu">
+            <el-icon size="20"><Close /></el-icon>
+          </button>
+        </div>
+
+        <nav class="mobile-sidebar-nav">
+          <template v-for="group in visibleMenuGroups" :key="group.label">
+            <div class="nav-group-label">{{ group.label }}</div>
+            <router-link
+              v-for="item in group.items"
+              :key="item.path"
+              :to="item.path"
+              class="nav-item"
+              :class="{ active: isMenuActive(item.path) }"
+              @click="closeMobileMenu"
+            >
+              <el-icon size="18">
+                <component :is="item.icon" />
+              </el-icon>
+              <span class="nav-text">{{ item.title }}</span>
+            </router-link>
+          </template>
+        </nav>
+      </aside>
+    </transition>
+
+    <!-- 桌面端侧边栏 -->
     <aside
       v-if="showSidebar"
       class="sidebar"
@@ -45,6 +92,11 @@
     >
       <header class="top-header" :class="{ 'platform-header': !showSidebar }">
         <div class="header-left">
+          <!-- 汉堡菜单按钮（平板/移动端） -->
+          <button class="hamburger-btn" @click="toggleMobileMenu">
+            <el-icon size="22"><Operation /></el-icon>
+          </button>
+
           <div class="header-logo" @click="router.push('/portal')">
             <el-icon size="28" color="var(--primary-500)"><Trophy /></el-icon>
             <span class="header-logo-text">双创竞赛服务平台</span>
@@ -95,21 +147,21 @@
         </router-view>
       </main>
     </div>
-    <Live2dWidget ref="live2dRef" />
+    <HuahuoAssistant />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import Live2dWidget from '@/components/Live2dWidget.vue'
+import HuahuoAssistant from '@/components/HuahuoAssistant.vue'
 import {
   Trophy, User, UserFilled, HomeFilled, SwitchButton, ArrowDown,
   FolderOpened, CirclePlusFilled, MagicStick, StarFilled, DocumentChecked,
   Expand, Fold, Document, Medal, School, Briefcase, Collection,
-  TrendCharts, Calendar, Setting, Edit, List
+  TrendCharts, Calendar, Setting, Edit, List, Close, Operation
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -117,10 +169,11 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const isCollapsed = ref(false)
+const mobileMenuOpen = ref(false)
 
 const platformPages = [
   '/portal', '/competitions', '/training-camps', '/courses',
-  '/ai-assistant', '/industry-topics', '/my-registrations', '/certificates'
+  '/industry-topics', '/my-registrations', '/certificates'
 ]
 
 const isPlatformPage = computed(() => {
@@ -132,16 +185,18 @@ const showSidebar = computed(() => {
   return true
 })
 
+// 顶部导航配置 - 所有角色都能看到核心功能入口，按使用习惯排序
 const topNavConfig = [
   { path: '/portal', title: '首页', roles: ['student', 'teacher', 'judge', 'admin'] },
   { path: '/competitions', title: '竞赛', roles: ['student', 'teacher', 'judge', 'admin'] },
-  { path: '/my-projects', title: '项目', roles: ['student'] },
-  { path: '/guide-projects', title: '项目', roles: ['teacher'] },
+  { path: '/training-camps', title: '训练营', roles: ['student', 'teacher', 'judge', 'admin'] },
+  { path: '/courses', title: '课程', roles: ['student', 'teacher', 'judge', 'admin'] },
+  { path: '/industry-topics', title: '产业命题', roles: ['student', 'teacher', 'judge', 'admin'] },
+  { path: '/my-projects', title: '我的项目', roles: ['student'] },
+  { path: '/guide-projects', title: '指导项目', roles: ['teacher'] },
   { path: '/pending-reviews', title: '评审', roles: ['judge'] },
-  { path: '/project-management', title: '管理', roles: ['admin'] },
-  { path: '/training-camps', title: '训练营', roles: ['student', 'teacher'] },
-  { path: '/courses', title: '课程', roles: ['student', 'teacher'] },
-  { path: '/ai-assistant', title: 'AI 助手', roles: ['student', 'teacher', 'judge', 'admin'] }
+  { path: '/certificates', title: '证书', roles: ['student'] },
+  { path: '/project-management', title: '管理', roles: ['admin'] }
 ]
 
 const topNavItems = computed(() => {
@@ -153,16 +208,18 @@ const topNavItems = computed(() => {
 const isTopNavActive = (path) => {
   if (path === '/portal') return route.path === '/portal'
   if (path === '/competitions') return route.path.startsWith('/competitions')
+  if (path === '/training-camps') return route.path.startsWith('/training-camps')
+  if (path === '/courses') return route.path.startsWith('/courses')
+  if (path === '/industry-topics') return route.path.startsWith('/industry-topics')
   if (path === '/my-projects') return route.path.startsWith('/my-projects') || route.path.startsWith('/create-project') || route.path.startsWith('/projects/')
   if (path === '/guide-projects') return route.path.startsWith('/guide-projects') || route.path.startsWith('/project-review')
   if (path === '/pending-reviews') return route.path.startsWith('/pending-reviews') || route.path.startsWith('/review-history')
+  if (path === '/certificates') return route.path.startsWith('/certificates')
   if (path === '/project-management') return route.path.startsWith('/project-management') || route.path.startsWith('/user-management') || route.path.startsWith('/competition-management') || route.path.startsWith('/review-management') || route.path.startsWith('/registration-management') || route.path.startsWith('/dashboard')
-  if (path === '/training-camps') return route.path.startsWith('/training-camps')
-  if (path === '/courses') return route.path.startsWith('/courses')
-  if (path === '/ai-assistant') return route.path.startsWith('/ai-assistant')
   return route.path === path
 }
 
+// 侧边栏菜单配置 - 分组顺序：概览 -> 竞赛 -> 项目 -> 学习 -> 管理
 const menuGroups = [
   {
     label: '概览',
@@ -173,11 +230,14 @@ const menuGroups = [
   },
   {
     label: '竞赛',
-    roles: ['student', 'admin'],
+    roles: ['student', 'teacher', 'judge', 'admin'],
     items: [
+      { path: '/competitions', title: '竞赛广场', icon: 'Trophy', roles: ['student', 'teacher', 'judge', 'admin'] },
       { path: '/my-registrations', title: '我的赛事', icon: 'Medal', roles: ['student'] },
       { path: '/competition-management', title: '比赛批次管理', icon: 'Trophy', roles: ['admin'] },
-      { path: '/registration-management', title: '报名管理', icon: 'Document', roles: ['admin'] }
+      { path: '/registration-management', title: '报名管理', icon: 'Document', roles: ['admin'] },
+      { path: '/pending-reviews', title: '待评审项目', icon: 'StarFilled', roles: ['judge'] },
+      { path: '/review-history', title: '评审记录', icon: 'List', roles: ['judge'] }
     ]
   },
   {
@@ -188,28 +248,24 @@ const menuGroups = [
       { path: '/create-project', title: '创建项目', icon: 'CirclePlusFilled', roles: ['student'] },
       { path: '/guide-projects', title: '指导项目', icon: 'FolderOpened', roles: ['teacher'] },
       { path: '/project-review', title: '项目审核', icon: 'DocumentChecked', roles: ['teacher'] },
-      { path: '/pending-reviews', title: '待评审项目', icon: 'StarFilled', roles: ['judge'] },
-      { path: '/review-history', title: '评审记录', icon: 'List', roles: ['judge'] },
       { path: '/project-management', title: '项目管理', icon: 'FolderOpened', roles: ['admin'] },
       { path: '/review-management', title: '评审管理', icon: 'StarFilled', roles: ['admin'] }
     ]
   },
   {
     label: '学习',
-    roles: ['student', 'teacher'],
+    roles: ['student', 'teacher', 'judge', 'admin'],
     items: [
-      { path: '/training-camps', title: '训练营', icon: 'School', roles: ['student', 'teacher'] },
-      { path: '/courses', title: '在线课程', icon: 'Collection', roles: ['student', 'teacher'] },
-      { path: '/industry-topics', title: '产业命题', icon: 'Briefcase', roles: ['student', 'teacher'] },
+      { path: '/training-camps', title: '训练营', icon: 'School', roles: ['student', 'teacher', 'judge', 'admin'] },
+      { path: '/courses', title: '在线课程', icon: 'Collection', roles: ['student', 'teacher', 'judge', 'admin'] },
+      { path: '/industry-topics', title: '产业命题', icon: 'Briefcase', roles: ['student', 'teacher', 'judge', 'admin'] },
       { path: '/certificates', title: '证书成果', icon: 'Medal', roles: ['student'] }
     ]
   },
   {
     label: '工具',
     roles: ['student', 'teacher', 'judge', 'admin'],
-    items: [
-      { path: '/ai-assistant', title: 'AI 项目助手', icon: 'MagicStick', roles: ['student', 'teacher', 'judge', 'admin'] }
-    ]
+    items: []
   },
   {
     label: '管理',
@@ -235,8 +291,11 @@ const visibleMenuGroups = computed(() => {
 
 const isMenuActive = (path) => {
   if (route.path === path) return true
+  // /create-project 只匹配自身，不匹配 /my-projects
+  if (path === '/create-project' && route.path === '/create-project') return true
+  // /my-projects 匹配项目相关页面，但不匹配 /create-project
   if (path === '/my-projects' && route.path.startsWith('/projects/')) return true
-  if (path === '/my-projects' && route.path === '/create-project') return true
+  if (path === '/my-projects' && route.path === '/my-projects') return true
   return false
 }
 
@@ -253,6 +312,36 @@ const roleText = computed(() => {
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
 }
+
+const toggleMobileMenu = () => {
+  mobileMenuOpen.value = !mobileMenuOpen.value
+  if (mobileMenuOpen.value) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+}
+
+const closeMobileMenu = () => {
+  mobileMenuOpen.value = false
+  document.body.style.overflow = ''
+}
+
+// 监听窗口大小变化，自动关闭移动菜单
+const handleResize = () => {
+  if (window.innerWidth > 1024 && mobileMenuOpen.value) {
+    closeMobileMenu()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  document.body.style.overflow = ''
+})
 
 const handleCommand = async (command) => {
   if (command === 'logout') {
@@ -280,6 +369,85 @@ const handleCommand = async (command) => {
   background-color: var(--bg-secondary);
 }
 
+/* ========== 移动端遮罩层 ========== */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+}
+
+.fade-overlay-enter-active,
+.fade-overlay-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-overlay-enter-from,
+.fade-overlay-leave-to {
+  opacity: 0;
+}
+
+/* ========== 移动端侧滑菜单 ========== */
+.mobile-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  background-color: var(--bg-sidebar);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.slide-menu-enter-active,
+.slide-menu-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-menu-enter-from,
+.slide-menu-leave-to {
+  transform: translateX(-100%);
+}
+
+.mobile-sidebar-header {
+  padding: 20px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobile-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  color: var(--text-sidebar);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.mobile-close-btn:hover {
+  background-color: var(--bg-sidebar-hover);
+  color: var(--text-inverse);
+}
+
+.mobile-sidebar-nav {
+  flex: 1;
+  padding: 12px 8px;
+  overflow-y: auto;
+}
+
+/* ========== 桌面端侧边栏 ========== */
 .sidebar {
   width: var(--sidebar-width);
   background-color: var(--bg-sidebar);
@@ -344,6 +512,7 @@ const handleCommand = async (command) => {
   text-decoration: none;
   transition: all var(--transition-fast);
   cursor: pointer;
+  position: relative;
 }
 
 .nav-item:hover {
@@ -351,9 +520,21 @@ const handleCommand = async (command) => {
   color: var(--text-inverse);
 }
 
+/* 侧边栏活跃项 - 左侧边框指示器 */
 .nav-item.active {
   background-color: var(--bg-sidebar-active);
   color: var(--text-sidebar-active);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  background-color: var(--primary-500);
+  border-radius: 0 2px 2px 0;
 }
 
 .nav-text {
@@ -386,6 +567,7 @@ const handleCommand = async (command) => {
   color: var(--text-inverse);
 }
 
+/* ========== 主内容区 ========== */
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
@@ -402,6 +584,7 @@ const handleCommand = async (command) => {
   margin-left: 0;
 }
 
+/* ========== 顶部导航栏 ========== */
 .top-header {
   height: var(--header-height);
   background-color: var(--bg-primary);
@@ -426,12 +609,33 @@ const handleCommand = async (command) => {
   gap: 40px;
 }
 
+/* 汉堡菜单按钮 - 默认隐藏 */
+.hamburger-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.hamburger-btn:hover {
+  background-color: var(--bg-tertiary);
+}
+
 .header-logo {
   display: flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
   transition: opacity var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .header-logo:hover {
@@ -461,6 +665,7 @@ const handleCommand = async (command) => {
   font-weight: 500;
   transition: all var(--transition-fast);
   white-space: nowrap;
+  position: relative;
 }
 
 .top-nav-item:hover {
@@ -468,10 +673,22 @@ const handleCommand = async (command) => {
   background-color: var(--primary-50);
 }
 
+/* 顶部导航活跃项 - 底部边框指示器 + 颜色 */
 .top-nav-item.active {
   color: var(--primary-600);
   background-color: var(--primary-50);
   font-weight: 600;
+}
+
+.top-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background-color: var(--primary-500);
+  border-radius: 1px 1px 0 0;
 }
 
 .user-info {
@@ -525,16 +742,31 @@ const handleCommand = async (command) => {
   padding: 0;
 }
 
+/* ========== 响应式：平板端 (768px - 1024px) ========== */
 @media (max-width: 1024px) {
+  .hamburger-btn {
+    display: flex;
+  }
+
   .top-nav {
     display: none;
   }
 
   .header-left {
-    gap: 16px;
+    gap: 12px;
+  }
+
+  /* 平板端隐藏桌面侧边栏，使用移动端侧滑菜单替代 */
+  .sidebar {
+    display: none;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
   }
 }
 
+/* ========== 响应式：移动端 (< 768px) ========== */
 @media (max-width: 768px) {
   .header-logo-text {
     display: none;
@@ -542,6 +774,14 @@ const handleCommand = async (command) => {
 
   .user-meta {
     display: none;
+  }
+
+  .top-header {
+    padding: 0 12px;
+  }
+
+  .mobile-sidebar {
+    width: 260px;
   }
 }
 </style>

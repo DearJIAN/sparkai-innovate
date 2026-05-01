@@ -42,3 +42,13 @@ export function uploadAsrAudio(formData) {
     body: formData,
   })
 }
+
+export async function generateAnalysis(form) {
+  const apiMap = {
+    summary: generateProjectSummary,
+    business_advice: generateBusinessAdvice,
+    risk_analysis: generateRiskAnalysis,
+  }
+  const fn = apiMap[form.ai_type] || generateProjectSummary
+  return fn(form)
+}

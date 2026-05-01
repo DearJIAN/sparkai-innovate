@@ -51,6 +51,9 @@ backend/uploads/*
 # Trae 相关目录
 .trae/
 
+# 项目资源文件
+image/
+
 # 其他项目目录
 keshe/
 

@@ -39,6 +39,13 @@
 
       <!-- Step 2: 队伍信息 -->
       <div v-if="currentStep === 1" class="step-content">
+        <div class="quick-fill-bar">
+          <el-button type="primary" plain size="small" @click="quickFillTeamInfo">
+            <el-icon><MagicStick /></el-icon>
+            快速生成队伍信息
+          </el-button>
+          <span class="quick-fill-hint">一键填充测试数据，方便调试</span>
+        </div>
         <h2 class="step-title">填写队伍信息</h2>
         <p class="step-desc">请填写参赛队伍的基本信息</p>
         <el-form
@@ -87,6 +94,13 @@
 
       <!-- Step 3: 队员信息 -->
       <div v-if="currentStep === 2" class="step-content">
+        <div class="quick-fill-bar">
+          <el-button type="primary" plain size="small" @click="quickFillMembers">
+            <el-icon><MagicStick /></el-icon>
+            快速生成队员信息
+          </el-button>
+          <span class="quick-fill-hint">一键填充测试队员数据</span>
+        </div>
         <h2 class="step-title">添加队员信息</h2>
         <p class="step-desc">
           你是队长，请添加其他队员（{{ selectedTrack?.teamMin || 3 }}-{{ selectedTrack?.teamMax || 5 }}人）
@@ -245,7 +259,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
-import { Plus, Upload } from '@element-plus/icons-vue'
+import { Plus, Upload, MagicStick } from '@element-plus/icons-vue'
 import { getPublicCompetitionDetail } from '@/api/competition'
 import { getProjects } from '@/api/project'
 import { createRegistration, addRegistrationMember, submitRegistration } from '@/api/registration'
@@ -476,6 +490,32 @@ const submitRegistrationFinal = async () => {
     submitting.value = false
   }
 }
+
+function quickFillTeamInfo() {
+  form.value.teamName = '创新先锋队'
+  form.value.school = 'XX大学'
+  form.value.college = '计算机科学与技术学院'
+  form.value.major = '软件工程'
+  form.value.teacherName = '张教授'
+  form.value.teacherPhone = '13800138000'
+  form.value.contactPhone = '13900139000'
+  form.value.contactEmail = 'team_leader@example.com'
+  if (form.value.trackId === null && tracks.value.length > 0) {
+    form.value.trackId = tracks.value[0].id
+  }
+  ElMessage.success('队伍信息已快速填充')
+}
+
+function quickFillMembers() {
+  const testMembers = [
+    { name: '李明', studentNo: '2023010001', college: '计算机学院', major: '人工智能', phone: '13811110001', email: 'liming@example.com' },
+    { name: '王芳', studentNo: '2023010002', college: '计算机学院', major: '数据科学', phone: '13811110002', email: 'wangfang@example.com' },
+    { name: '张伟', studentNo: '2023010003', college: '计算机学院', major: '软件工程', phone: '13811110003', email: 'zhangwei@example.com' }
+  ]
+  const maxMembers = (selectedTrack.value?.teamMax || 5) - 1
+  form.value.members = testMembers.slice(0, maxMembers).map(m => ({ ...m }))
+  ElMessage.success(`已快速生成 ${form.value.members.length} 名队员信息`)
+}
 </script>
 
 <style scoped>
@@ -507,6 +547,22 @@ const submitRegistrationFinal = async () => {
   font-weight: 600;
   color: #1e293b;
   margin-bottom: 8px;
+}
+
+.quick-fill-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border-radius: 10px;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.quick-fill-hint {
+  font-size: 12px;
+  color: #64748b;
 }
 
 .step-desc {

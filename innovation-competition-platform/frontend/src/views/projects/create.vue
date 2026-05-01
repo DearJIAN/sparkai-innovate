@@ -111,15 +111,23 @@
           </el-col>
         </el-row>
 
-        <el-form-item class="form-actions">
-          <el-button size="large" @click="$router.back()">取消</el-button>
-          <el-button type="primary" size="large" :loading="submitting" @click="handleSubmit">
-            创建项目
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-  </div>
+        <div class="quick-fill-bar">
+        <el-icon><MagicStick /></el-icon>
+        <span>调试辅助：一键快速生成项目信息</span>
+        <el-button type="primary" size="small" @click="quickFillProject">
+          快速填充
+        </el-button>
+      </div>
+
+      <el-form-item class="form-actions">
+        <el-button size="large" @click="$router.back()">取消</el-button>
+        <el-button type="primary" size="large" :loading="submitting" @click="handleSubmit">
+          创建项目
+        </el-button>
+      </el-form-item>
+    </el-form>
+  </el-card>
+</div>
 </template>
 
 <script setup>
@@ -127,6 +135,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { createProject } from '@/api/project'
 import { ElMessage } from 'element-plus'
+import { MagicStick } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const formRef = ref()
@@ -156,6 +165,34 @@ const rules = {
     { required: true, message: '请输入项目简介', trigger: 'blur' },
     { min: 10, message: '项目简介至少 10 个字符', trigger: 'blur' }
   ]
+}
+
+const quickFillProject = () => {
+  const projectNames = [
+    '智慧校园一站式服务平台',
+    'AI 驱动的个性化学习助手',
+    '校园二手交易信用平台',
+    '基于区块链的学历认证系统',
+    '大学生创业资源共享平台'
+  ]
+  const categories = ['科技创新', '社会服务', '文化创意', '电子商务', '现代农业']
+  const tracks = ['人工智能', '大数据', '物联网', '新能源', '生物医药', '智能制造', '数字经济']
+  const stages = ['idea', 'proof', 'resource', 'development', 'market']
+
+  form.name = projectNames[Math.floor(Math.random() * projectNames.length)]
+  form.category = categories[Math.floor(Math.random() * categories.length)]
+  form.track = tracks[Math.floor(Math.random() * tracks.length)]
+  form.stage = stages[Math.floor(Math.random() * stages.length)]
+  form.description = `本项目旨在通过${form.track}技术，打造一个面向大学生的${form.category}平台。项目将整合校园内外资源，为用户提供便捷的服务体验，同时探索可持续的商业模式。团队由跨学科成员组成，具备扎实的技术功底和丰富的实践经验。`
+  form.teacher_id = String(10000 + Math.floor(Math.random() * 100))
+  form.competition_id = String(Math.floor(Math.random() * 10) + 1)
+
+  const now = new Date()
+  form.start_date = now.toISOString().split('T')[0]
+  const end = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
+  form.end_date = end.toISOString().split('T')[0]
+
+  ElMessage.success('已快速生成项目信息')
 }
 
 const handleSubmit = async () => {
@@ -221,5 +258,26 @@ const handleSubmit = async () => {
 
 .form-actions .el-button + .el-button {
   margin-left: 16px;
+}
+
+.quick-fill-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px dashed #0ea5e9;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  color: #0369a1;
+  font-size: 13px;
+}
+
+.quick-fill-bar .el-icon {
+  color: #0ea5e9;
+}
+
+.quick-fill-bar span {
+  flex: 1;
 }
 </style>

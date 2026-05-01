@@ -12,6 +12,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    headers: {
+      'Content-Security-Policy': "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: data:; worker-src 'self' blob:;"
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:5000',

@@ -61,7 +61,21 @@
           @click="goToDetail(comp.id)"
         >
           <div class="card-poster" :style="comp.posterStyle">
-            <div class="poster-content" v-if="!comp.poster_url">
+            <img
+              v-if="comp.localImage"
+              :src="comp.localImage"
+              :alt="comp.name"
+              class="poster-img"
+              @error="handleImageError"
+            />
+            <img
+              v-else-if="comp.poster_url"
+              :src="comp.poster_url"
+              :alt="comp.name"
+              class="poster-img"
+              @error="handleImageError"
+            />
+            <div class="poster-content" v-if="!comp.hasImage">
               <span class="poster-name">{{ comp.name }}</span>
             </div>
             <div class="poster-badge">{{ comp.level }}</div>
@@ -130,6 +144,51 @@ import { ElMessage } from 'element-plus'
 import { Search, Calendar, View, User } from '@element-plus/icons-vue'
 import { getPublicCompetitions } from '@/api/competition'
 
+// 导入本地竞赛图片
+import imgAI from '@/assets/images/competitions/2026 AI 应用创新设计大赛.png'
+import imgRural from '@/assets/images/competitions/2026 乡村振兴公益创业实践赛.png'
+import imgEnterprise from '@/assets/images/competitions/2026 企业真实命题创新挑战赛.png'
+import imgInnovation from '@/assets/images/competitions/2026 大学生创新创业计划训练赛.png'
+import imgCareer from '@/assets/images/competitions/2026 大学生职业规划与就业能力大赛.png'
+import imgDigital from '@/assets/images/competitions/2026 数字经济与商业模式创新挑战赛.png'
+import imgSmartMfg from '@/assets/images/competitions/2026 智能制造与物联网应用赛.png'
+import imgEcommerce from '@/assets/images/competitions/2026 校园电子商务运营挑战赛.png'
+import imgSoftware from '@/assets/images/competitions/2026 软件工程创新项目挑战赛.png'
+import imgRedDream from '@/assets/images/competitions/2026 青年红色筑梦公益项目赛.png'
+
+// 竞赛图片映射：key 为去掉 "2026 " 前缀的竞赛名称
+const competitionImages = {
+  'AI 应用创新设计大赛': imgAI,
+  '乡村振兴公益创业实践赛': imgRural,
+  '企业真实命题创新挑战赛': imgEnterprise,
+  '大学生创新创业计划训练赛': imgInnovation,
+  '大学生职业规划与就业能力大赛': imgCareer,
+  '数字经济与商业模式创新挑战赛': imgDigital,
+  '智能制造与物联网应用赛': imgSmartMfg,
+  '校园电子商务运营挑战赛': imgEcommerce,
+  '软件工程创新项目挑战赛': imgSoftware,
+  '青年红色筑梦公益项目赛': imgRedDream
+}
+
+// 根据竞赛名称匹配本地图片
+const getLocalImage = (name) => {
+  // 去掉 "2026 " 前缀后匹配
+  const key = name.replace(/^2026\s*/, '')
+  return competitionImages[key] || null
+}
+
+// 图片加载失败时的占位处理
+const handleImageError = (e) => {
+  const img = e.target
+  img.style.display = 'none'
+  const poster = img.closest('.card-poster')
+  if (poster) {
+    poster.style.background = 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'
+    const content = poster.querySelector('.poster-content')
+    if (content) content.style.display = ''
+  }
+}
+
 const router = useRouter()
 const userStore = useUserStore()
 
@@ -171,16 +230,22 @@ const loadCompetitions = async () => {
     }
     const res = await getPublicCompetitions(params)
     if (res.code === 200) {
-      competitions.value = res.data.competitions.map(c => ({
-        ...c,
-        statusText: getStatusText(c.status),
-        statusType: getStatusType(c.status),
-        levelType: getLevelType(c.level),
-        gradient: c.poster_url ? '' : 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
-        posterStyle: c.poster_url 
-          ? { backgroundImage: `url(${c.poster_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-          : { background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)' }
-      }))
+      competitions.value = res.data.competitions.map(c => {
+        const localImage = getLocalImage(c.name)
+        // 优先使用本地图片，其次后端 poster_url，最后 fallback 渐变色
+        const hasImage = localImage || c.poster_url
+        return {
+          ...c,
+          statusText: getStatusText(c.status),
+          statusType: getStatusType(c.status),
+          levelType: getLevelType(c.level),
+          localImage,
+          hasImage: !!hasImage,
+          posterStyle: hasImage
+            ? {}
+            : { background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)' }
+        }
+      })
       total.value = res.data.total
     }
   } catch (error) {
@@ -326,12 +391,22 @@ const handlePageChange = (page) => {
 }
 
 .card-poster {
-  height: 160px;
+  aspect-ratio: 16 / 9;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  overflow: hidden;
+}
+
+.poster-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .poster-content {

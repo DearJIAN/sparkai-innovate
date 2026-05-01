@@ -57,7 +57,7 @@
                 {{ topic.bonus }}
               </span>
             </div>
-            <el-button type="primary" size="small">
+            <el-button type="primary" size="small" @click="handleAccept(topic)">
               承接命题
             </el-button>
           </div>
@@ -69,7 +69,42 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { OfficeBuilding, Timer, Coin } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+
+const router = useRouter()
+
+const handleAccept = async (topic) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要承接「${topic.title}」命题吗？\n\n承接后，系统将为您创建关联项目，您可以在「我的项目」中查看和管理。`,
+      '确认承接命题',
+      {
+        confirmButtonText: '确认承接',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    )
+
+    // 模拟承接成功（后续可接入后端 API）
+    ElMessage.success(`成功承接「${topic.title}」命题，正在为您创建项目...`)
+
+    // 延迟跳转到创建项目页面，并预填充产业命题信息
+    setTimeout(() => {
+      router.push({
+        path: '/create-project',
+        query: {
+          topic_id: topic.id,
+          topic_title: topic.title,
+          topic_company: topic.company
+        }
+      })
+    }, 1000)
+  } catch {
+    // 用户取消
+  }
+}
 
 const topics = ref([
   {
@@ -280,11 +315,14 @@ const topics = ref([
   padding: 16px 20px;
   border-top: 1px solid #f1f5f9;
   background: #f8fafc;
+  min-height: 56px;
 }
 
 .topic-meta {
   display: flex;
   gap: 16px;
+  align-items: center;
+  flex: 1;
 }
 
 .meta-item {
@@ -293,5 +331,6 @@ const topics = ref([
   gap: 4px;
   font-size: 13px;
   color: #64748b;
+  white-space: nowrap;
 }
 </style>

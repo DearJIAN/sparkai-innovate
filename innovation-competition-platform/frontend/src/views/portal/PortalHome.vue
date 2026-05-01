@@ -1,10 +1,20 @@
 <template>
   <div class="portal-page">
+    <!-- 全屏数字雨背景 -->
+    <canvas ref="globalRainCanvas" class="global-rain-canvas"></canvas>
+
     <!-- Banner 区域 -->
     <div class="portal-banner">
+      <div class="banner-gradient-bg"></div>
       <div class="banner-bg-pattern"></div>
-      <div class="banner-particles">
-        <div v-for="i in 20" :key="i" class="particle" :style="particleStyle(i)"></div>
+      <div class="banner-particles" ref="particleContainer">
+        <div
+          v-for="i in 20"
+          :key="'p' + i"
+          class="particle"
+          :class="[`particle-${((i - 1) % 3) + 1}`]"
+          :style="particleStyle(i)"
+        ></div>
       </div>
       <div class="banner-content">
         <div class="banner-badge">
@@ -51,7 +61,7 @@
     </div>
 
     <!-- 功能卡片区域 -->
-    <div class="portal-section">
+    <div class="portal-section section-features" ref="cardSection">
       <h2 class="section-title">功能入口</h2>
       <div class="card-grid">
         <div
@@ -76,7 +86,7 @@
     </div>
 
     <!-- 推荐竞赛区域 -->
-    <div class="portal-section" v-if="recommendedCompetitions.length > 0">
+    <div class="portal-section section-competitions" v-if="recommendedCompetitions.length > 0" ref="compSection">
       <div class="section-header">
         <h2 class="section-title">推荐竞赛</h2>
         <el-button link type="primary" @click="navigateTo('/competitions')">
@@ -90,12 +100,21 @@
           class="competition-item"
           @click="navigateTo(`/competitions/${comp.id}`)"
         >
-          <div class="comp-poster" :style="{ background: comp.gradient }">
-            <span class="comp-name">{{ comp.name }}</span>
+          <div class="comp-poster">
+            <img
+              v-if="getLocalImage(comp.name)"
+              :src="getLocalImage(comp.name)"
+              :alt="comp.name"
+              class="comp-poster-img"
+            />
+            <div v-else class="comp-poster-fallback" :style="{ background: comp.gradient }"></div>
           </div>
           <div class="comp-info">
-            <el-tag size="small" :type="comp.levelType">{{ comp.level }}</el-tag>
-            <el-tag size="small" class="comp-category">{{ comp.category }}</el-tag>
+            <h4 class="comp-name">{{ comp.name }}</h4>
+            <div class="comp-tags">
+              <el-tag size="small" :type="comp.levelType">{{ comp.level }}</el-tag>
+              <el-tag size="small" class="comp-category">{{ comp.category }}</el-tag>
+            </div>
             <p class="comp-time">报名截止：{{ comp.endDate }}</p>
           </div>
         </div>
@@ -103,7 +122,7 @@
     </div>
 
     <!-- 快捷入口区域 -->
-    <div class="portal-section">
+    <div class="portal-section section-quick" ref="quickSection">
       <h2 class="section-title">快捷操作</h2>
       <div class="quick-actions">
         <el-button
@@ -123,7 +142,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import {
@@ -132,26 +151,310 @@ import {
   Briefcase, Collection, Calendar
 } from '@element-plus/icons-vue'
 
+// 导入本地竞赛图片
+import imgAI from '@/assets/images/competitions/2026 AI 应用创新设计大赛.png'
+import imgRural from '@/assets/images/competitions/2026 乡村振兴公益创业实践赛.png'
+import imgEnterprise from '@/assets/images/competitions/2026 企业真实命题创新挑战赛.png'
+import imgInnovation from '@/assets/images/competitions/2026 大学生创新创业计划训练赛.png'
+import imgCareer from '@/assets/images/competitions/2026 大学生职业规划与就业能力大赛.png'
+import imgDigital from '@/assets/images/competitions/2026 数字经济与商业模式创新挑战赛.png'
+import imgSmartMfg from '@/assets/images/competitions/2026 智能制造与物联网应用赛.png'
+import imgEcommerce from '@/assets/images/competitions/2026 校园电子商务运营挑战赛.png'
+import imgSoftware from '@/assets/images/competitions/2026 软件工程创新项目挑战赛.png'
+import imgRedDream from '@/assets/images/competitions/2026 青年红色筑梦公益项目赛.png'
+
+const competitionImages = {
+  'AI 应用创新设计大赛': imgAI,
+  '乡村振兴公益创业实践赛': imgRural,
+  '企业真实命题创新挑战赛': imgEnterprise,
+  '大学生创新创业计划训练赛': imgInnovation,
+  '大学生职业规划与就业能力大赛': imgCareer,
+  '数字经济与商业模式创新挑战赛': imgDigital,
+  '智能制造与物联网应用赛': imgSmartMfg,
+  '校园电子商务运营挑战赛': imgEcommerce,
+  '软件工程创新项目挑战赛': imgSoftware,
+  '青年红色筑梦公益项目赛': imgRedDream
+}
+
+const getLocalImage = (name) => {
+  const key = name.replace(/^2026\s*/, '')
+  return competitionImages[key] || null
+}
+
 const router = useRouter()
 const userStore = useUserStore()
+
+// Refs for IntersectionObserver
+const particleContainer = ref(null)
+const cardSection = ref(null)
+const compSection = ref(null)
+const quickSection = ref(null)
+const particleCanvas = ref(null)
+const particleCanvas2 = ref(null)
+const particleCanvas3 = ref(null)
+const globalRainCanvas = ref(null)
+
+// 非首屏区域可见性控制
+const cardSectionVisible = ref(false)
+const compSectionVisible = ref(false)
+const quickSectionVisible = ref(false)
 
 const navigateTo = (path) => {
   if (path) router.push(path)
 }
 
-// 粒子样式生成
+// 粒子样式生成 - 使用primary色系，大小3-8px，透明度0.1-0.3
 const particleStyle = (i) => {
   const left = Math.random() * 100
-  const top = Math.random() * 100
-  const delay = Math.random() * 6
-  const duration = 4 + Math.random() * 4
+  const top = 60 + Math.random() * 40 // 从下方开始上浮
+  const delay = Math.random() * 8
+  const duration = 8 + Math.random() * 7 // 8-15秒周期
+  const size = 3 + Math.random() * 5 // 3-8px
+  const opacity = 0.1 + Math.random() * 0.2 // 0.1-0.3
   return {
     left: `${left}%`,
     top: `${top}%`,
+    width: `${size}px`,
+    height: `${size}px`,
+    opacity: opacity,
     animationDelay: `${delay}s`,
     animationDuration: `${duration}s`
   }
 }
+
+// IntersectionObserver 懒加载非首屏粒子/区域
+let observer = null
+
+onMounted(() => {
+  // 启动全局数字雨背景（铺满整个页面宽度）
+  initGlobalRain(globalRainCanvas)
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const target = entry.target
+          if (target === cardSection.value) { cardSectionVisible.value = true }
+          if (target === compSection.value) { compSectionVisible.value = true }
+          if (target === quickSection.value) { quickSectionVisible.value = true }
+        }
+      })
+    },
+    { threshold: 0.1, rootMargin: '100px' }
+  )
+
+  if (cardSection.value) observer.observe(cardSection.value)
+  if (compSection.value) observer.observe(compSection.value)
+  if (quickSection.value) observer.observe(quickSection.value)
+
+  window.addEventListener('resize', handleResize)
+})
+
+const flowAnimFrames = []
+
+function handleResize() {
+  flowAnimFrames.forEach(f => f())
+}
+
+// 全局数字雨背景 - 铺满整个页面宽度
+function initGlobalRain(canvasRef) {
+  const canvas = canvasRef?.value
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+
+  function resizeCanvas() {
+    const pageWidth = document.documentElement.scrollWidth || window.innerWidth
+    const pageHeight = document.documentElement.scrollHeight || window.innerHeight
+    canvas.width = pageWidth
+    canvas.height = pageHeight
+    return { w: pageWidth, h: pageHeight }
+  }
+
+  let { w, h } = resizeCanvas()
+
+  // 科幻数字雨风格的数据流
+  const fontSize = 14
+  let columns = Math.floor(w / fontSize)
+
+  // 数字和符号字符集（科幻感）
+  const chars = '0123456789ABCDEF'.split('')
+  const symbols = ['+', '-', '*', '/', '=', '<', '>', '{', '}', '[', ']', '|', '&', '%', '$', '#', '@']
+  const allChars = [...chars, ...symbols]
+
+  // 每列的状态
+  const drops = []
+  function initDrops() {
+    drops.length = 0
+    columns = Math.floor(w / fontSize)
+    for (let i = 0; i < columns; i++) {
+      drops.push({
+        x: i * fontSize,
+        y: Math.random() * h * 0.8 - h * 0.3,
+        speed: 0.8 + Math.random() * 1.5,
+        length: 8 + Math.floor(Math.random() * 18),
+        chars: [],
+        opacity: 0.03 + Math.random() * 0.06,
+        active: Math.random() > 0.6,
+        timer: Math.random() * 200
+      })
+    }
+    // 初始化每列的字符
+    drops.forEach(drop => {
+      drop.chars = []
+      for (let j = 0; j < drop.length; j++) {
+        drop.chars.push(allChars[Math.floor(Math.random() * allChars.length)])
+      }
+    })
+  }
+  initDrops()
+
+  // 偶尔出现的水平扫描线
+  const scanLines = []
+  let lastScanTime = 0
+
+  function createScanLine() {
+    scanLines.push({
+      y: Math.random() * h,
+      speed: 0.8 + Math.random() * 1.5,
+      opacity: 0.03 + Math.random() * 0.04,
+      width: 40 + Math.random() * 120,
+      life: 1.0,
+      decay: 0.003 + Math.random() * 0.005
+    })
+  }
+
+  function draw() {
+    // 检测页面高度变化（内容动态加载可能导致高度变化）
+    const currentHeight = document.documentElement.scrollHeight
+    if (currentHeight !== h) {
+      h = currentHeight
+      canvas.height = h
+    }
+
+    // 使用半透明覆盖，产生拖尾效果
+    ctx.fillStyle = 'rgba(248, 250, 252, 0.12)'
+    ctx.fillRect(0, 0, w, h)
+
+    // 绘制数字雨列
+    drops.forEach(drop => {
+      if (!drop.active) {
+        drop.timer--
+        if (drop.timer <= 0) {
+          drop.active = true
+          drop.timer = 100 + Math.random() * 300
+        }
+        return
+      }
+
+      drop.y += drop.speed
+
+      // 如果超出底部，重置到顶部
+      if (drop.y - drop.length * fontSize > h) {
+        drop.y = -drop.length * fontSize
+        drop.speed = 0.8 + Math.random() * 1.5
+        drop.length = 8 + Math.floor(Math.random() * 18)
+        drop.opacity = 0.03 + Math.random() * 0.06
+        // 随机停用一些列
+        if (Math.random() > 0.7) {
+          drop.active = false
+          drop.timer = 50 + Math.random() * 200
+        }
+        // 重新生成字符
+        drop.chars = []
+        for (let j = 0; j < drop.length; j++) {
+          drop.chars.push(allChars[Math.floor(Math.random() * allChars.length)])
+        }
+      }
+
+      // 绘制该列的字符
+      for (let j = 0; j < drop.length; j++) {
+        const cy = drop.y - j * fontSize
+        if (cy < -fontSize || cy > h + fontSize) continue
+
+        // 头部字符最亮（青色/蓝色）
+        let alpha, color
+        if (j === 0) {
+          alpha = drop.opacity * 3
+          color = '#22d3ee'
+        } else if (j < 3) {
+          alpha = drop.opacity * 2
+          color = '#0ea5e9'
+        } else {
+          alpha = drop.opacity * (1 - j / drop.length)
+          color = '#64748b'
+        }
+
+        // 偶尔闪烁变化字符
+        if (Math.random() > 0.995) {
+          drop.chars[j] = allChars[Math.floor(Math.random() * allChars.length)]
+        }
+
+        ctx.font = `${fontSize}px 'Courier New', monospace`
+        ctx.fillStyle = color
+        ctx.globalAlpha = Math.max(0, Math.min(1, alpha))
+        ctx.fillText(drop.chars[j], drop.x, cy)
+      }
+    })
+
+    // 偶尔生成水平扫描线
+    const now = Date.now()
+    if (now - lastScanTime > 4000 + Math.random() * 6000) {
+      createScanLine()
+      lastScanTime = now
+    }
+
+    // 绘制扫描线
+    for (let si = scanLines.length - 1; si >= 0; si--) {
+      const sl = scanLines[si]
+      sl.y += sl.speed
+      sl.life -= sl.decay
+
+      if (sl.life <= 0 || sl.y > h) {
+        scanLines.splice(si, 1)
+        continue
+      }
+
+      const sx = Math.random() * (w - sl.width)
+      ctx.fillStyle = '#0ea5e9'
+      ctx.globalAlpha = sl.opacity * sl.life
+      ctx.fillRect(sx, sl.y, sl.width, 1)
+
+      // 扫描线上的小光点
+      if (Math.random() > 0.5) {
+        ctx.fillStyle = '#22d3ee'
+        ctx.globalAlpha = sl.opacity * sl.life * 2
+        ctx.fillRect(sx + Math.random() * sl.width, sl.y, 2, 1)
+      }
+    }
+
+    ctx.globalAlpha = 1
+    flowAnimFrames[flowAnimFrames.indexOf(draw)] = requestAnimationFrame(draw)
+  }
+  flowAnimFrames.push(draw)
+  draw()
+
+  const cleanup = () => {
+    const idx = flowAnimFrames.indexOf(draw)
+    if (idx >= 0) cancelAnimationFrame(flowAnimFrames.splice(idx, 1)[0])
+  }
+  flowAnimFrames.push(cleanup)
+}
+
+// 兼容旧函数名（不再使用）
+function initDataFlow(canvasRef) {
+  // 已废弃，数字雨现在由 initGlobalRain 统一管理
+}
+
+onBeforeUnmount(() => {
+  if (observer) {
+    observer.disconnect()
+    observer = null
+  }
+  window.removeEventListener('resize', handleResize)
+  flowAnimFrames.forEach((f, i) => {
+    if (typeof f === 'number') cancelAnimationFrame(f)
+  })
+})
 
 // 功能卡片配置
 const allCards = [
@@ -380,6 +683,23 @@ const recommendedCompetitions = ref([
 .portal-page {
   min-height: 100vh;
   background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+  position: relative;
+}
+
+.global-rain-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.portal-banner,
+.portal-section {
+  position: relative;
+  z-index: 1;
 }
 
 /* Banner */
@@ -389,6 +709,44 @@ const recommendedCompetitions = ref([
   padding: 60px 40px;
   overflow: hidden;
   border-radius: 0 0 40px 40px;
+}
+
+/* 渐变动画背景 - 10-15秒周期缓慢变化 */
+.banner-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    #0c4a6e 0%,
+    #075985 25%,
+    #0ea5e9 50%,
+    #06b6d4 75%,
+    #0891b2 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 12s ease infinite;
+  z-index: 0;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 50% 0%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  75% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .banner-content {
@@ -480,6 +838,8 @@ const recommendedCompetitions = ref([
   color: #1e293b;
   font-weight: 600;
   padding: 12px 28px;
+  will-change: transform, box-shadow;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .banner-btn-primary:hover {
@@ -495,6 +855,8 @@ const recommendedCompetitions = ref([
   color: #ffffff;
   font-weight: 500;
   padding: 12px 28px;
+  will-change: transform, box-shadow;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .banner-btn-secondary:hover {
@@ -517,7 +879,7 @@ const recommendedCompetitions = ref([
   z-index: 0;
 }
 
-/* Particles */
+/* Particles - 纯CSS粒子动画 */
 .banner-particles {
   position: absolute;
   top: 0;
@@ -525,26 +887,50 @@ const recommendedCompetitions = ref([
   right: 0;
   bottom: 0;
   overflow: hidden;
-  z-index: 0;
+  z-index: 1;
 }
 
 .particle {
   position: absolute;
-  width: 4px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  animation: float 6s ease-in-out infinite;
+  will-change: transform, opacity;
+  animation: particleFloat linear infinite;
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-    opacity: 0.3;
+/* 粒子颜色 - primary色系 */
+.particle-1 {
+  background: #0ea5e9;
+}
+
+.particle-2 {
+  background: #06b6d4;
+}
+
+.particle-3 {
+  background: #0891b2;
+}
+
+/* 粒子缓慢上浮动画 - GPU加速 */
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: var(--particle-opacity, 0.2);
+  }
+  25% {
+    transform: translateY(-25%) translateX(10px) scale(1.1);
+    opacity: calc(var(--particle-opacity, 0.2) * 1.2);
   }
   50% {
-    transform: translateY(-20px) scale(1.2);
-    opacity: 0.6;
+    transform: translateY(-50%) translateX(-5px) scale(1);
+    opacity: var(--particle-opacity, 0.2);
+  }
+  75% {
+    transform: translateY(-75%) translateX(8px) scale(0.9);
+    opacity: calc(var(--particle-opacity, 0.2) * 0.8);
+  }
+  100% {
+    transform: translateY(-100%) translateX(0) scale(1);
+    opacity: var(--particle-opacity, 0.2);
   }
 }
 
@@ -562,6 +948,7 @@ const recommendedCompetitions = ref([
   position: absolute;
   border-radius: 50%;
   opacity: 0.15;
+  will-change: transform;
 }
 
 .c1 {
@@ -570,6 +957,7 @@ const recommendedCompetitions = ref([
   background: #7dd3fc;
   right: -50px;
   top: -50px;
+  animation: decoFloat1 8s ease-in-out infinite;
 }
 
 .c2 {
@@ -578,6 +966,7 @@ const recommendedCompetitions = ref([
   background: #38bdf8;
   right: 100px;
   bottom: -30px;
+  animation: decoFloat2 10s ease-in-out infinite;
 }
 
 .c3 {
@@ -586,6 +975,22 @@ const recommendedCompetitions = ref([
   background: #0ea5e9;
   right: 250px;
   top: 50%;
+  animation: decoFloat3 7s ease-in-out infinite;
+}
+
+@keyframes decoFloat1 {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-15px) scale(1.05); }
+}
+
+@keyframes decoFloat2 {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(10px) scale(1.03); }
+}
+
+@keyframes decoFloat3 {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(0.95); }
 }
 
 .deco-hexagon {
@@ -597,6 +1002,7 @@ const recommendedCompetitions = ref([
   background: rgba(255, 255, 255, 0.05);
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   animation: rotate 20s linear infinite;
+  will-change: transform;
 }
 
 .deco-dots {
@@ -619,6 +1025,18 @@ const recommendedCompetitions = ref([
   padding: 40px;
   max-width: 1400px;
   margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.data-flow-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .section-title {
@@ -626,6 +1044,8 @@ const recommendedCompetitions = ref([
   font-weight: 600;
   color: #1e293b;
   margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .section-header {
@@ -633,6 +1053,8 @@ const recommendedCompetitions = ref([
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Card Grid */
@@ -640,6 +1062,8 @@ const recommendedCompetitions = ref([
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
+  position: relative;
+  z-index: 1;
 }
 
 .portal-card {
@@ -647,15 +1071,22 @@ const recommendedCompetitions = ref([
   border-radius: 16px;
   padding: 28px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid #e2e8f0;
   position: relative;
   overflow: hidden;
+  will-change: transform, box-shadow;
 }
 
+/* 卡片hover微动效 - 上浮4px + 阴影增强 */
 .portal-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+}
+
+/* 卡片图标hover微动效 - 旋转缩放 */
+.portal-card:hover .card-icon {
+  transform: scale(1.15) rotate(5deg);
 }
 
 .portal-card::before {
@@ -700,6 +1131,8 @@ const recommendedCompetitions = ref([
 
 .card-icon {
   margin-bottom: 16px;
+  will-change: transform;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-title {
@@ -721,7 +1154,8 @@ const recommendedCompetitions = ref([
   right: 20px;
   bottom: 20px;
   color: #94a3b8;
-  transition: all 0.3s ease;
+  will-change: transform;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s ease;
 }
 
 .portal-card:hover .card-arrow {
@@ -734,6 +1168,8 @@ const recommendedCompetitions = ref([
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
+  position: relative;
+  z-index: 1;
 }
 
 .competition-item {
@@ -741,8 +1177,9 @@ const recommendedCompetitions = ref([
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid #e2e8f0;
+  will-change: transform, box-shadow;
 }
 
 .competition-item:hover {
@@ -751,32 +1188,51 @@ const recommendedCompetitions = ref([
 }
 
 .comp-poster {
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0f172a;
 }
 
-.comp-name {
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.4;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+.comp-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.comp-poster-fallback {
+  width: 100%;
+  height: 100%;
 }
 
 .comp-info {
   padding: 16px;
 }
 
+.comp-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comp-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .comp-category {
-  margin-left: 8px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: none;
 }
 
 .comp-time {
-  margin-top: 8px;
   font-size: 13px;
   color: #64748b;
 }
@@ -786,6 +1242,8 @@ const recommendedCompetitions = ref([
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
 }
 
 .quick-btn {
@@ -795,5 +1253,30 @@ const recommendedCompetitions = ref([
   padding: 12px 24px;
   border-radius: 12px;
   font-weight: 500;
+  will-change: transform;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quick-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .particle,
+  .banner-gradient-bg,
+  .deco-circle,
+  .deco-hexagon {
+    animation: none !important;
+  }
+  .portal-card,
+  .competition-item,
+  .quick-btn,
+  .card-icon,
+  .card-arrow,
+  .banner-btn-primary,
+  .banner-btn-secondary {
+    transition: none !important;
+  }
 }
 </style>

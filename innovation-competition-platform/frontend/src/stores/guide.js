@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useGuideStore = defineStore('guide', () => {
-  // State
   const isVisible = ref(false)
   const currentStep = ref(0)
   const currentRole = ref('')
@@ -10,10 +9,8 @@ export const useGuideStore = defineStore('guide', () => {
   const hasShownGuide = ref(false)
   const isFirstLogin = ref(false)
 
-  // Getters
   const opacityValue = computed(() => opacity.value / 100)
 
-  // Actions
   const showGuide = (role, firstLogin = false) => {
     currentRole.value = role
     currentStep.value = 0
@@ -60,194 +57,240 @@ export const useGuideStore = defineStore('guide', () => {
     const steps = {
       student: [
         {
-          title: '欢迎使用创新创业平台',
-          content: '这里是您的创新创业项目管理助手。让我带您快速了解系统的核心功能。',
+          title: '欢迎使用创新创业平台 v2.0',
+          content: '欢迎来到双创竞赛服务平台！本次更新集成了 Live2D 虚拟形象「火花」、AI 智能对话、语音交互、训练营和在线课程等全新功能。让我带你快速了解所有功能。',
           target: null,
           position: 'center'
         },
         {
-          title: '数据看板',
-          content: '这里展示了您的项目概览、待办任务和最新动态，帮助您快速了解当前状态。',
-          target: '.page-title',
+          title: '平台导航栏',
+          content: '顶部导航栏可以快速切换不同模块：首页、竞赛广场、项目、训练营、课程、AI助手等。点击即可跳转。',
+          target: '.top-header',
           position: 'bottom'
         },
         {
-          title: '我的项目',
-          content: '在"我的项目"页面，您可以创建新的创新创业项目，管理已有项目的详细信息。',
-          target: null,
-          position: 'center'
+          title: '工作台数据看板',
+          content: '这里展示了你的项目概览、待办任务数和最新动态，帮助你快速了解当前状态。',
+          target: '.page-title',
+          position: 'bottom',
+          routePath: '/dashboard'
         },
         {
-          title: '项目详情',
-          content: '点击项目卡片进入详情页，您可以编辑项目信息、提交评审、查看评审结果。',
-          target: null,
-          position: 'center'
+          title: '创建新项目',
+          content: '在"我的项目"页面，点击"创建项目"按钮即可开始你的创新创业之旅。填写项目信息后可邀请团队成员加入。',
+          target: '.nav-item[href="/create-project"], a[href*="create-project"]',
+          position: 'right',
+          routePath: '/my-projects'
+        },
+        {
+          title: '竞赛广场与报名',
+          content: '在竞赛广场浏览所有可用赛事，查看详情页的时间安排、奖项设置等信息。点击"立即报名"参与比赛。',
+          target: '.top-nav-item[href="/competitions"], .nav-item[href*="competitions"]',
+          position: 'bottom',
+          routePath: '/competitions'
+        },
+        {
+          title: '创新创业训练营',
+          content: '全新的训练营模块！提供4大主题训练营：创新基础、商业计划书写作、路演表达、AI项目孵化。每个训练营包含完整的大纲、章节和讲师信息。点击"开始学习"即可进入。',
+          target: '.top-nav-item[href="/training-camps"]',
+          position: 'bottom',
+          routePath: '/training-camps'
+        },
+        {
+          title: '在线课程中心',
+          content: '系统化的在线课程体系：创业基础、市场调研方法、商业模式设计、路演技巧、法律知识等。点击"查看课程"了解详情并开始学习。',
+          target: '.top-nav-item[href="/courses"]',
+          position: 'bottom',
+          routePath: '/courses'
+        },
+        {
+          title: 'AI 助手「火花」- 全局浮动伙伴',
+          content: '左下角的 Live2D 看板娘「火花」是你的 AI 助手入口！点击她即可打开对话面板。支持文字/语音输入、AI 流式对话、语音朗读。面板内还可切换到"AI 分析"模式，生成项目简介、商业建议和风险分析。',
+          target: '#waifu',
+          position: 'right'
         },
         {
           title: '团队成员管理',
-          content: '在成员管理页面，您可以添加团队成员、分配角色和分工，打造高效协作团队。',
+          content: '在成员管理页面添加团队成员、分配角色和分工，打造高效协作的创业团队。',
+          target: null,
+          position: 'center',
+          routePath: '/projects/1/members'
+        },
+        {
+          title: '材料上传与任务管理',
+          content: '上传项目申报书、商业计划书、路演PPT等材料，创建任务跟踪项目进度，确保按时完成各阶段目标。',
           target: null,
           position: 'center'
         },
         {
-          title: '项目材料上传',
-          content: '上传项目申报书、商业计划书、路演PPT等材料，支持多种文件格式。',
-          target: null,
-          position: 'center'
-        },
-        {
-          title: '任务进度管理',
-          content: '创建任务、设置优先级和截止时间，跟踪项目进度，确保按时完成。',
-          target: null,
-          position: 'center'
-        },
-        {
-          title: 'AI 项目助手',
-          content: '使用 AI 助手生成项目简介、商业计划书建议和风险分析，提升项目质量。',
-          target: null,
-          position: 'center'
-        },
-        {
-          title: '开始您的创新创业之旅',
-          content: '现在您可以开始创建自己的创新创业项目了！祝您比赛顺利！',
+          title: '开始你的创新创业之旅',
+          content: '现在你已经了解了平台的所有核心功能！从创建项目开始，利用 AI 助手优化方案，参加训练营提升能力，最终在竞赛中脱颖而出。祝你好运！',
           target: null,
           position: 'center'
         }
       ],
       teacher: [
         {
-          title: '欢迎使用创新创业平台',
-          content: '作为指导老师，您可以在这里管理指导的学生项目，协助他们完善项目。',
+          title: '欢迎使用创新创业平台 v2.0',
+          content: '欢迎老师！平台已升级至 v2.0，新增 AI 对话、Live2D 虚拟形象、训练营、课程等功能。让我带你快速了解指导老师视角的功能。',
           target: null,
           position: 'center'
         },
         {
-          title: '数据看板',
-          content: '查看您指导的所有项目概览，了解项目状态和进度。',
-          target: '.page-title',
-          position: 'bottom'
+          title: '导航与工作台',
+          content: '通过顶部导航或左侧菜单访问各模块。工作台展示你指导的所有学生项目概览。',
+          target: '.top-header',
+          position: 'bottom',
+          routePath: '/dashboard'
         },
         {
-          title: '指导项目',
-          content: '在"指导项目"页面，查看您负责指导的所有学生项目列表。',
+          title: '指导项目管理',
+          content: '在"指导项目"页面查看你负责的所有学生项目列表，点击进入详情页审核内容、给出指导意见。',
+          target: '.nav-item[href="/guide-projects"], .top-nav-item[href*="guide"]',
+          position: 'right',
+          routePath: '/guide-projects'
+        },
+        {
+          title: '项目审核功能',
+          content: '对学生提交的项目进行审核，检查项目信息的完整性和可行性，给出专业反馈意见帮助学生改进。',
           target: null,
           position: 'center'
         },
         {
-          title: '项目详情与审核',
-          content: '点击项目查看详情，您可以查看项目材料、审核项目内容、给出指导意见。',
-          target: null,
-          position: 'center'
+          title: '训练营与课程资源',
+          content: '推荐学生使用训练营和课程资源提升能力。训练营涵盖创新基础、BP写作、路演表达、AI孵化四大方向。',
+          target: '.top-nav-item[href="/training-camps"]',
+          position: 'bottom',
+          routePath: '/training-camps'
+        },
+        {
+          title: 'AI 助手「火花」',
+          content: '左下角的 Live2D 看板娘「火花」是你的 AI 助手入口！点击她打开对话面板，可为学生的项目生成商业计划书建议和风险分析报告，辅助你进行更专业的指导。',
+          target: '#waifu',
+          position: 'right'
         },
         {
           title: '评审结果查看',
-          content: '查看项目的评审结果和评委反馈，帮助学生改进项目。',
-          target: null,
-          position: 'center'
-        },
-        {
-          title: 'AI 助手辅助',
-          content: '使用 AI 助手为学生的项目提供商业计划书建议和风险分析。',
+          content: '查看项目的评审结果和评委反馈，协助学生根据反馈改进项目方案。',
           target: null,
           position: 'center'
         },
         {
           title: '开始指导学生',
-          content: '现在您可以开始查看和指导学生的创新创业项目了！',
+          content: '现在你可以开始查看和指导学生的创新创业项目了！善用 AI 工具提升效率，祝指导顺利！',
           target: null,
           position: 'center'
         }
       ],
       judge: [
         {
-          title: '欢迎使用创新创业平台',
-          content: '作为评委，您可以在这里查看待评审项目，进行专业评审打分。',
+          title: '欢迎使用创新创业平台 v2.0',
+          content: '欢迎评委老师！平台已升级，新增多项功能。让我带你快速了解评委视角的核心操作。',
           target: null,
           position: 'center'
         },
         {
-          title: '数据看板',
-          content: '查看您的评审任务概览，了解待评审和已评审项目数量。',
-          target: '.page-title',
-          position: 'bottom'
+          title: '导航与数据看板',
+          content: '顶部导航快速切换模块，工作台展示待评审和已评审的项目数量统计。',
+          target: '.top-header',
+          position: 'bottom',
+          routePath: '/dashboard'
         },
         {
-          title: '待评审项目',
-          content: '在"待评审项目"页面，查看所有需要您评审的项目列表。',
+          title: '待评审项目列表',
+          content: '在"待评审项目"页面查看所有分配给你的评审任务，按优先级和时间安排进行评审。',
+          target: '.nav-item[href="/pending-reviews"], .top-nav-item[href*="pending"]',
+          position: 'right',
+          routePath: '/pending-reviews'
+        },
+        {
+          title: '项目评审打分',
+          content: '点击项目进入评审详情页，查看项目信息、材料、任务进度，然后从创新性、可行性、市场前景、团队能力、商业模式、技术实现、路演表现七个维度进行评分。',
           target: null,
           position: 'center'
         },
         {
-          title: '项目评审',
-          content: '点击项目进入评审页面，查看项目详情、材料、任务进度，然后进行打分。',
+          title: '评审记录查询',
+          content: '在"评审记录"页面查看所有历史评审记录和评分详情，支持按时间、状态筛选。',
           target: null,
           position: 'center'
         },
         {
-          title: '评分维度',
-          content: '从创新性、可行性、市场前景、团队能力、商业模式、技术实现、路演表现七个维度进行评分。',
-          target: null,
-          position: 'center'
-        },
-        {
-          title: '评审记录',
-          content: '在"评审记录"页面，查看您所有的评审历史和评分详情。',
-          target: null,
-          position: 'center'
+          title: 'AI 辅助参考',
+          content: '左下角的 Live2D 看板娘「火花」是你的 AI 助手入口！点击她打开对话面板，可为项目生成风险分析和建议报告，作为评审参考依据。',
+          target: '#waifu',
+          position: 'right'
         },
         {
           title: '开始评审',
-          content: '现在您可以开始评审学生的创新创业项目了！感谢您的专业评审！',
+          content: '现在你可以开始评审学生的创新创业项目了！感谢您的专业评审！',
           target: null,
           position: 'center'
         }
       ],
       admin: [
         {
-          title: '欢迎使用创新创业平台',
-          content: '作为管理员，您可以在这里管理整个比赛系统，包括用户、项目、比赛批次等。',
+          title: '欢迎使用创新创业平台 v2.0',
+          content: '欢迎管理员！平台已全面升级至 v2.0，新增 Live2D 形象、AI 对话、训练营、课程等功能模块。让我带你了解管理员后台的全部功能。',
           target: null,
           position: 'center'
         },
         {
           title: '管理员数据看板',
-          content: '这里展示了系统的核心统计数据：用户数、项目数、评审数等，以及图表可视化。',
+          content: '这里展示系统的核心统计数据：用户总数、项目数、评审数、竞赛批次等，配有图表可视化展示。',
           target: '.page-title',
-          position: 'bottom'
+          position: 'bottom',
+          routePath: '/dashboard'
         },
         {
           title: '用户管理',
-          content: '在"用户管理"页面，查看和管理所有注册用户，可以编辑用户信息和权限。',
-          target: null,
-          position: 'center'
-        },
-        {
-          title: '项目管理',
-          content: '查看和管理系统中的所有项目，可以查看项目详情、审核状态。',
-          target: null,
-          position: 'center'
+          content: '在"用户管理"页面查看和管理所有注册用户，编辑用户信息和角色权限（学生/教师/评委/管理员）。',
+          target: '.nav-item[href="/user-management"]',
+          position: 'right',
+          routePath: '/user-management'
         },
         {
           title: '比赛批次管理',
-          content: '创建和管理比赛批次，设置比赛时间、状态和描述信息。',
-          target: null,
-          position: 'center'
+          content: '创建和管理比赛批次，设置比赛名称、时间范围、状态描述等信息，控制比赛的报名和评审流程。',
+          target: '.nav-item[href="/competition-management"]',
+          position: 'right',
+          routePath: '/competition-management'
         },
         {
-          title: '评审管理',
-          content: '查看所有评审记录，监控评审进度和评分分布。',
-          target: null,
-          position: 'center'
+          title: '报名管理与审核',
+          content: '查看所有参赛报名信息，审核报名材料的完整性和合规性。',
+          target: '.nav-item[href="/registration-management"]',
+          position: 'right'
         },
         {
-          title: '系统管理',
-          content: '您拥有系统的最高权限，可以管理所有数据和配置。',
-          target: null,
-          position: 'center'
+          title: '项目管理总览',
+          content: '管理系统中的所有项目，查看项目详情、审核状态、团队信息等。',
+          target: '.nav-item[href="/project-management"]',
+          position: 'right',
+          routePath: '/project-management'
+        },
+        {
+          title: '评审管理与监控',
+          content: '监控所有评审进度和评分分布情况，确保评审工作的公平性和及时性。',
+          target: '.nav-item[href="/review-management"]',
+          position: 'right'
+        },
+        {
+          title: '新功能：训练营与课程',
+          content: 'v2.0 新增的训练营和课程模块为学生提供系统化学习资源，可在管理后台查看相关数据统计。',
+          target: '.top-nav-item[href="/training-camps"]',
+          position: 'bottom',
+          routePath: '/training-camps'
+        },
+        {
+          title: 'AI 助手「火花」',
+          content: '左下角的 Live2D 看板娘「火花」是平台的 AI 助手入口！点击她打开对话面板，支持智能对话和 AI 分析功能（项目简介/商业建议/风险分析）。',
+          target: '#waifu',
+          position: 'right'
         },
         {
           title: '开始管理系统',
-          content: '现在您可以开始管理创新创业比赛系统了！',
+          content: '现在你已经了解了管理员后台的全部功能模块。祝你管理工作顺利！',
           target: null,
           position: 'center'
         }

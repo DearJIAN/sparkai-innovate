@@ -1,7 +1,7 @@
 <template>
   <teleport to="body">
     <div ref="waifuContainer" class="live2d-widget-container">
-      <div id="waifu" class="waifu">
+      <div id="waifu" class="waifu" v-show="visible">
         <div class="waifu-tips" v-show="showTips" @click="showTips = false">
           <span>{{ tipText }}</span>
         </div>
@@ -12,12 +12,21 @@
           </span>
         </div>
       </div>
+      <div v-if="!loaded && !loadError" class="live2d-loading">
+        <el-icon class="is-loading" size="32"><Loading /></el-icon>
+        <span>火花加载中...</span>
+      </div>
+      <div v-if="loadError" class="live2d-error" @click="retryInit">
+        <el-icon size="24"><WarningFilled /></el-icon>
+        <span>加载失败，点击重试</span>
+      </div>
     </div>
   </teleport>
 </template>
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { Loading, WarningFilled } from '@element-plus/icons-vue'
 import { useLive2d } from '@/composables/useLive2d'
 
 const { detectEmotionByText, getExpressionByEmotion, updateExpressionByText, notifyLive2dHook } = useLive2d()
@@ -25,14 +34,15 @@ const { detectEmotionByText, getExpressionByEmotion, updateExpressionByText, not
 const showTips = ref(false)
 const tipText = ref('')
 const waifuContainer = ref(null)
+const visible = ref(true)
+const loaded = ref(false)
+const loadError = ref(false)
+let retryCount = 0
 
 const tools = [
   { name: '切换表情', icon: '😊', action: () => switchExpression() },
-  { name: '切换模型', icon: '👗', action: () => switchModel() },
   { name: '隐藏', icon: '✖', action: () => hideWaifu() },
 ]
-
-const visible = ref(true)
 
 function switchExpression() {
   if (window.__expressionControlsState) {
@@ -44,12 +54,6 @@ function switchExpression() {
         window.__syncExpressionState(randomExpr)
       }
     }
-  }
-}
-
-function switchModel() {
-  if (window.loadlive2d) {
-    window.loadlive2d('live2d', '/live2d/huahuo/火花.model3.json')
   }
 }
 
@@ -69,33 +73,6 @@ function showWaifu() {
   visible.value = true
 }
 
-function initLive2D() {
-  const existingLink = document.querySelector('link[href*="waifu.css"]')
-  if (!existingLink) {
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = '/live2d-widget-dist/waifu.css'
-    document.head.appendChild(link)
-  }
-
-  const existingScript = document.querySelector('script[src*="waifu-tips"]')
-  if (!existingScript) {
-    const script = document.createElement('script')
-    script.src = '/live2d-widget-dist/waifu-tips.js'
-    script.onload = () => {
-      setTimeout(() => {
-        if (window.initWidget) {
-          window.initWidget({
-            cdnPath: '/live2d/huahuo/',
-            waifuPath: '/live2d-widget-dist/waifu-huahuo.json',
-          })
-        }
-      }, 500)
-    }
-    document.body.appendChild(script)
-  }
-}
-
 function setupExpressionControls() {
   window.__expressionControlsState = {
     baseExpressions: [
@@ -113,6 +90,25 @@ function setupExpressionControls() {
       model.setExpression(expressionName)
     }
     window.__expressionControlsState.currentBase = expressionName
+  }
+
+  window.__applySpeechStateToCore = (state) => {
+    const model = window.__live2dModel
+    if (!model) return
+    if (model.coreModel && model.coreModel.internalModel) {
+      const core = model.coreModel.internalModel
+      if (core.setParameterValueById) {
+        const mouthOpenY = state.mouthOpenY !== undefined ? state.mouthOpenY : 0
+        core.setParameterValueById('ParamMouthOpenY', mouthOpenY)
+      }
+    }
+  }
+
+  window.__applyOverlayStateToCore = (overlayNames) => {
+    const model = window.__live2dModel
+    if (model && model.setExpression) {
+      overlayNames.forEach(name => model.setExpression(name))
+    }
   }
 }
 
@@ -134,7 +130,7 @@ function setupVoiceHooks() {
         window.__applySpeechStateToCore({ mouthOpenY: 0 })
       }
     },
-    onSpeechStart: (payload) => {
+    onSpeechStart: () => {
       window.__syncExpressionState && window.__syncExpressionState('07 星星眼')
     },
     onSpeechPulse: (payload) => {
@@ -152,6 +148,127 @@ function setupVoiceHooks() {
   }
 }
 
+async function loadLive2DLibraries() {
+  return new Promise((resolve, reject) => {
+    const TIMEOUT_MS = 15000
+    let resolved = false
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true
+        reject(new Error('Live2D library load timeout'))
+      }
+    }, TIMEOUT_MS)
+
+    const checkAndResolve = () => {
+      if (!resolved) {
+        resolved = true
+        clearTimeout(timer)
+        resolve()
+      }
+    }
+
+    const existingCss = document.querySelector('link[href*="waifu.css"]')
+    if (!existingCss) {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = '/live2d-widget-dist/waifu.css'
+      link.onload = checkAndResolve
+      document.head.appendChild(link)
+    }
+
+    const existingScript = document.querySelector('script[src*="live2d-widget-dist/chunk/index"]')
+    if (!existingScript) {
+      const script1 = document.createElement('script')
+      script1.src = '/live2d-widget-dist/chunk/index.js'
+      script1.onerror = () => { if (!resolved) { resolved = true; clearTimeout(timer); reject(new Error('Failed to load index.js')) } }
+      document.body.appendChild(script1)
+
+      const script2 = document.createElement('script')
+      script2.src = '/live2d-widget-dist/chunk/index2.js'
+      script2.onerror = () => { if (!resolved) { resolved = true; clearTimeout(timer); reject(new Error('Failed to load index2.js')) } }
+      document.body.appendChild(script2)
+    }
+
+    const existingTipsScript = document.querySelector('script[src*="waifu-tips"]')
+    if (!existingTipsScript) {
+      const tipsScript = document.createElement('script')
+      tipsScript.src = '/live2d-widget-dist/waifu-tips.js'
+      tipsScript.onload = checkAndResolve
+      tipsScript.onerror = () => { if (!resolved) { resolved = true; clearTimeout(timer); reject(new Error('Failed to load waifu-tips.js')) } }
+      document.body.appendChild(tipsScript)
+    }
+
+    setTimeout(checkAndResolve, 2000)
+  })
+}
+
+async function initLive2D() {
+  try {
+    loadError.value = false
+    await loadLive2DLibraries()
+
+    await new Promise((resolve, reject) => {
+      let attempts = 0
+      const maxAttempts = 20
+      const interval = setInterval(() => {
+        attempts++
+        if (window.initWidget) {
+          clearInterval(interval)
+          resolve()
+        } else if (attempts >= maxAttempts) {
+          clearInterval(interval)
+          reject(new Error('initWidget not found after waiting'))
+        }
+      }, 300)
+    })
+
+    if (window.initWidget) {
+      window.initWidget({
+        cdnPath: '/live2d/huahuo/',
+        waifuPath: '/live2d-widget-dist/waifu-huahuo.json',
+      })
+    }
+
+    await new Promise((resolve) => {
+      let attempts = 0
+      const maxAttempts = 30
+      const interval = setInterval(() => {
+        attempts++
+        const canvas = document.getElementById('live2d')
+        if (canvas && canvas.getContext('2d') && canvas.width > 0) {
+          const ctx = canvas.getContext('2d')
+          const imageData = ctx.getImageData(0, 0, 1, 1)
+          if (imageData.data[3] > 0) {
+            clearInterval(interval)
+            loaded.value = true
+            resolve()
+          }
+        }
+        if (attempts >= maxAttempts) {
+          clearInterval(interval)
+          loaded.value = true
+          resolve()
+        }
+      }, 300)
+    })
+
+  } catch (err) {
+    console.warn('Live2D init error:', err.message)
+    loadError.value = true
+  }
+}
+
+function retryInit() {
+  if (retryCount >= 3) {
+    loadError.value = false
+    return
+  }
+  retryCount++
+  loadError.value = false
+  loaded.value = false
+  initLive2D()
+}
+
 defineExpose({
   showWaifu,
   hideWaifu,
@@ -167,7 +284,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  const scripts = document.querySelectorAll('script[src*="live2d"]')
+  const scripts = document.querySelectorAll('script[src*="live2d"], script[src*="waifu-tips"], script[src*="chunk/index"]')
   scripts.forEach(s => s.remove())
   const links = document.querySelectorAll('link[href*="waifu"]')
   links.forEach(l => l.remove())
@@ -189,12 +306,13 @@ onBeforeUnmount(() => {
 <style>
 .live2d-widget-container {
   z-index: 9999;
-}
-
-#waifu {
   position: fixed;
   bottom: 0;
   right: 20px;
+}
+
+#waifu {
+  position: relative;
   z-index: 9999;
   cursor: grab;
   user-select: none;
@@ -213,6 +331,7 @@ onBeforeUnmount(() => {
   transition: opacity 0.3s;
 }
 
+#wafu:hover .waifu-tool,
 #waifu:hover .waifu-tool {
   opacity: 1;
 }
@@ -242,7 +361,37 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   cursor: pointer;
   max-width: 280px;
-  white-space: normal;
   text-align: center;
+}
+
+.live2d-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-500);
+  font-size: 13px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.live2d-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ef4444;
+  font-size: 13px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.live2d-error:hover {
+  background: rgba(255, 255, 255, 1);
 }
 </style>

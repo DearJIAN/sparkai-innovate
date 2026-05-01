@@ -50,7 +50,12 @@
             <h3 class="cert-title">{{ cert.title }}</h3>
             <p class="cert-issuer">颁发机构：{{ cert.issuer }}</p>
             <p class="cert-date">获得时间：{{ cert.date }}</p>
-            <el-tag :type="cert.statusType" size="small">{{ cert.status }}</el-tag>
+            <div class="cert-actions">
+              <el-tag :type="cert.statusType" size="small">{{ cert.status }}</el-tag>
+              <el-button type="primary" size="small" link @click="viewCertDetail(cert)">
+                查看详情
+              </el-button>
+            </div>
           </div>
         </div>
       </div>
@@ -79,6 +84,11 @@
             <p class="award-project">项目：{{ award.project }}</p>
             <p class="award-date">获奖时间：{{ award.date }}</p>
           </div>
+          <div class="award-actions">
+            <el-button type="primary" size="small" link @click="viewAwardDetail(award)">
+              查看详情
+            </el-button>
+          </div>
         </div>
       </div>
 
@@ -88,12 +98,39 @@
         :image-size="120"
       />
     </div>
+
+    <!-- 证书/获奖详情图片弹窗 -->
+    <el-dialog
+      v-model="imageDialogVisible"
+      :title="dialogTitle"
+      width="800px"
+      align-center
+      destroy-on-close
+      class="cert-image-dialog"
+    >
+      <div class="cert-image-wrapper">
+        <img
+          v-if="dialogImage"
+          :src="dialogImage"
+          :alt="dialogTitle"
+          class="cert-image"
+        />
+        <el-empty v-else description="暂无图片" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { Trophy, Medal, DocumentChecked, Star } from '@element-plus/icons-vue'
+
+// 导入证书图片
+import certInnovation from '@/assets/images/certificates/创新创业基础训练营结业证书.png'
+import certAI from '@/assets/images/certificates/AI 项目孵化训练营结业证书.png'
+import certBusiness from '@/assets/images/certificates/商业计划书写作训练营结业证书.png'
+import awardInnovation from '@/assets/images/certificates/2025 大学生创新创业计划训练赛.png'
+import awardEcommerce from '@/assets/images/certificates/2025 校园电子商务运营挑战赛.png'
 
 const stats = ref({
   competitions: 5,
@@ -111,7 +148,8 @@ const certificates = ref([
     status: '已发放',
     statusType: 'success',
     icon: 'DocumentChecked',
-    gradient: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'
+    gradient: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
+    image: certInnovation
   },
   {
     id: 2,
@@ -121,7 +159,8 @@ const certificates = ref([
     status: '已发放',
     statusType: 'success',
     icon: 'DocumentChecked',
-    gradient: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)'
+    gradient: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+    image: certAI
   },
   {
     id: 3,
@@ -131,7 +170,8 @@ const certificates = ref([
     status: '已发放',
     statusType: 'success',
     icon: 'DocumentChecked',
-    gradient: 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)'
+    gradient: 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)',
+    image: certBusiness
   }
 ])
 
@@ -142,7 +182,8 @@ const awards = ref([
     project: '智慧校园服务平台',
     level: 'second',
     levelText: '二等奖',
-    date: '2025-07-15'
+    date: '2025-07-15',
+    image: awardInnovation
   },
   {
     id: 2,
@@ -150,9 +191,26 @@ const awards = ref([
     project: '校园二手交易平台',
     level: 'third',
     levelText: '三等奖',
-    date: '2025-05-20'
+    date: '2025-05-20',
+    image: awardEcommerce
   }
 ])
+
+const imageDialogVisible = ref(false)
+const dialogTitle = ref('')
+const dialogImage = ref('')
+
+const viewCertDetail = (cert) => {
+  dialogTitle.value = cert.title
+  dialogImage.value = cert.image || ''
+  imageDialogVisible.value = true
+}
+
+const viewAwardDetail = (award) => {
+  dialogTitle.value = award.competition + ' - ' + award.levelText
+  dialogImage.value = award.image || ''
+  imageDialogVisible.value = true
+}
 </script>
 
 <style scoped>
@@ -237,7 +295,7 @@ const awards = ref([
 
 .certificates-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
 }
 
@@ -282,6 +340,13 @@ const awards = ref([
   margin-bottom: 4px;
 }
 
+.cert-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
 .awards-list {
   display: flex;
   flex-direction: column;
@@ -296,6 +361,11 @@ const awards = ref([
   border-radius: 12px;
   padding: 16px 20px;
   border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.award-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .award-badge {
@@ -320,6 +390,10 @@ const awards = ref([
   background: linear-gradient(135deg, #b45309, #d97706);
 }
 
+.award-body {
+  flex: 1;
+}
+
 .award-title {
   font-size: 15px;
   font-weight: 600;
@@ -333,9 +407,44 @@ const awards = ref([
   color: #64748b;
 }
 
+.award-actions {
+  flex-shrink: 0;
+}
+
+.cert-image-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.cert-image {
+  max-width: 100%;
+  max-height: 600px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .certificate-card {
+    flex-direction: column;
+  }
+
+  .cert-icon {
+    width: 100%;
+    height: 60px;
+  }
+
+  .award-card {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>
