@@ -25,12 +25,7 @@ timeout /t 1 /nobreak >nul
 
 echo.
 echo [1/4] Checking frontend dependencies...
-if not exist "frontend\node_modules" (
-    echo     Installing frontend dependencies for the first time...
-    call npm install --prefix frontend
-) else (
-    echo     Frontend dependencies already installed
-)
+call npm install --prefix frontend
 
 echo.
 echo [2/4] Starting backend service...

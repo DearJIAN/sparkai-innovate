@@ -439,6 +439,12 @@ innovation-competition-platform/
 
 ## 快速开始
 
+> **仓库内容说明**：`.gitignore` 已配置忽略以下内容，clone 后这些目录会自动从源码运行，无需手动处理：
+> - `frontend/dist/` — Vite `npm run build` 产生的打包产物，`npm run dev` 开发模式直接使用 `src/` 源码
+> - `backend/vector_stores/` — FAISS/BM25 运行时生成的向量索引，启动服务后自动重建
+> - `node_modules/`、`__pycache__/`、`venv/` — 依赖缓存
+> - `backend/.env` — 含密钥的本地配置文件（`.gitignore` 不忽略，由协作者自行复制 `.env.example` 配置）
+
 ### 方式一：一键启动（推荐）
 
 双击项目根目录的 `start.bat`，脚本会自动：
@@ -524,7 +530,7 @@ DOUBAO_ASR_CHANNEL=1
 DOUBAO_ASR_LANGUAGE=zh-CN
 ```
 
-> **注意**：`.env.example` 仅包含基础配置（Flask/MySQL/JWT），AI/ASR/TTS 相关配置需手动添加。
+> **注意**：`.env.example` 包含完整配置模板（Flask/MyySQL/JWT/火山方舟 AI/实时语音/ASR），协作者按注释填入自己的凭证即可。
 
 #### 4. 后端启动
 
@@ -561,6 +567,8 @@ npm run dev
 前端服务默认运行在 http://localhost:5173
 
 > **Vite 代理配置**：`/api` 和 `/uploads` 请求代理到 `http://localhost:5000`，CSP header 允许 `unsafe-eval`（Live2D SDK 需要）。
+
+> **`frontend/dist/` 目录说明**：`npm run build` 时 Vite 将 `src/` 源码编译打包后输出的静态文件目录，包含 `index.html`、编译后的 JS/CSS 以及 `public/` 目录的拷贝（Live2D 模型、Widget SDK 等）。此目录已被 `.gitignore` 忽略，协作者 clone 后 `npm run dev` 会自动使用源码目录运行，无需手动处理。
 
 #### 6. 初始化测试数据
 
