@@ -1,0 +1,1 @@
+import{i as e}from"./index-BFAveDQn.js";var t=t=>e.get(`/projects`,{params:t}),n=t=>e.get(`/projects/${t}`),r=t=>e.post(`/projects`,t),i=(t,n)=>e.put(`/projects/${t}`,n),a=t=>e.post(`/projects/${t}/submit`);export{i as a,a as i,n,t as r,r as t};

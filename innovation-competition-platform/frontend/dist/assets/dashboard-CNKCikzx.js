@@ -1,0 +1,1 @@
+import{i as e}from"./index-BFAveDQn.js";var t=()=>e.get(`/dashboard/stats`),n=()=>e.get(`/dashboard/recent`);export{n,t};

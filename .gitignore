@@ -1,91 +1,36 @@
-# 操作系统文件
+# 操作系统
 .DS_Store
 Thumbs.db
-*.tmp
-*.swp
-*.swo
-*~
 
-# 编辑器配置
+# 编辑器
 .vscode/
 .idea/
-*.iml
-*.ipr
-*.iws
-
-# 日志文件
-*.log
-logs/
-
-# 临时文件
-temp/
-tmp/
 
 # Python 虚拟环境
 venv/
 env/
 .venv/
-.python-version
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-.Python
 
-# Node.js 依赖
+# Node 依赖（根目录如果有前端独立项目）
 node_modules/
-package-lock.json
-yarn.lock
 
-# 前端构建产物
-dist/
-build/
-*.min.js
-*.min.css
+# 日志和临时文件
+*.log
+logs/
+temp/
+tmp/
 
-# 上传文件（忽略具体文件，但保留目录结构）
-backend/uploads/*
-!backend/uploads/.gitkeep
-!backend/uploads/competition_posters/
-
-# Trae 相关目录
-.trae/
-
-# 项目资源文件
+# 子项目目录
 image/
-
-# 其他项目目录
+.trae/
 keshe/
 
-# 数据库文件
-*.db
-*.sqlite
-*.sqlite3
-
-# IDE 缓存
-.cache/
-.parcel-cache/
-.eslintcache
-
-# 测试覆盖报告
-coverage/
-.coverage
-htmlcov/
-
-# 类型定义
-*.d.ts
-
-# 构建输出
-*.local
-dist-ssr/
-
-
-# ====================
-# ✅ 明确保留的文件（不被忽略）
-# ====================
-
-# .env 配置文件（协作者需要，使用通配符）
-!.env
-
-# 示例配置文件
-!.env.example
+# ============================================
+# ⚠️ 重要：以下类型文件严禁被忽略
+# ============================================
+# .env 配置文件（含密钥，协作者需要）
+# *.db 数据库文件
+# *.sqlite / *.sqlite3
+# 以上文件即使出现也不会被忽略

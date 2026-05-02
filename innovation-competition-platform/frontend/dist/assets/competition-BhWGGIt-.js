@@ -1,0 +1,1 @@
+import{i as e}from"./index-BFAveDQn.js";var t=t=>e.get(`/public/competitions`,{params:t}),n=t=>e.get(`/public/competitions/${t}`),r=t=>e.get(`/competitions`,{params:t}),i=t=>e.post(`/competitions`,t),a=(t,n)=>e.put(`/competitions/${t}`,n),o=t=>e.delete(`/competitions/${t}`);export{t as a,n as i,o as n,a as o,r,i as t};
