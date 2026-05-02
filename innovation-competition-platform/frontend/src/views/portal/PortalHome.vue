@@ -69,7 +69,7 @@
           :key="card.key"
           class="portal-card"
           :class="[`card-${card.color}`]"
-          @click="navigateTo(card.path)"
+          @click="navigateTo(card.path, card.action)"
         >
           <div class="card-icon">
             <el-icon size="32">
@@ -207,7 +207,13 @@ const homeStats = ref({
   tracks: 0
 })
 
-const navigateTo = (path) => {
+const navigateTo = (path, action) => {
+  if (action === 'open-huahuo-agent') {
+    window.dispatchEvent(new CustomEvent('open-huahuo-agent', {
+      detail: { source: 'portal' }
+    }))
+    return
+  }
   if (path) router.push(path)
 }
 
@@ -562,7 +568,8 @@ const allCards = [
     title: 'AI 项目助手',
     desc: '智能辅助项目创作',
     icon: MagicStick,
-    path: '/ai-assistant',
+    path: null,
+    action: 'open-huahuo-agent',
     color: 'indigo',
     roles: ['student', 'teacher', 'judge', 'admin']
   },

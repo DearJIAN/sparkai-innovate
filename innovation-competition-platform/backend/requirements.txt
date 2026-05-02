@@ -11,5 +11,13 @@ volcengine-python-sdk[ark]
 opencc-python-reimplemented
 langchain
 langchain-core
+langchain-community
+langchain-openai
+langchain-text-splitters
+faiss-cpu
+rank-bm25
+python-docx
+python-pptx
+pypdf
 websockets
 requests

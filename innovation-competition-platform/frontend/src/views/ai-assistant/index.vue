@@ -1,5 +1,14 @@
 <template>
   <div class="ai-assistant-page">
+    <el-alert
+      type="info"
+      :closable="false"
+      show-icon
+      style="margin-bottom: 16px"
+    >
+      备用 AI 页面：推荐使用右下角火花助手。此页面用于调试和完整结果查看。
+    </el-alert>
+
     <div class="page-header">
       <div class="header-content">
         <h2 class="page-title">
@@ -147,6 +156,13 @@
           </div>
         </div>
       </el-tab-pane>
+
+      <el-tab-pane label="AI 智能体" name="agent">
+        <AgentPanel
+          :user-role="userRole"
+          :initial-context="{}"
+        />
+      </el-tab-pane>
     </el-tabs>
 
     <VoiceChat v-if="showVoiceChat" @close="showVoiceChat = false" @reply="onVoiceReply" />
@@ -164,8 +180,12 @@ import { marked } from 'marked'
 import { ElMessage } from 'element-plus'
 import VoiceChat from '@/components/VoiceChat.vue'
 import { useLive2d } from '@/composables/useLive2d'
+import AgentPanel from '@/views/ai-assistant/AgentPanel.vue'
+import { useUserStore } from '@/stores/user'
 
 const { notifyLive2dHook, updateExpressionByText } = useLive2d()
+const userStore = useUserStore()
+const userRole = computed(() => userStore.currentRole || 'student')
 
 marked.setOptions({ breaks: true, gfm: true })
 

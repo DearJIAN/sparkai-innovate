@@ -31,6 +31,9 @@
               <el-tag v-if="isListening" type="danger" size="small" effect="dark" class="listening-tag">录音中</el-tag>
             </div>
             <div class="header-actions">
+              <el-button size="small" text @click.stop="switchToAgent" title="AI 智能体">
+                🤖
+              </el-button>
               <el-button size="small" text @click.stop="switchToAnalysis" title="AI 分析工具">
                 <el-icon><MagicStick /></el-icon>
               </el-button>
@@ -101,6 +104,20 @@
                   <el-button size="small" type="primary" link @click="speakAnalysisResult">朗读</el-button>
                 </div>
               </div>
+              <div class="mode-switch-hint">
+                <el-button type="primary" link size="small" @click="mode = 'chat'">← 返回对话模式</el-button>
+              </div>
+            </div>
+
+            <!-- AI 智能体模式 -->
+            <div v-else-if="mode === 'agent'" class="agent-mode">
+              <AgentPanel
+                :user-role="userRole"
+                :initial-context="agentInitialContext"
+                compact
+                @result="onAgentResult"
+                @speak="onAgentSpeak"
+              />
               <div class="mode-switch-hint">
                 <el-button type="primary" link size="small" @click="mode = 'chat'">← 返回对话模式</el-button>
               </div>
@@ -183,14 +200,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, reactive, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { marked } from 'marked'
 import { chatStream, generateAnalysis } from '@/api/ai'
 import { ElMessage } from 'element-plus'
 import { Loading, WarningFilled, MagicStick, ArrowDown, Microphone, Delete, Plus, VideoPause, VideoPlay, Rank } from '@element-plus/icons-vue'
 import { useLive2d } from '@/composables/useLive2d'
+import AgentPanel from '@/views/ai-assistant/AgentPanel.vue'
+import { useUserStore } from '@/stores/user'
 
 const { detectEmotionByText, getExpressionByEmotion, updateExpressionByText, notifyLive2dHook } = useLive2d()
+const userStore = useUserStore()
 
 const showTips = ref(false)
 const tipText = ref('')
@@ -198,6 +218,8 @@ const loaded = ref(false)
 const loadError = ref(false)
 const panelOpen = ref(false)
 const mode = ref('chat')
+const agentInitialContext = ref({})
+const userRole = computed(() => userStore.currentRole || 'student')
 let retryCount = 0
 
 // 表情控制状态
@@ -255,6 +277,35 @@ function closePanel() {
 
 function switchToAnalysis() {
   mode.value = 'analysis'
+}
+
+function switchToAgent() {
+  if (isListening.value) {
+    ElMessage.warning('请先停止语音识别')
+    stopVoiceRecognition()
+  }
+  mode.value = 'agent'
+}
+
+function onAgentResult(text) {
+  updateExpressionByText(text)
+}
+
+function onAgentSpeak(text) {
+  if (isStreaming.value) {
+    ElMessage.warning('当前正在生成对话回复，请稍后再朗读智能体结果')
+    return
+  }
+  currentReplyText.value = text
+  toggleSpeech()
+}
+
+function handleOpenHuahuoAgent(event) {
+  panelOpen.value = true
+  mode.value = 'agent'
+  if (event.detail) {
+    agentInitialContext.value = event.detail
+  }
 }
 
 function toggleExpressionPanel() {
@@ -1121,6 +1172,7 @@ onMounted(() => {
   setupExpressionControls()
   setupVoiceHooks()
   initLive2D()
+  window.addEventListener('open-huahuo-agent', handleOpenHuahuoAgent)
   try { const saved = localStorage.getItem('huahuoPanelPos'); if (saved) { panelPos.value = JSON.parse(saved); panelStyle.value = { transform: `translate(${panelPos.value.x}px, ${panelPos.value.y}px)` } } } catch (_e) {}
   try {
     const modelPos = localStorage.getItem('huahuoModelPos')
@@ -1149,6 +1201,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('open-huahuo-agent', handleOpenHuahuoAgent)
   stopVoiceRecognition()
   stopSpeechMouthPulse()
   stopModelPatchLoop()
@@ -1421,11 +1474,16 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
-.chat-mode, .analysis-mode {
+.chat-mode, .analysis-mode, .agent-mode {
   display: flex;
   flex-direction: column;
   flex: 1;
   overflow: hidden;
+}
+
+.agent-mode {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .analysis-mode {

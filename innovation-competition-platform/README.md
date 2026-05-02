@@ -4,48 +4,107 @@
 
 一个面向高校的**创新创业竞赛全流程服务平台**，覆盖竞赛发现、报名、项目创建、团队管理、材料上传、任务进度、评审打分、AI 辅助的完整流程。平台采用**前后端分离架构**，支持学生、指导老师、评委、管理员四种角色，提供竞赛广场、项目工作室、训练营、在线课程、产业命题等多元化功能。
 
-平台集成了 **Live2D 虚拟形象「火花」**、**语音交互**、**AI 智能对话**等特色功能，为用户提供沉浸式智能辅助体验。
+平台集成了 **Live2D 虚拟形象「火花」**、**语音交互**、**AI 智能对话**、**AI 项目智能体**等特色功能，为用户提供沉浸式智能辅助体验。其中 AI 项目智能体提供材料问答、商业计划书体检、路演稿生成、评审辅助、智能竞赛推荐 5 大 AI 能力，基于 LangChain + FAISS + BM25 混合检索技术实现。
+
+---
+
+## 项目环境依赖
+
+> 本项目后端指定使用 `newyolo` conda 环境，Python 解释器路径：`D:\TOOLS\anaconda\envs\newyolo\python.exe`
+
+### 后端核心依赖（newyolo conda 环境）
+
+| 库名 | 版本 | 用途 |
+|------|------|------|
+| Python | 3.10+ | 运行环境 |
+| Flask | 3.0.3 | Web 框架 |
+| Flask-SQLAlchemy | 3.1.1 | ORM 数据库工具 |
+| Flask-Migrate | 4.0.7 | 数据库迁移（Alembic） |
+| Flask-JWT-Extended | 4.6.0 | JWT 认证 |
+| Flask-Cors | 4.0.1 | 跨域支持 |
+| PyMySQL | 1.1.1 | MySQL 驱动 |
+| SQLAlchemy | 2.0.49 | ORM 核心 |
+| Alembic | 1.18.4 | 数据库迁移引擎 |
+| Werkzeug | 3.0.3 | WSGI 工具库 |
+| python-dotenv | 1.0.1 | 环境变量管理 |
+| cryptography | 47.0.0 | 加密库 |
+| PyJWT | 2.12.1 | JWT Token 处理 |
+| volcengine-python-sdk | 5.0.24 | 火山方舟 AI SDK |
+| openai | 2.32.0 | OpenAI 兼容接口 |
+| langchain | 1.2.15 | AI 编排框架 |
+| langchain-core | 1.3.0 | LangChain 核心 |
+| langchain-openai | 1.1.15 | LangChain OpenAI 兼容接口 |
+| langchain-community | 0.4.1 | LangChain 社区扩展 |
+| langchain-text-splitters | 1.1.2 | 文本分割器 |
+| langchain-volcengine | 0.1.2 | 火山方舟 LangChain 集成 |
+| faiss-cpu | 1.13.2 | Facebook 向量相似性搜索 |
+| rank-bm25 | 0.2.2 | BM25 稀疏检索 |
+| jieba | 0.42.1 | 中文分词（BM25 中文支持） |
+| python-docx | 1.2.0 | Word 文档解析 |
+| python-pptx | 1.0.2 | PowerPoint 文档解析 |
+| pypdf | 6.10.2 | PDF 文档解析 |
+| websockets | 16.0 | WebSocket 客户端 |
+| requests | 2.32.5 | HTTP 请求库 |
+| Pillow | 11.2.1 | 图像处理（海报生成） |
+| opencc-python-reimplemented | 0.1.7 | 简繁转换 |
+| tiktoken | 0.12.0 | Token 计数 |
+| numpy | 2.2.6 | 数值计算 |
+
+### 前端核心依赖
+
+| 库名 | 版本 | 用途 |
+|------|------|------|
+| Node.js | 18+ | 运行环境 |
+| Vue | ^3.5.32 | 渐进式 JavaScript 框架 |
+| Vite | ^8.0.10 | 前端构建工具 |
+| Element Plus | ^2.13.7 | Vue 3 组件库 |
+| Pinia | ^3.0.4 | 状态管理 |
+| Vue Router | ^5.0.6 | 前端路由 |
+| Axios | ^1.15.2 | HTTP 客户端 |
+| ECharts | ^6.0.0 | 数据可视化 |
+| marked | ^18.0.2 | Markdown 渲染 |
+| DOMPurify | ^3.2.6 | HTML 安全净化 |
+
+### 基础设施
+
+| 依赖 | 版本 | 说明 |
+|------|------|------|
+| MySQL | 8.0+ | 关系型数据库 |
+| ffmpeg | - | 音频格式转换（ASR 需要，需加入系统 PATH） |
+| conda | - | Python 环境管理（`newyolo` 环境） |
 
 ---
 
 ## 技术栈
 
+> 完整依赖版本信息见顶部 [项目环境依赖](#项目环境依赖) 章节
+
 ### 前端
 
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| Vue | ^3.5.32 | 渐进式 JavaScript 框架（Composition API + `<script setup>`） |
-| Vite | ^8.0.10 | 下一代前端构建工具 |
-| @vitejs/plugin-vue | ^6.0.6 | Vite Vue 插件 |
-| Element Plus | ^2.13.7 | 基于 Vue 3 的组件库 |
-| @element-plus/icons-vue | ^2.3.2 | Element Plus 图标库 |
-| Pinia | ^3.0.4 | Vue 状态管理方案 |
-| Vue Router | ^5.0.6 | 前端路由管理（createWebHistory） |
-| Axios | ^1.15.2 | HTTP 客户端（baseURL: `/api`，30s 超时） |
-| ECharts | ^6.0.0 | 数据可视化图表库 |
-| marked | ^18.0.2 | Markdown 渲染库（AI 输出格式化） |
-| Live2D Widget | - | Live2D 看板娘组件（CDN + 本地 SDK） |
+| 技术 | 说明 |
+|------|------|
+| Vue 3 | 渐进式 JavaScript 框架（Composition API + `<script setup>`） |
+| Vite | 下一代前端构建工具 |
+| Element Plus | 基于 Vue 3 的组件库 |
+| Pinia | Vue 状态管理方案 |
+| Vue Router | 前端路由管理（createWebHistory） |
+| Axios | HTTP 客户端（baseURL: `/api`，30s 超时） |
+| ECharts | 数据可视化图表库 |
+| marked + DOMPurify | Markdown 渲染 + XSS 防护 |
+| Live2D Widget | Live2D 看板娘组件（CDN + 本地 SDK） |
 
 ### 后端
 
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| Flask | 3.0.3 | 轻量级 Web 框架（应用工厂模式） |
-| Flask-SQLAlchemy | 3.1.1 | ORM 数据库工具 |
-| Flask-Migrate | 4.0.7 | 数据库迁移工具（Alembic） |
-| Flask-JWT-Extended | 4.6.0 | JWT 认证（Access 24h / Refresh 7d） |
-| Flask-CORS | 4.0.1 | 跨域支持（仅允许 localhost:5173） |
-| PyMySQL | 1.1.1 | MySQL 驱动 |
-| cryptography | 42.0.8 | 加密库 |
-| python-dotenv | 1.0.1 | 环境变量管理 |
-| Werkzeug | 3.0.3 | WSGI 工具库（密码哈希 / 安全文件名） |
-| volcengine-python-sdk[ark] | - | 火山方舟 AI SDK |
-| opencc-python-reimplemented | - | 简繁转换（ASR 结果处理） |
-| langchain / langchain-core | - | AI 编排框架 |
-| websockets | - | WebSocket 客户端（实时语音对话 / ASR） |
-| requests | - | HTTP 请求库（TTS 合成） |
-| Pillow | - | 图像处理（seed.py 海报自动生成） |
-| MySQL | 8.0+ | 关系型数据库 |
+| 技术 | 说明 |
+|------|------|
+| Flask | 轻量级 Web 框架（应用工厂模式） |
+| Flask-SQLAlchemy | ORM 数据库工具 |
+| Flask-JWT-Extended | JWT 认证（Access 24h / Refresh 7d） |
+| LangChain | AI 编排框架（RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐） |
+| FAISS + BM25 | 混合检索方案（向量索引 + 稀疏检索 + 关键词回退） |
+| 火山方舟 SDK | AI 大模型 + Embedding + ASR + TTS |
+| python-docx / python-pptx / pypdf | 文档解析（.docx / .pptx / .pdf） |
+| PyMySQL | MySQL 驱动 |
 
 ---
 
@@ -87,6 +146,16 @@
 - 商业计划书建议（AI 驱动）
 - 风险分析（AI 驱动）
 - AI 输出结果 Markdown 渲染（marked 库）+ 一键复制 + 朗读
+
+### AI 项目智能体
+
+基于 LangChain + FAISS + BM25 混合检索的 AI 项目智能体系统，为竞赛全流程提供 5 大 AI 能力：
+
+- **AI 材料问答**：上传项目/报名材料（支持 .docx / .pptx / .pdf），自动解析文档内容并建立向量索引，用户可针对材料内容进行自然语言问答，AI 基于检索结果精准回答
+- **AI 商业计划书体检**：对商业计划书进行全方位结构化审查，从执行摘要、市场分析、商业模式、团队介绍、财务规划、风险分析等维度给出改进建议，**不给出具体评分**
+- **AI 路演稿生成**：根据项目信息和材料内容，自动生成结构化路演演讲稿（开场白 / 痛点分析 / 解决方案 / 市场前景 / 团队介绍 / 结尾呼吁），支持自定义时长和风格
+- **AI 评审辅助**（仅 teacher / judge / admin）：辅助评审人员快速了解项目全貌，生成项目亮点/风险/改进建议的摘要分析，**严格不返回具体分数，仅提供定性评价参考**
+- **智能竞赛推荐**（仅 student / admin）：根据项目类别、赛道、阶段等信息，智能匹配推荐适合参加的竞赛，给出推荐理由和匹配度分析
 
 ### 火山实时语音对话
 
@@ -139,7 +208,7 @@ innovation-competition-platform/
 │   ├── test_file_api.py              # 文件接口测试
 │   ├── test_task_api.py              # 任务接口测试
 │   │
-│   ├── models/                       # 数据模型（12 个）
+│   ├── models/                       # 数据模型（14 个）
 │   │   ├── __init__.py               # 模型统一导出
 │   │   ├── user.py                   # 用户信息（users 表）
 │   │   ├── competition.py            # 竞赛信息（competitions 表）
@@ -152,9 +221,11 @@ innovation-competition-platform/
 │   │   ├── project_file.py           # 项目文件（project_files 表）
 │   │   ├── project_task.py           # 项目任务（project_tasks 表）
 │   │   ├── review.py                 # 评审记录（reviews 表）
-│   │   └── ai_record.py             # AI 使用记录（ai_records 表）
+│   │   ├── ai_record.py             # AI 使用记录（ai_records 表）
+│   │   ├── agent_task.py            # AI 智能体任务（agent_tasks 表）
+│   │   └── agent_material_index.py  # AI 智能体材料索引（agent_material_indices 表）
 │   │
-│   ├── routes/                       # API 路由（13 个蓝图）
+│   ├── routes/                       # API 路由（14 个蓝图）
 │   │   ├── __init__.py               # 蓝图包初始化
 │   │   ├── auth.py                   # /api/auth    认证接口（注册/登录/当前用户/登出）
 │   │   ├── user.py                   # /api/users   用户接口（列表/详情）
@@ -168,11 +239,15 @@ innovation-competition-platform/
 │   │   ├── dashboard.py              # /api/dashboard 看板接口（统计/最近数据）
 │   │   ├── ai.py                     # /api/ai      AI 接口（聊天/语音/ASR/TTS/分析/表情/健康）
 │   │   ├── competition.py            # /api         竞赛接口（公开+管理+赛道）
-│   │   └── registration.py           # /api         报名接口（学生+管理员）
+│   │   ├── registration.py           # /api         报名接口（学生+管理员）
+│   │   └── agent.py                  # /api/agent   AI 智能体接口（材料索引/问答/体检/路演/评审辅助/推荐/任务）
 │   │
 │   ├── services/                     # 业务逻辑
 │   │   ├── __init__.py
 │   │   ├── ai_service.py             # AI 核心（火山方舟 SDK + 会话管理 + 流式输出 + 回答清洗）
+│   │   ├── langchain_service.py      # LangChain 编排服务（RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐）
+│   │   ├── document_parser.py        # 文档解析服务（.docx / .pptx / .pdf 文本提取 + 分块）
+│   │   ├── vector_store.py           # 向量存储服务（FAISS 索引 + BM25 混合检索 + Embedding）
 │   │   ├── tts_service.py            # TTS 语音合成（火山 TTS HTTP API + 文件缓存 + 缓存统计/清理）
 │   │   ├── volc_realtime_bridge.py   # 火山实时语音对话桥（WebSocket + 流式回复 + 回答清洗）
 │   │   └── volc_realtime_protocol.py # 火山实时语音二进制协议（编解码 + Gzip）
@@ -185,6 +260,7 @@ innovation-competition-platform/
 │   ├── uploads/                      # 文件上传目录
 │   │   ├── competition_posters/      # 竞赛海报（seed.py 自动生成）
 │   │   └── .gitkeep
+│   ├── vector_stores/                # FAISS 向量索引存储目录
 │   └── migrations/                   # 数据库迁移（Alembic）
 │       ├── versions/
 │       │   └── 448f0412e5bb_initial_migration_with_all_models.py
@@ -230,7 +306,7 @@ innovation-competition-platform/
 │       ├── App.vue                   # 根组件（路由视图 + GuideSystem）
 │       ├── style.css                 # 全局基础样式
 │       │
-│       ├── api/                      # API 接口封装（11 个模块）
+│       ├── api/                      # API 接口封装（12 个模块）
 │       │   ├── request.js            # Axios 基础配置（baseURL:/api，30s超时，Token拦截器，401自动跳转）
 │       │   ├── auth.js               # 认证 API（login/register/getCurrentUser）
 │       │   ├── project.js            # 项目 API
@@ -241,7 +317,8 @@ innovation-competition-platform/
 │       │   ├── dashboard.js          # 看板 API
 │       │   ├── competition.js        # 竞赛 API
 │       │   ├── registration.js       # 报名 API
-│       │   └── ai.js                 # AI API（聊天/语音/ASR/TTS/流式/分析）
+│       │   ├── ai.js                 # AI API（聊天/语音/ASR/TTS/流式/分析）
+│       │   └── agent.js              # AI 智能体 API（材料索引/问答/体检/路演/评审辅助/推荐/任务）
 │       │
 │       ├── components/               # 公共组件
 │       │   ├── GuideSystem.vue       # 全局引导系统（首次登录引导/高亮/拖拽弹窗/路由跳转）
@@ -279,9 +356,10 @@ innovation-competition-platform/
 │       │       ├── training-camps/   # 训练营图片（4 张）
 │       │       └── courses/          # 在线课程图片（5 张）
 │       │
-│       └── views/                    # 页面视图（42 个 Vue 文件）
+│       └── views/                    # 页面视图（43 个 Vue 文件）
 │           ├── ai-assistant/         # AI 助手（双标签页：分析工具 + 对话）
-│           │   └── index.vue
+│           │   ├── index.vue
+│           │   └── AgentPanel.vue    # AI 智能体面板（材料索引/问答/体检/路演/评审辅助/推荐）
 │           ├── admin/                # 管理员页面（5 个）
 │           │   ├── users.vue         # 用户管理（搜索/角色筛选/状态筛选/CRUD弹窗）
 │           │   ├── projects.vue      # 项目管理（6维统计/搜索/阶段筛选/评分颜色分级）
@@ -345,13 +423,15 @@ innovation-competition-platform/
 
 ## 环境要求
 
+> 具体库版本信息见顶部 [项目环境依赖](#项目环境依赖) 章节
+
 | 依赖 | 版本要求 | 说明 |
 |------|----------|------|
-| Python | 3.10+ | 后端运行环境（推荐使用 `newyolo` conda 环境） |
+| Python | 3.10+ | 后端运行环境（指定使用 `newyolo` conda 环境） |
 | Node.js | 18+ | 前端构建环境 |
 | MySQL | 8.0+ | 关系型数据库 |
 | ffmpeg | - | 音频格式转换（ASR 功能需要，需加入系统 PATH） |
-| conda | - | Python 环境管理（推荐 `newyolo` 环境） |
+| conda | - | Python 环境管理（`newyolo` 环境） |
 
 > **重要**：本项目指定使用 `newyolo` conda 环境，Python 解释器路径为 `D:\TOOLS\anaconda\envs\newyolo\python.exe`。`start.bat` 已配置使用此环境。
 
@@ -755,6 +835,68 @@ done:1                     # 流结束标记
 | `/api/teams` | 团队管理 |
 | `/api/materials` | 材料管理 |
 
+### AI 智能体 `/api/agent`
+
+| 接口 | 方法 | 认证 | 权限 | 说明 |
+|------|------|------|------|------|
+| `/api/agent/index-materials` | POST | JWT | 所有角色 | 索引项目/报名材料（支持 .docx/.pptx/.pdf，自动解析文档并建立向量索引） |
+| `/api/agent/material-qa` | POST | JWT | 所有角色 | AI 材料问答（基于已索引材料进行 RAG 检索问答） |
+| `/api/agent/bp-check` | POST | JWT | 所有角色 | 商业计划书体检（多维度结构化审查，**不返回具体评分**） |
+| `/api/agent/roadshow` | POST | JWT | 所有角色 | 路演稿生成（根据项目信息生成结构化演讲稿） |
+| `/api/agent/review-assist` | POST | JWT | teacher/judge/admin | 评审辅助（项目亮点/风险/改进建议摘要，**严格不返回具体分数，仅提供定性评价参考**） |
+| `/api/agent/competition-recommend` | POST | JWT | student/admin | 智能竞赛推荐（根据项目信息匹配推荐竞赛+推荐理由） |
+| `/api/agent/tasks` | GET | JWT | 所有角色 | 任务记录列表（分页，按时间倒序） |
+| `/api/agent/tasks/<id>` | GET | JWT | 所有角色 | 任务详情（含输入参数和 AI 输出结果） |
+
+**索引材料请求示例**：
+```json
+{
+  "project_id": 1,
+  "registration_id": null,
+  "file_ids": [1, 2, 3]
+}
+```
+
+**材料问答请求示例**：
+```json
+{
+  "project_id": 1,
+  "question": "这个项目的核心技术方案是什么？"
+}
+```
+
+**商业计划书体检请求示例**：
+```json
+{
+  "project_id": 1
+}
+```
+
+**路演稿生成请求示例**：
+```json
+{
+  "project_id": 1,
+  "duration_minutes": 5,
+  "style": "formal"
+}
+```
+
+**评审辅助请求示例**：
+```json
+{
+  "project_id": 1
+}
+```
+
+> **重要**：评审辅助端点严格不返回具体分数，仅提供项目亮点、风险点和改进建议的定性评价参考，避免影响评审公正性。
+
+**智能竞赛推荐请求示例**：
+```json
+{
+  "project_id": 1
+}
+```
+
 ---
 
 ## 路由配置
@@ -791,6 +933,7 @@ done:1                     # 流结束标记
 | `/projects/:id/files` | projects/files.vue | 项目材料 |
 | `/projects/:id/tasks` | projects/tasks.vue | 任务进度 |
 | `/reviews/:id` | reviews/detail.vue | 评审详情 |
+| `/ai-assistant` | ai-assistant/index.vue | AI 助手备用页面（hidden: true，不显示在导航菜单） |
 
 ### 学生专属路由
 
@@ -855,6 +998,8 @@ done:1                     # 流结束标记
 | ProjectTask | project_tasks | 项目任务 |
 | Review | reviews | 评审记录 |
 | AiRecord | ai_records | AI 使用记录 |
+| AgentTask | agent_tasks | AI 智能体任务 |
+| AgentMaterialIndex | agent_material_indices | AI 智能体材料索引 |
 
 ### 模型详细字段
 
@@ -1065,6 +1210,38 @@ done:1                     # 流结束标记
 | result | Text | AI 输出结果 |
 | created_at | DateTime | 创建时间 |
 
+#### AgentTask（AI 智能体任务）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 任务 ID |
+| user_id | Integer (FK → users) | 发起用户 ID |
+| project_id | Integer (FK → projects) | 关联项目 ID |
+| registration_id | Integer | 关联报名 ID（可选） |
+| task_type | String | 任务类型（material_qa / bp_check / roadshow / review_assist / competition_recommend / index_materials） |
+| status | String | 任务状态（pending / processing / completed / failed，默认 pending） |
+| input_params | Text | 输入参数（JSON 格式） |
+| result | Text | AI 输出结果 |
+| error_message | Text | 错误信息（失败时记录） |
+| created_at | DateTime | 创建时间 |
+| updated_at | DateTime | 更新时间 |
+
+#### AgentMaterialIndex（AI 智能体材料索引）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 索引 ID |
+| project_id | Integer (FK → projects) | 关联项目 ID |
+| registration_id | Integer | 关联报名 ID（可选） |
+| file_id | Integer (FK → project_files) | 关联文件 ID |
+| file_name | String | 文件名 |
+| file_type | String | 文件类型（docx/pptx/pdf） |
+| chunk_count | Integer | 文本分块数量 |
+| index_status | String | 索引状态（pending / indexing / completed / failed，默认 pending） |
+| index_path | String | FAISS 索引文件路径 |
+| created_at | DateTime | 创建时间 |
+| updated_at | DateTime | 更新时间 |
+
 ---
 
 ## 用户角色与权限
@@ -1102,6 +1279,18 @@ def create_competition():
 | 指导老师 | 工作台、指导项目、项目审核、训练营、在线课程、产业命题、AI 助手 |
 | 评委 | 工作台、待评审项目、评审记录、AI 助手 |
 | 管理员 | 工作台、比赛批次管理、报名管理、项目管理、评审管理、用户管理、数据看板、AI 助手 |
+
+### AI 智能体权限矩阵
+
+| AI 智能体能力 | 学生 | 指导老师 | 评委 | 管理员 | 说明 |
+|--------------|------|----------|------|--------|------|
+| AI 材料问答 | ✅ | ✅ | ✅ | ✅ | 所有角色可对自己参与/负责的项目材料进行问答 |
+| AI 商业计划书体检 | ✅ | ✅ | ✅ | ✅ | 所有角色可对项目商业计划书进行体检 |
+| AI 路演稿生成 | ✅ | ✅ | ✅ | ✅ | 所有角色可为项目生成路演稿 |
+| AI 评审辅助 | ❌ | ✅ | ✅ | ✅ | 仅 teacher/judge/admin 可使用，**严格不返回具体分数** |
+| 智能竞赛推荐 | ✅ | ❌ | ❌ | ✅ | 仅 student/admin 可使用 |
+| 索引项目材料 | ✅ | ✅ | ✅ | ✅ | 所有角色可索引自己参与项目的材料 |
+| 查看任务记录 | ✅ | ✅ | ✅ | ✅ | 所有角色可查看自己的任务记录 |
 
 ---
 
@@ -1230,6 +1419,26 @@ def create_competition():
 2. 前端 Axios 拦截器自动检测 401 响应，清除 Token 并跳转登录页
 3. 登录接口返回的 Token 存储在 `localStorage`
 
+### 12. AI 智能体接口超时 / 502
+
+1. LLM 密集型接口（BP 体检、路演稿、评审辅助）耗时较长，Vite 代理超时已设为 120 秒
+2. 偶发 502 可重试，通常第二次请求会成功
+3. 前端 API 客户端超时已设为 120 秒（`agentTimeout`）
+4. 检查 `.env` 中 `ARK_API_KEY` 和 `ARK_BASE_URL` 是否正确
+
+### 13. FAISS 向量索引不可用
+
+1. 检查 `.env` 中 `ARK_API_KEY` 和 `ARK_BASE_URL` 是否正确配置
+2. FAISS Embedding 依赖火山方舟 API，不可用时自动降级为 BM25 + 关键词检索
+3. 检查 `backend/vector_stores/` 目录下是否有索引文件
+4. BM25 中文分词依赖 jieba 库，确认已安装
+
+### 14. AI 评审辅助返回 403
+
+1. 评审辅助仅限 teacher / judge / admin 角色使用
+2. 学生角色调用会返回 403 "权限不足，需要 teacher 及以上角色"
+3. 这是预期行为，评审辅助严格不返回具体分数
+
 ---
 
 ## 当前开发状态
@@ -1257,6 +1466,7 @@ def create_competition():
 | 管理后台 | ✅ 完成 | 用户/项目/竞赛/报名/评审管理 |
 | 首页数字雨 | ✅ 完成 | 全局 Canvas 数字雨背景/科幻风格/扫描线/全屏铺满 |
 | Banner 动画 | ✅ 完成 | 竞赛/训练营/课程各具独特渐变色+光球动画 |
+| AI 项目智能体 | ✅ 完成 | 5 大 AI 能力（材料问答/BP 体检/路演稿/评审辅助/竞赛推荐）+ LangChain + FAISS + BM25 |
 | 一键启动 | ✅ 完成 | start.bat 自动检测依赖+启动前后端 |
 
 ### 正在进行的开发任务
@@ -1274,7 +1484,7 @@ def create_competition():
 - **消息通知系统**：站内信、竞赛状态变更通知、报名审核通知
 - **数据导出**：报名表 Excel 导出、评审结果导出、证书 PDF 下载
 - **团队协作**：项目讨论区、文件版本管理、任务看板
-- **AI 能力扩展**：项目匹配推荐、竞赛策略分析、路演稿生成
+- **AI 能力扩展**：项目匹配推荐优化、竞赛策略分析、多模态材料理解
 - **性能优化**：前端懒加载、后端缓存、CDN 静态资源
 - **暗黑模式**：设计系统已预留暗黑模式变量，待实现切换逻辑
 
@@ -1404,314 +1614,130 @@ cd backend && flask db upgrade && python seed.py
 | `ARK_MODEL` | ❌ | AI 模型名称 |
 | `VOICE_REALTIME_*` | ❌ | 实时语音对话（不配置则回退文本模式） |
 | `DOUBAO_ASR_*` | ❌ | 语音识别（不配置则仅 Chrome 原生 ASR） |
+| `ARK_API_KEY` | ❌ | AI 智能体向量检索 Embedding（不配置则 FAISS 向量检索不可用，需与 AI 对话共用） |
 
 ---
 
 ## 版本变更记录
 
-### v3.0.0 - 2026-05-01（当前版本）
+### v4.0.0 - 2026-05-02（当前版本）
+
+> AI 项目智能体全量上线：5 大 AI 能力、LangChain + FAISS + BM25 混合检索、文档解析服务、AgentPanel 组件
+
+#### 新增功能
+
+- **AI 材料问答**：上传项目/报名材料（.docx/.pptx/.pdf），自动解析文档内容并建立 FAISS 向量索引，支持基于 RAG 检索的自然语言问答
+- **AI 商业计划书体检**：对商业计划书进行多维度结构化审查（执行摘要/市场分析/商业模式/团队/财务/风险），给出改进建议，不给出具体评分
+- **AI 路演稿生成**：根据项目信息和材料内容，自动生成结构化路演演讲稿，支持自定义时长和风格
+- **AI 评审辅助**（仅 teacher/judge/admin）：辅助评审人员快速了解项目全貌，生成亮点/风险/改进建议摘要，**严格不返回具体分数，仅提供定性评价参考**
+- **智能竞赛推荐**（仅 student/admin）：根据项目类别/赛道/阶段智能匹配推荐竞赛，给出推荐理由和匹配度分析
+- **AgentPanel.vue 组件**：AI 智能体前端面板组件，集成材料索引/问答/体检/路演/评审辅助/推荐 6 大功能入口
+- **文档解析服务**（`document_parser.py`）：支持 .docx（python-docx）/ .pptx（python-pptx）/ .pdf（pypdf）三种格式文本提取 + RecursiveCharacterTextSplitter 分块
+- **向量存储服务**（`vector_store.py`）：FAISS 向量索引 + BM25 稀疏检索混合方案，支持 Embedding 向量化 + 相似度搜索
+- **LangChain 编排服务**（`langchain_service.py`）：基于 LangChain 的 RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐 5 大能力编排
+- **agent 路由蓝图**（`agent.py`）：8 个 API 端点（index-materials / material-qa / bp-check / roadshow / review-assist / competition-recommend / tasks / tasks/<id>）
+- **AgentTask 模型**：AI 智能体任务记录（task_type / status / input_params / result / error_message）
+- **AgentMaterialIndex 模型**：AI 智能体材料索引记录（file_type / chunk_count / index_status / index_path）
+
+#### 功能修改
+
+- **HuahuoAssistant.vue**：新增 agent 模式，点击火花形象可切换到 AI 智能体面板
+- **PortalHome.vue / judge.vue / teacher.vue**：AI 助手入口改为全局事件触发（`emit('open-ai-assistant')`），不再使用路由跳转
+- **ai-assistant/index.vue**：新增 Tab 3（AI 智能体），集成 AgentPanel 组件，并添加备用提示（推荐使用全局浮动火花入口）
+
+#### Bug 修复
+
+- **修复 PortalHome / judge / teacher 中 /ai-assistant 链接 404**：移除直接路由跳转，改为全局事件触发打开 AI 助手面板
+
+#### 安全与稳定性
+
+- **评审辅助严格不返回具体分数**：后端 review-assist 端点在 Prompt 和后处理中双重保障，仅返回定性评价参考，避免影响评审公正性
+- **DOMPurify 安全渲染 Markdown**：前端 Markdown 渲染引入 DOMPurify 净化 HTML 输出，防止 XSS 攻击
+- **事件监听 onBeforeUnmount 清理**：AgentPanel 和相关组件在卸载时完整清理全局事件监听器，避免内存泄漏
+
+#### 文档更新
+
+- **README 全量更新**：技术栈新增 9 个后端依赖 + 1 个前端依赖；特色功能新增 AI 项目智能体小节；项目结构新增 8 个文件 + 1 个目录；API 文档新增 AI 智能体章节；数据库模型新增 2 个模型；路由配置新增备用路由；权限矩阵新增 AI 智能体权限；版本号更新为 v4.0.0
+
+#### 已知问题
+
+- **FAISS Embedding 需要火山方舟 API 配置**：向量索引依赖火山方舟 Embedding API，需在 `.env` 中正确配置 `ARK_API_KEY` 和 `ARK_BASE_URL`，否则向量检索降级为 BM25/关键词检索
+- **BP 体检 / 路演稿等 LLM 密集型接口偶发 502**：Vite 代理超时 120 秒，LLM 调用耗时较长时可能触发，重试通常可成功
+
+#### Chrome DevTools MCP 调试验证（2026-05-02）
+
+| 验收项 | 结果 | 说明 |
+|--------|------|------|
+| student1 登录 | ✅ | API 登录成功，JWT Token 正确 |
+| Portal AI 入口打开火花 Agent 模式 | ✅ | `open-huahuo-agent` 全局事件触发，面板自动打开并切换到 agent 模式 |
+| chat / analysis / agent 三模式切换 | ✅ | 三种模式均可正常切换，无状态污染 |
+| 全局事件 detail 参数自动选中能力 | ✅ | `capability: 'competition_recommend'` → 🎯 智能竞赛推荐 |
+| 材料索引 `/api/agent/index-materials` | ✅ | 200，索引成功 |
+| 材料问答 `/api/agent/material-qa` | ✅ | 200，返回问答结果 |
+| 商业计划书体检 `/api/agent/bp-check` | ✅ | 200，返回体检报告，不返回具体评分 |
+| 路演稿生成 `/api/agent/roadshow` | ✅ | 200，返回路演稿 |
+| 智能竞赛推荐 `/api/agent/competition-recommend` | ✅ | 200，返回推荐结果 |
+| judge1 评审辅助 `/api/agent/review-assist` | ✅ | 200，严格不返回具体分数 |
+| student1 评审辅助被拦截 | ✅ | 403 "权限不足，需要 teacher 及以上角色" |
+| Console 无新增关键错误 | ✅ | 仅 403 为学生角色访问管理看板（预期行为） |
+| Network /api/agent/* 无 404/500 | ✅ | 偶发 502 为 LLM 超时，重试可成功 |
+| 返回格式 {code, message, data} | ✅ | 所有 API 均符合统一响应格式 |
+| /ai-assistant 备用页面 | ✅ | 三个 Tab 可切换，顶部有备用提示 |
+| student 角色权限 | ✅ | 仅显示 4 个能力卡片（无评审辅助） |
+| 复制/朗读/表情联动 | ⚠️ | 需用户在浏览器中手动验证（MCP 无法模拟剪贴板和音频输出） |
+
+---
+
+### v3.0.0 - 2026-05-01
 
 > AI流式输出优化、项目创建修复、引导内容更新、产业命题承接、动态数据、头部卡片动画
 
-#### 详情页海报被导航栏遮盖修复
-
-- **顶部间距**：竞赛详情页、训练营详情页、课程详情页统一添加 `padding-top: 64px`，确保封面海报不被固定导航栏遮挡
-- **影响范围**：3个详情页组件（CompetitionDetail、TrainingCampDetail、CourseDetail）
-
-#### 竞赛详情页时间安排和奖项设置修复
-
-- **默认数据填充**：competition.value 初始化时即包含完整的默认竞赛数据（AI应用创新设计大赛），不再依赖API返回
-- **容错机制**：loadDetail 函数重构，即使 API 请求失败或返回空数据，也会自动生成完整的时间安排（6阶段）、奖项设置（6级）和材料要求
-- **智能匹配**：根据竞赛名称和级别自动生成对应的时间线描述、奖项名称和材料类型
-- **问题根因**：原代码在 API 返回空数组时 fallback 未正确触发
-
-#### 使用引导按钮支持拖拽+悬浮显示
-
-- **垂直拖拽**：引导重新打开按钮支持沿左侧边缘上下拖拽，拖拽范围限制在 `60px ~ (windowHeight - 60px)`
-- **悬浮展开**：默认只显示图标（宽度44px），鼠标悬浮时展开完整文字"使用引导"，带平滑过渡动画
-- **视觉优化**：添加阴影、边框发光效果，hover 时增强视觉反馈
-
-#### 竞赛报名表单快速生成功能
-
-- **队伍信息一键填充**：点击"快速生成队伍信息"自动填入队名、学校、学院、专业、指导老师、联系方式等全部字段
-- **队员信息一键生成**：点击"快速生成队员信息"自动生成3名测试队员的完整信息（姓名、学号、学院、专业、电话、邮箱）
-- **调试友好**：每个步骤都有独立的快速填充栏，带提示文字说明用途
-
-#### Live2D 引导后关闭加载不出来 BUG 修复
-
-- **根因分析**：`onBeforeUnmount` 中删除了 `window.initWidget` 全局函数，导致组件重新挂载时无法初始化 Live2D
-- **修复方案**：移除对全局变量和 DOM 元素的破坏性删除操作，改为隐藏 waifu 元素（`display: none`）
-- **保留功能**：保留语音识别停止、口型脉冲停止等必要清理逻辑
-
-#### Live2D 全屏拖拽修复
-
-- **事件冲突修复**：`startModelDrag` 添加 `e.stopPropagation()` 防止与 waifu 点击事件冲突
-- **手柄定位修复**：CSS 改用 `transform: translateX(-50%) translateY(-100%)` 确保手柄正确显示在 waifu 元素上方
-- **视觉效果优化**：手柄添加阴影、圆角、边框发光效果，hover 时颜色变化
-
-#### 导航栏 AI 助手入口删除
-
-- **顶部导航**：从 topNavConfig 中移除 `/ai-assistant` 入口
-- **侧边栏**：从 menuGroups 的"工具"分组中移除 AI 项目助手入口
-- **活跃状态**：同步清理 isTopNavActive 函数中的 ai-assistant 路由判断
-
-#### 首页下板块背景改为粒子数据流动画
-
-- **Canvas 实现**：使用 HTML5 Canvas + requestAnimationFrame 实现高性能粒子动画
-- **数据流效果**：粒子从底部向上流动，带横向摆动（正弦波），模拟数据上升效果
-- **粒子样式**：圆形粒子 + 拖尾线条，多色系（蓝/青/紫/绿），大小1-3.5px，透明度0.03-0.15
-- **懒加载触发**：通过 IntersectionObserver 在板块进入视口时才启动动画，节省性能
-- **响应式**：窗口 resize 时自动重绘，粒子数量根据区域面积动态计算
-- **覆盖范围**：功能入口、推荐竞赛、快捷操作三个下板块均启用
-
-#### 竞赛详情页时间安排和奖项设置强制生成
-
-- **问题根因**：API 返回的 schedule/awards/materials 为空数组时，原代码的 fallback 逻辑判断条件 `!competition.value.schedule` 对空数组返回 false，导致 fallback 不触发
-- **修复方案**：`loadDetail` 函数中直接移除对 API 返回数组的条件判断，无论 API 返回什么数据，都在最后强制调用 `getScheduleForCompetition` / `getAwardsForCompetition` / `getMaterialsForCompetition` 生成完整数据
-- **智能内容**：根据竞赛名称关键词（AI/乡村振兴/电子商务/软件等）和级别（国家级/省级/校级）自动生成匹配的时间线描述、奖项配置和材料要求
-
-#### 竞赛海报裁切修复
-
-- **问题根因**：详情页海报使用 `object-fit: cover` + `max-height: 500px` + `overflow: hidden`，导致海报上下被裁切
-- **修复方案**：
-  - `object-fit: cover` → `object-fit: contain`：确保海报完整显示，不裁切任何部分
-  - 移除 `overflow: hidden`：允许海报自然展开
-  - 海报容器背景改为深色 `#1e293b`：contain 模式下两侧留白时显示深色背景更美观
-  - `height: auto`：让海报保持原始宽高比
-
-#### Live2D 全屏拖拽优化
-
-- **坐标系修复**：原代码使用 `bottom` 定位 + `origBottom` 计算，导致拖拽时 Y 轴方向相反（向上拖反而向下走）
-- **修复方案**：
-  - 改为 `top` 定位 + `origTop` 计算，拖拽方向与鼠标移动方向一致
-  - `applyModelPosition` 中设置 `bottom: auto; top: xxxpx`，彻底消除坐标系混乱
-  - 恢复位置时同样使用 `top` 而非 `bottom`
-- **拖拽手柄位置**：从形象顶部改为形象右侧（`left: 320px; bottom: 120px`），圆形按钮设计，更简洁
-- **#waifu 样式**：`cursor: grab` → `grabbing` 拖拽时反馈；`position: fixed !important` 确保定位优先级
-
-#### 我的赛事卡片使用海报图
-
-- **问题根因**：`MyRegistrations.vue` 中卡片左侧图片区域使用纯渐变色背景 + 白色文字，不美观
-- **修复方案**：
-  - 导入与 `CompetitionSquare.vue` 相同的本地竞赛图片映射
-  - `getLocalImage` 函数根据 `competitionName` 匹配对应的本地海报图
-  - 卡片 `posterStyle` 优先使用本地图片，其次 `poster_url`，最后回退到渐变色
-  - 保持与竞赛广场卡片一致的视觉风格
-
-#### 证书与获奖记录查看详情弹窗
-
-- **新增功能**：证书卡片和获奖记录卡片均添加"查看详情"按钮
-- **图片弹窗**：点击后弹出 `el-dialog` 显示证书/获奖证书的高清图片
-- **图片资源**：将外部证书图片复制到项目 `src/assets/images/certificates/` 目录：
-  - 证书：创新创业基础训练营结业证书、AI项目孵化训练营结业证书、商业计划书写作训练营结业证书
-  - 获奖：2025大学生创新创业计划训练赛（二等奖）、2025校园电子商务运营挑战赛（三等奖）
-- **弹窗设计**：800px 宽度，图片居中显示，`object-fit: contain`，最大高度 600px，带阴影和圆角
-
-#### 首页数据流粒子动画增强 + 烟花效果
-
-- **粒子增强**：
-  - 颜色从 4 种扩展到 8 种（新增橙/粉/亮青/金黄）
-  - 粒子数量从 `w*h/12000` 增加到 `w*h/8000`，更密集
-  - 透明度从 `0.03-0.15` 提升到 `0.15-0.5`，更明显
-  - 粒子大小从 `1-3.5px` 增加到 `1.5-4.5px`
-  - 添加径向渐变发光效果（`createRadialGradient`），粒子带光晕
-- **烟花效果**：
-  - 每隔 3-7 秒随机在 Canvas 上半区域生成一次烟花爆炸
-  - 每个烟花 20-45 个粒子，向四周散射
-  - 粒子受重力影响（`vy += 0.03`），模拟真实抛物线
-  - 烟花粒子带发光效果和生命周期衰减（`life/decay`）
-  - 多色系烟花，每次随机颜色
-
-#### 竞赛详情页海报宽度占满 + 去掉中央文字
-
-- **问题根因**：海报使用 `object-fit: contain` + `max-height: 560px`，虽然完整显示了海报，但海报宽度没有占满页面，两侧留有大片空白
-- **修复方案**：
-  - 移除 `max-height: 560px` 限制，改为 `aspect-ratio: 16 / 9`，让海报容器保持 16:9 比例并自动占满全宽
-  - `height: auto` + `width: 100%`：海报图片根据容器宽度自动调整高度，保持原始宽高比
-  - 海报容器背景改为 `#0f172a` 深色，海报未加载时显示深色背景
-  - 去掉海报中央叠加的文字（`poster-fallback-content` 中的标题/主办方等），海报本身已包含这些信息
-
-#### 导航栏与海报间距移除
-
-- **问题根因**：`.competition-detail` 设置了 `padding-top: 64px`，导致导航栏下方与海报顶部之间有 64px 的空白间距
-- **修复方案**：移除 `padding-top: 64px`，海报紧贴导航栏底部，视觉更紧凑
-
-#### Live2D 拖拽按钮跟随形象移动
-
-- **问题根因**：拖拽按钮使用固定的 `left: 316px` 定位，形象拖拽后按钮仍留在原地
-- **修复方案**：
-  - 给拖拽按钮添加 `id="live2d-drag-handle"`
-  - `applyModelPosition` 函数中，每次更新形象位置时，同步计算按钮位置：`left = 形象left + 形象宽度 - 4`，`top = 形象top + 形象高度/2 - 16`
-  - 恢复位置时同样同步恢复按钮位置
-  - 按钮初始位置跟随默认形象位置（`left: 20px` 时按钮在 `316px`）
-
-#### 首页推荐竞赛改用海报封面
-
-- **问题根因**：推荐竞赛卡片使用纯渐变色背景 + 白色竞赛名文字，不美观且遮挡信息
-- **修复方案**：
-  - 导入与 `CompetitionSquare.vue` 相同的本地竞赛图片映射
-  - 卡片海报区域使用 `<img>` 标签显示对应海报，`object-fit: cover`，`aspect-ratio: 16/9`
-  - 竞赛名从卡片内部移到下方信息区域，黑色文字显示，避免遮挡海报
-  - 标签（级别/分类）放在竞赛名下方，水平排列
-  - 无海报时回退到渐变色背景
-
-#### 首页数据流动画改为科幻数字雨风格
-
-- **问题根因**：原有粒子动画元素过多、速度过快、烟花效果喧宾夺主，与页面整体风格不协调
-- **修复方案**：改为《黑客帝国》风格的数字雨（Matrix Rain）效果：
-  - **列式下落**：将画布分为多列（根据宽度计算），每列独立下落，模拟终端代码滚动
-  - **字符集**：使用 0-9、A-F 十六进制数字 + 编程符号（`+ - * / = < > { } [ ]` 等），营造科技感
-  - **头部高亮**：每列最前面的 1-3 个字符使用青色（`#22d3ee`）/蓝色（`#0ea5e9`）高亮，后面字符渐变为灰色（`#64748b`）并淡出
-  - **拖尾效果**：使用半透明覆盖（`rgba(248,250,252,0.12)`）而非完全清空画布，产生字符拖尾残影
-  - **速度控制**：每列速度 `0.3-1.1px/帧`，比原来慢很多，文艺感更强
-  - **随机启停**：约 40% 的列初始处于非活跃状态，定时器到期后才重新激活，避免所有列同时滚动
-  - **字符闪烁**：每帧有 0.5% 概率随机改变某个字符，模拟数据刷新
-  - **水平扫描线**：偶尔出现水平扫描线（4-10秒间隔），带小光点，增强科幻感
-  - **整体透明度**：所有字符透明度控制在 `0.03-0.18`，非常淡雅，不干扰前景内容
-
-#### 训练营/课程详情页海报修复
-
-- **问题根因**：训练营和课程详情页海报仍使用旧的 `object-fit: cover` + `max-height: 500px` + `padding-top: 64px`，导致海报裁切且与导航栏有间距
-- **修复方案**：
-  - 移除 `padding-top: 64px`，海报紧贴导航栏
-  - `object-fit: cover` → `object-fit: contain`，海报完整显示不裁切
-  - 移除 `max-height` 和 `overflow: hidden`，改为 `aspect-ratio: 16 / 9`
-  - 海报容器背景改为 `#0f172a` 深色
-  - 与竞赛详情页保持一致的修复方案
-
-#### 数字雨全屏铺满 + 速度加快
-
-- **问题根因**：
-  - 数字雨画布放在每个 `portal-section` 内部，受 `max-width: 1400px` 限制，两侧有空白
-  - 速度 `0.3-1.1px/帧` 太慢，用户反馈"着实有些慢"
-- **修复方案**：
-  - **全屏铺满**：改为单个全局画布 `global-rain-canvas`，放在 `portal-page` 最外层，使用 `document.documentElement.scrollWidth/Height` 获取全页面尺寸
-  - **动态高度检测**：每帧检测 `document.documentElement.scrollHeight` 变化，自动调整画布高度适应内容变化
-  - **速度加快**：下落速度从 `0.3-1.1px/帧` 提升到 `0.8-2.3px/帧`，扫描线速度同步加快
-  - **移除旧画布**：删除三个 section 内部的 `data-flow-canvas`，统一由全局画布管理
-
-#### Live2D 拖拽按钮点击对话后不消失
-
-- **问题根因**：拖拽按钮使用 `v-if="loaded && !panelOpen"`，打开对话面板后按钮被销毁，关闭面板后按钮重新创建但位置丢失
-- **修复方案**：
-  - `v-if` 改为 `v-if="loaded"`，按钮始终存在
-  - 添加 `:class="{ 'panel-open': panelOpen }"`，面板打开时通过 CSS `opacity: 0` 隐藏按钮而非销毁
-  - 添加 `transition: opacity 0.3s` 实现平滑淡入淡出
-  - 面板关闭后按钮自动恢复可见，位置保持跟随形象
-
-#### 侧边栏「我的项目」选中状态 BUG 修复
-
-- **问题根因**：`isMenuActive` 函数中 `/my-projects` 的匹配条件包含了 `/create-project`，导致点击「创建项目」时「我的项目」也处于高亮状态
-- **修复方案**：
-  - `/create-project` 路由单独精确匹配，只高亮「创建项目」菜单项
-  - `/my-projects` 只匹配 `/my-projects` 自身和 `/projects/*` 子路由，不再匹配 `/create-project`
-  - 顶部导航栏 `isTopNavActive` 同步修复（保持原有逻辑，因为顶部导航没有独立的「创建项目」入口）
-
-#### 创建项目页面添加一键快速填充
-
-- **新增功能**：在表单底部操作按钮上方添加「快速填充」调试栏
-- **填充内容**：
-  - 项目名称：从 5 个预设名称中随机选择（智慧校园/AI学习助手/二手交易/区块链学历/创业资源平台）
-  - 项目类别：从 5 个类别中随机选择
-  - 所属赛道：从 7 个赛道中随机选择
-  - 当前阶段：从 5 个阶段中随机选择
-  - 项目简介：根据类别和赛道自动生成描述文本
-  - 指导老师 ID：随机生成 10000-10099
-  - 比赛批次 ID：随机生成 1-10
-  - 开始/结束时间：今天起往后 90 天
-- **UI 设计**：蓝色虚线边框提示栏，带 MagicStick 图标和说明文字
-
-#### 产业命题卡片底部对齐 + 承接功能完善
-
-- **底部对齐修复**：
-  - `.topic-footer` 添加 `min-height: 56px`，统一 footer 高度
-  - `.topic-meta` 添加 `align-items: center` 和 `flex: 1`
-  - `.meta-item` 添加 `white-space: nowrap`，防止文字换行导致高度不一致
-- **承接命题功能**：
-  - 点击「承接命题」按钮弹出 `ElMessageBox` 确认对话框，显示命题标题和后续流程说明
-  - 确认后显示成功提示，延迟 1 秒跳转到「创建项目」页面
-  - 通过 URL query 参数传递产业命题信息（`topic_id`、`topic_title`、`topic_company`），为后续预填充项目信息做准备
-  - 取消承接时不执行任何操作
-
-#### AI 对话流式输出稳定性优化
-
-- **问题根因**：原流式输出代码在遇到网络抖动、API 返回空数组或响应中断时直接报错，无重试机制
-- **修复方案**：
-  - **重试机制**：最大重试 2 次，每次重试间隔递增（1s、2s）
-  - **超时控制**：单 chunk 接收超时 3 分钟（180000ms），超时自动触发重试
-  - **缓冲区处理**：完善 decoder 缓冲区管理，确保最后一行数据不丢失
-  - **错误隔离**：服务端返回的 `error:` 行不再中断流，继续读取后续内容
-  - **完整保存**：使用 `fullResponse` 变量累计完整回复，避免 `streamingText` 重置导致内容丢失
-  - **空响应保护**：检查 `response.body` 是否存在，不存在时抛出明确错误
-
-#### 项目创建失败问题修复（500 错误）
-
-- **问题根因**：快速填充生成的 `teacher_id` 和 `competition_id` 为字符串，后端期望整数或 null；空字符串传给后端导致 500 错误
-- **修复方案**：
-  - **数据预处理**：提交前将 `teacher_id` / `competition_id` 从字符串转为整数，空字符串转为 `null`
-  - **格式校验**：日期对象转为 `YYYY-MM-DD` 字符串格式
-  - **详细错误提示**：区分 500/400/401/403/网络错误，给出针对性提示
-  - **调试日志**：提交前 `console.log` 完整请求数据，便于排查
-
-#### 引导窗口内容适配更新
-
-- **问题根因**：引导步骤仍引用 v2.0 旧功能（工作台数据看板、成员管理、材料上传等），与当前平台功能不匹配
-- **修复方案**：
-  - 更新为 v3.0 功能路径：首页 → 竞赛广场 → 我的赛事 → 训练营 → 课程 → 产业命题 → 项目管理 → 证书成果 → AI 助手
-  - 删除已移除的功能（工作台数据看板、成员管理、材料上传等）
-  - 补充新增功能：我的赛事、产业命题、证书成果
-  - 每步引导文案与当前页面功能一致
-
-#### 产业命题承接流程完善
-
-- **新增页面**：`AcceptTopic.vue` 承接命题填写页面
-  - 表单字段：负责人姓名、联系电话（手机号校验）、团队人数、预计完成时间、项目方案概述、团队优势、备注
-  - 顶部展示命题信息（企业、标题、周期、奖金）
-  - 一键快速填充按钮（调试辅助）
-  - 确认承接后跳转创建项目页面，URL 传递命题信息
-- **路由配置**：新增 `/accept-topic/:id` 路由
-- **IndustryTopics.vue**：点击「承接命题」跳转至填写页面（而非直接确认弹窗）
-
-#### 项目列表动态更新
-
-- **问题根因**：从创建项目页面返回「我的项目」时，列表不自动刷新
-- **修复方案**：`my-projects.vue` 添加 `onActivated` 钩子，页面从 keep-alive 恢复时自动调用 `fetchProjects()`
-
-#### 系统数值动态化
-
-- **问题根因**：首页 Banner 统计（50+ 竞赛、1000+ 团队、10+ 赛道）为硬编码
-- **修复方案**：
-  - 调用 `getDashboardStats()` API 获取实时数据
-  - 添加 `homeStats` 响应式数据对象
-  - API 失败时回退到默认值
-  - 模板使用 `{{ homeStats.competitions }}+` 动态绑定
-
-#### 页面头部卡片渐变色 + 动画优化
-
-- **竞赛广场**：深蓝渐变 `#1e3a5f → #0c4a6e → #0ea5e9` + 双光球呼吸动画 `bannerPulse`
-- **训练营**：紫罗兰渐变 `#312e81 → #4338ca → #7c3aed` + 光球漂浮动画 `campGlow`（带位移）
-- **在线课程**：翠绿渐变 `#064e3b → #059669 → #10b981` + 光球上下浮动动画 `courseFloat`
-- **动画实现**：纯 CSS `@keyframes` + `::before/::after` 伪元素，无需额外库
-
-#### 修改文件清单
-
-| 文件 | 修改内容 |
-|------|----------|
-| `CompetitionDetail.vue` | 移除 padding-top:64px；海报 aspect-ratio:16/9 占满宽度；去掉 poster-fallback 中央文字 |
-| `TrainingCampDetail.vue` | 移除 padding-top:64px；海报 object-fit:contain + aspect-ratio:16/9 |
-| `CourseDetail.vue` | 移除 padding-top:64px；海报 object-fit:contain + aspect-ratio:16/9 |
-| `HuahuoAssistant.vue` | 拖拽按钮 v-if 改为常驻；panel-open 类控制透明度隐藏；流式输出重试+超时机制（3分钟） |
-| `MainLayout.vue` | isMenuActive 修复：/create-project 独立匹配，/my-projects 不再匹配 /create-project |
-| `create.vue` | 添加 quickFillProject 函数；快速填充栏 UI；handleSubmit 数据预处理+详细错误处理 |
-| `IndustryTopics.vue` | 底部对齐样式修复；handleAccept 跳转至填写页面 |
-| `AcceptTopic.vue` | 新增：产业命题承接填写页面，含表单、校验、快速填充 |
-| `PortalHome.vue` | 推荐竞赛卡片改用海报封面；全局数字雨；动态加载首页统计数据 |
-| `my-projects.vue` | 添加 onActivated 钩子实现返回时自动刷新 |
-| `guide.js` | 引导步骤更新为 v3.0 功能路径 |
-| `CompetitionSquare.vue` | Banner 渐变色+双光球呼吸动画 |
-| `TrainingCamps.vue` | Banner 紫罗兰渐变色+光球漂浮动画 |
-| `Courses.vue` | Banner 翠绿渐变色+光球浮动动画 |
-| `router/index.js` | 新增 /accept-topic/:id 路由 |
+#### 新增功能
+
+- **竞赛报名表单快速生成**：队伍信息一键填充 + 队员信息一键生成（3 名测试队员完整信息）
+- **产业命题承接功能**：新增 `AcceptTopic.vue` 承接命题填写页面（负责人/联系电话/团队人数/项目方案等），确认后跳转创建项目页面
+- **证书与获奖记录查看详情弹窗**：证书卡片和获奖记录卡片添加"查看详情"按钮，`el-dialog` 显示高清图片
+- **首页数据流粒子动画增强 + 烟花效果**：8 种颜色粒子 + 径向渐变发光 + 烟花爆炸效果
+- **首页数据流动画改为科幻数字雨风格**：《黑客帝国》风格数字雨（十六进制字符 + 编程符号 + 头部高亮 + 拖尾残影 + 水平扫描线）
+- **数字雨全屏铺满 + 速度加快**：单个全局画布 `global-rain-canvas`，下落速度提升到 0.8-2.3px/帧
+- **创建项目页面一键快速填充**：5 个预设名称随机选择 + 类别/赛道/阶段/简介自动生成
+- **页面头部卡片渐变色 + 动画**：竞赛广场深蓝渐变 + 双光球呼吸、训练营紫罗兰渐变 + 光球漂浮、课程翠绿渐变 + 光球浮动
+- **系统数值动态化**：首页 Banner 统计改为调用 `getDashboardStats()` API 获取实时数据
+
+#### 功能修改
+
+- **竞赛详情页海报宽度占满 + 去掉中央文字**：`aspect-ratio: 16/9` 占满全宽，移除 `max-height`，去掉海报中央叠加文字
+- **导航栏与海报间距移除**：移除 `padding-top: 64px`，海报紧贴导航栏底部
+- **首页推荐竞赛改用海报封面**：卡片使用 `<img>` 标签显示对应海报，竞赛名移到下方信息区域
+- **我的赛事卡片使用海报图**：导入本地竞赛图片映射，卡片优先使用本地图片
+- **训练营/课程详情页海报修复**：移除 `padding-top: 64px`，`object-fit: contain` + `aspect-ratio: 16/9`
+- **引导窗口内容适配更新**：更新为 v3.0 功能路径，删除已移除功能，补充新增功能
+- **产业命题承接流程完善**：点击「承接命题」跳转至填写页面（而非直接确认弹窗）
+- **项目列表动态更新**：`my-projects.vue` 添加 `onActivated` 钩子，返回时自动刷新
+
+#### Bug 修复
+
+- **详情页海报被导航栏遮盖**：竞赛/训练营/课程详情页统一添加 `padding-top: 64px`（后续版本又移除）
+- **竞赛详情页时间安排和奖项设置缺失**：API 返回空数组时 fallback 未正确触发，改为强制调用生成函数
+- **竞赛海报裁切**：`object-fit: cover` → `object-fit: contain`，移除 `overflow: hidden`
+- **Live2D 引导后关闭加载不出来**：移除对 `window.initWidget` 的破坏性删除，改为隐藏 waifu 元素
+- **Live2D 全屏拖拽修复**：`startModelDrag` 添加 `e.stopPropagation()`，手柄定位改用 `transform`
+- **Live2D 拖拽按钮点击对话后不消失**：`v-if` 改为常驻 + `opacity: 0` 隐藏
+- **Live2D 拖拽按钮跟随形象移动**：`applyModelPosition` 中同步计算按钮位置
+- **Live2D 全屏拖拽坐标系修复**：`bottom` 定位改为 `top` 定位，拖拽方向与鼠标一致
+- **侧边栏「我的项目」选中状态 BUG**：`/create-project` 路由单独精确匹配，不再误高亮「我的项目」
+- **AI 对话流式输出稳定性**：添加重试机制（最大 2 次）+ 3 分钟超时 + 缓冲区处理 + 错误隔离
+- **项目创建失败 500 错误**：`teacher_id`/`competition_id` 字符串转整数，空字符串转 null
+- **导航栏 AI 助手入口删除**：从 topNavConfig 和 menuGroups 中移除 `/ai-assistant` 入口
+
+#### 安全与稳定性
+
+- **AI 流式输出重试 + 超时**：最大重试 2 次，递增间隔 1s/2s，单 chunk 超时 3 分钟
+- **项目创建数据预处理**：提交前类型转换和空值处理，详细错误提示
+
+#### 文档更新
+
+- 引导步骤更新为 v3.0 功能路径
 
 ---
 
@@ -1719,83 +1745,98 @@ cd backend && flask db upgrade && python seed.py
 
 > Live2D拖拽按钮常驻、侧边栏选中状态修复、创建项目快速填充、产业命题承接功能
 
+#### 新增功能
+
+- **创建项目一键快速填充**：5 个预设名称随机选择 + 类别/赛道/阶段/简介自动生成
+- **产业命题承接功能**：`AcceptTopic.vue` 承接命题填写页面（负责人/联系电话/团队人数/项目方案等），确认后跳转创建项目
+
+#### Bug 修复
+
+- **Live2D 拖拽按钮点击对话后不消失**：`v-if` 改为常驻 + `opacity: 0` 隐藏
+- **侧边栏「我的项目」选中状态 BUG**：`/create-project` 路由单独精确匹配
+
+#### 安全与稳定性
+
+- **项目创建数据预处理**：`teacher_id`/`competition_id` 字符串转整数，空字符串转 null，详细错误提示
+
+---
+
 ### v2.9.0 - 2026-05-01
 
 > 训练营/课程海报修复、数字雨全屏铺满、速度加快
+
+#### 功能修改
+
+- **数字雨全屏铺满**：改为单个全局画布 `global-rain-canvas`，动态高度检测
+- **数字雨速度加快**：下落速度从 `0.3-1.1px/帧` 提升到 `0.8-2.3px/帧`
+
+#### Bug 修复
+
+- **训练营/课程详情页海报裁切**：`object-fit: cover` → `contain`，移除 `padding-top: 64px`
+
+---
 
 ### v2.8.0 - 2026-05-01
 
 > 首页数据流动画改为科幻数字雨风格
 
+#### 功能修改
+
+- **数字雨风格重设计**：《黑客帝国》风格数字雨（十六进制字符 + 编程符号 + 头部高亮 + 拖尾残影 + 水平扫描线），替代原粒子动画
+
+---
+
 ### v2.7.0 - 2026-05-01
 
 > 海报宽度占满修复、Live2D拖拽按钮跟随、导航栏间距移除、推荐竞赛海报封面
+
+#### 功能修改
+
+- **竞赛详情页海报宽度占满**：`aspect-ratio: 16/9` 占满全宽，去掉海报中央叠加文字
+- **推荐竞赛改用海报封面**：卡片使用 `<img>` 标签显示对应海报
+- **导航栏与海报间距移除**：移除 `padding-top: 64px`
+
+#### Bug 修复
+
+- **Live2D 拖拽按钮跟随形象移动**：`applyModelPosition` 中同步计算按钮位置
+
+---
 
 ### v2.6.0 - 2026-05-01
 
 > 竞赛详情数据强制生成、海报裁切修复、Live2D全屏拖拽优化、我的赛事海报图、证书查看详情弹窗、首页烟花数据流
 
+#### 新增功能
+
+- **证书与获奖记录查看详情弹窗**：`el-dialog` 显示高清图片
+- **首页数据流粒子动画增强 + 烟花效果**：8 种颜色粒子 + 径向渐变发光 + 烟花爆炸效果
+
+#### Bug 修复
+
+- **竞赛详情页时间安排和奖项设置缺失**：API 返回空数组时强制调用生成函数
+- **竞赛海报裁切**：`object-fit: cover` → `contain`，移除 `overflow: hidden`
+- **Live2D 全屏拖拽坐标系修复**：`bottom` 定位改为 `top` 定位
+- **我的赛事卡片图片**：导入本地竞赛图片映射
+
 ### v2.4.0 - 2026-05-01
 
 > Live2D全屏拖拽、竞赛/训练营/课程详情页完善、导航栏侧边栏补全、首页背景动画补充
 
-#### Live2D形象全屏可拖拽
+#### 新增功能
 
-- **拖拽手柄**：在Live2D形象顶部添加"拖拽移动"手柄，鼠标/触摸均可操作
-- **全屏拖拽**：Live2D形象不再固定在左下角，可拖拽到屏幕任意位置
-- **位置持久化**：拖拽位置自动保存到localStorage，刷新页面后恢复
-- **边界约束**：拖拽时自动限制在可视窗口范围内，不会超出屏幕
-- **触摸支持**：同时支持鼠标和触摸屏拖拽操作
+- **Live2D 形象全屏可拖拽**：拖拽手柄 + 全屏拖拽 + 位置持久化（localStorage）+ 边界约束 + 触摸支持
+- **训练营详情页开发**：`TrainingCampDetail.vue` 独立页面，4 大训练营完整数据（课程大纲/讲师团队/学习安排/结业奖励）
+- **在线课程详情页开发**：`CourseDetail.vue` 独立页面，5 门课程完整数据（课程简介/章节目录/学习计划/学习成果）
+- **首页下板块背景动画**：浮动圆形装饰 + 底部波浪动画 + 点阵动画（CSS 动画，GPU 加速）
 
-#### 竞赛详情页完善
+#### 功能修改
 
-- **时间安排补充**：从简略的2-3项扩展为完整的6阶段时间线（报名启动→报名截止→初赛评审→复赛评审→决赛路演→结果公布与颁奖），每阶段包含详细描述
-- **奖项设置补充**：从1项扩展为6级完整奖项体系（特等奖/一等奖/二等奖/三等奖/最佳创意奖/最佳团队奖），每项含具体奖金、证书和附加奖励
-- **封面海报修复**：使用本地竞赛海报图片作为详情页顶部封面，替代原来的渐变色占位
-- **布局适配**：海报图片使用`object-fit: cover`确保16:9海报完整显示，最大高度500px
-- **智能内容生成**：根据竞赛名称和级别自动生成匹配的时间安排、奖项设置和材料要求
+- **竞赛详情页完善**：时间安排从 2 项扩展为 6 阶段、奖项从 1 项扩展为 6 级、封面海报使用本地图片
+- **导航栏和侧边栏补全**：新增产业命题/AI助手/证书成果等入口，活跃状态检测，响应式适配
 
-#### 训练营详情页开发
+#### Bug 修复
 
-- **独立详情页**：从弹窗模式升级为独立页面（`TrainingCampDetail.vue`），路由`/training-camps/:id`
-- **完整内容**：包含训练营简介、课程大纲（可展开章节/课时）、学习安排时间线、结业奖励、讲师团队
-- **封面海报**：使用本地训练营图片作为顶部封面，与竞赛详情页布局风格一致
-- **4大训练营数据**：创新创业基础(24课时)、商业计划书写作(18课时)、路演表达(12课时)、AI项目孵化(32课时)
-
-#### 在线课程详情页开发
-
-- **独立详情页**：从弹窗模式升级为独立页面（`CourseDetail.vue`），路由`/courses/:id`
-- **完整内容**：包含课程简介、课程目录（可展开章节/课时）、学习计划时间线、学习成果、课程标签
-- **封面海报**：使用本地课程图片作为顶部封面
-- **5门课程数据**：创业基础(12h)、市场调研方法(8h)、商业模式设计(10h)、项目路演技巧(6h)、创业法律与知识产权(8h)
-- **与训练营区分**：课程侧重知识学习（自主进度、在线考核），训练营侧重实战训练（分阶段、导师辅导、路演答辩）
-
-#### 导航栏和侧边栏补全
-
-- **顶部导航新增**：产业命题、AI助手、证书成果等首页功能入口展示的功能
-- **侧边栏新增**：竞赛广场、AI项目助手等入口，新增"工具"分组
-- **活跃状态**：所有新增导航项均支持活跃状态检测和高亮显示
-
-#### 首页下板块背景动画
-
-- **功能入口区域**：添加浮动圆形装饰（蓝色+绿色）+ 底部波浪动画 + 点阵动画
-- **推荐竞赛区域**：添加浮动圆形装饰（紫色+粉色）+ 底部波浪动画
-- **快捷操作区域**：添加浮动圆形装饰（橙色+红色）+ 点阵动画
-- **动画性能**：所有装饰元素使用CSS动画，GPU加速，不影响交互操作
-
-#### 修改文件清单
-
-| 文件 | 修改内容 |
-|------|----------|
-| `HuahuoAssistant.vue` | 添加全屏拖拽功能（拖拽手柄、位置持久化、边界约束、触摸支持） |
-| `CompetitionDetail.vue` | 完全重写，补充完整时间安排/奖项设置/材料要求，修复封面海报 |
-| `TrainingCampDetail.vue` | 新增训练营独立详情页 |
-| `CourseDetail.vue` | 新增在线课程独立详情页 |
-| `TrainingCamps.vue` | "开始学习"按钮改为跳转详情页 |
-| `Courses.vue` | "开始学习"按钮改为跳转详情页 |
-| `MainLayout.vue` | 导航栏新增产业命题/AI助手/证书，侧边栏新增竞赛广场/AI助手/工具分组 |
-| `PortalHome.vue` | 下板块添加背景装饰动画（浮动圆形/波浪/点阵） |
-| `router/index.js` | 新增训练营详情和课程详情路由 |
+- **竞赛详情页封面海报缺失**：使用本地竞赛海报图片替代渐变色占位
 
 ---
 
@@ -1803,69 +1844,25 @@ cd backend && flask db upgrade && python seed.py
 
 > 图片资源替换优化、导航与侧边栏入口补全、页面背景美化与动效增强、Live2D表情系统修复、引导窗口优化
 
-#### 图片资源替换与优化
+#### 新增功能
 
-- **竞赛报名模块**：将所有竞赛卡片封面图替换为本地真实图片资源（`src/assets/images/competitions/`），文件名与比赛名称严格一对一匹配
-- **训练营模块**：使用本地训练营图片资源（`src/assets/images/training-camps/`），按功能模块分类替换
-- **在线课程模块**：使用本地课程图片资源（`src/assets/images/courses/`），确保图片内容与课程主题高度匹配
-- **图片适配**：海报类图片保持16:9标准比例，通过CSS `object-fit: cover` 确保无拉伸变形
-- **占位图机制**：实现图片加载失败时的渐变色占位图显示，占位图符合整体UI风格（Cyan主色调渐变）
-- **全位置覆盖**：卡片封面图、详情页图片、hover/active状态图片均正确更新
+- **首页粒子动画**：20 个 CSS 粒子动画效果，Cyan 主色调适配，IntersectionObserver 懒加载
 
-#### 导航与侧边栏入口优化
+#### 功能修改
 
-- **导航栏补全**：补全竞赛报名、训练营、在线课程等核心功能模块的导航入口
-- **入口排序**：基于用户使用习惯合理排序（首页 → 竞赛报名 → 训练营 → 在线课程 → 产业命题 → 证书成果）
-- **侧边栏同步**：侧边栏与导航栏入口名称、图标样式、层级结构完全统一
-- **活跃状态反馈**：入口处于活跃状态时提供明确视觉反馈（高亮、图标变色）
-- **响应式设计**：导航栏与侧边栏实现桌面端、平板端、移动端全屏幕尺寸适配，移动端使用汉堡菜单
+- **图片资源替换与优化**：竞赛/训练营/课程卡片封面图全部替换为本地真实图片，图片加载失败时渐变色占位图
+- **导航与侧边栏入口优化**：补全核心功能模块导航入口，合理排序，响应式适配（桌面/平板/移动端 + 汉堡菜单）
+- **引导窗口优化**：宽度调整为 820px，左侧步骤指示器 + 右侧内容区域双栏布局
 
-#### 页面背景美化与动效增强
+#### Bug 修复
 
-- **首页粒子动画**：添加20个CSS粒子动画效果，与整体Cyan主色调UI风格适配
-- **全站背景优化**：同步对竞赛报名页、训练营页面、课程详情页等所有页面进行背景优化
-- **动效性能**：使用CSS动画实现粒子效果，确保运行帧率≥60fps
-- **懒加载机制**：非首屏区域的动效通过 `IntersectionObserver` 实现懒加载
+- **Live2D 表情按钮点击无响应**：重新实现表情控制逻辑
+- **月卡/水印表情无法与其他表情共存**：设计表情叠加系统（`__expressionOverlayRules`），支持多修饰效果并行
+- **CSP 阻止 Live2D SDK 加载**：`vite.config.js` 添加 Content-Security-Policy header 允许 `unsafe-eval`
 
-#### Live2D形象加载修复
+#### 安全与稳定性
 
-- **表情按钮修复**：解决表情按钮点击无响应问题，重新实现表情控制逻辑
-- **表情共存功能**：实现"月卡"和"水印"表情的叠加效果，可与任何其他基础表情同时生效
-- **表情叠加系统**：设计修饰效果规则（`__expressionOverlayRules`），支持多修饰效果并行
-- **CSP配置修复**：在 `vite.config.js` 中添加Content-Security-Policy header，允许Live2D SDK执行eval
-- **加载性能优化**：Live2D形象加载时长≤3秒
-
-#### 引导窗口优化
-
-- **尺寸规范**：引导窗口宽度调整为≥800px（820px），高度根据内容自适应
-- **布局重设计**：左侧步骤指示器 + 右侧内容区域的双栏布局
-- **视觉优化**：优化元素间距、字号大小、视觉层级，提升内容可读性
-- **步骤指示器**：已完成步骤显示✓标记，当前步骤高亮，未来步骤灰色
-
-#### 修改文件清单
-
-| 文件 | 修改内容 |
-|------|----------|
-| `CompetitionSquare.vue` | 竞赛图片本地化导入、图片加载失败处理 |
-| `TrainingCamps.vue` | 训练营图片本地化导入、占位图机制 |
-| `Courses.vue` | 课程图片本地化导入、占位图机制 |
-| `PortalHome.vue` | 粒子动画背景、统计数据展示优化 |
-| `MainLayout.vue` | 导航入口补全、响应式设计、侧边栏同步 |
-| `HuahuoAssistant.vue` | 表情系统修复、叠加效果实现、CSP兼容 |
-| `GuideSystem.vue` | 窗口尺寸优化、双栏布局重设计 |
-| `vite.config.js` | CSP header配置 |
-| `src/assets/images/` | 新增竞赛/训练营/课程图片资源目录 |
-
-#### 遇到的问题及解决方案
-
-| 问题 | 解决方案 |
-|------|----------|
-| Live2D SDK被CSP策略阻止加载 | 在vite.config.js添加Content-Security-Policy header允许unsafe-eval |
-| 图片加载失败导致页面空白 | 实现渐变色占位图机制，@error事件处理 |
-| 表情按钮点击无响应 | 重新实现表情控制逻辑，使用全局状态管理 |
-| 月卡/水印表情无法与其他表情共存 | 设计表情叠加系统，区分基础表情和修饰效果 |
-| 引导窗口内容拥挤 | 重新设计双栏布局，增加窗口宽度至820px |
-| 导航栏移动端显示异常 | 实现响应式设计，添加汉堡菜单 |
+- **CSP 配置修复**：允许 Live2D SDK 执行 eval，加载时长 ≤ 3 秒
 
 ---
 
@@ -1873,92 +1870,43 @@ cd backend && flask db upgrade && python seed.py
 
 > AI 助手与 Live2D 形象整合为全局浮动组件，CSP 修复，四角色引导更新
 
-#### 架构变更
+#### 新增功能
 
-- **AI 助手不再是独立页面**：移除 `/ai-assistant` 路由和导航入口，改为全局浮动组件 `HuahuoAssistant.vue`
-- **Live2D + 对话面板 + AI 分析三合一**：点击左下角 Live2D 看板娘「火花」即可打开对话面板，面板内可切换"对话模式"和"AI 分析模式"
-- **任何页面均可使用 AI 助手**：不再需要跳转到专门页面，全局可用
+- **HuahuoAssistant.vue 全局浮动组件**：整合 Live2D 看板娘 + AI 对话面板 + 语音交互 + AI 分析工具，任何页面均可使用
 
-#### 新增文件
+#### 功能修改
 
-- `HuahuoAssistant.vue`：整合 Live2D 看板娘 + AI 对话面板 + 语音交互 + AI 分析工具的全局浮动组件
-  - Live2D 形象：点击打开对话面板，支持表情切换
-  - 对话模式：文字/语音输入、SSE 流式回复、语音朗读、快捷问题
-  - AI 分析模式：项目简介/商业建议/风险分析生成
-  - 面板可拖拽移动，位置持久化到 localStorage
+- **AI 助手不再是独立页面**：移除 `/ai-assistant` 路由和导航入口，改为全局浮动组件
+- **四角色引导更新**：AI 助手相关步骤从"页面导航"改为"点击左下角火花"，合并对话/语音/Live2D 为一个步骤
 
-#### 前端变更
+#### Bug 修复
 
-- `vite.config.js`：添加 CSP header `script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: data:` 解决 Live2D 加载被阻止问题
-- `MainLayout.vue`：`Live2dWidget` 替换为 `HuahuoAssistant`，移除顶部导航和侧边栏中的"AI 助手"入口
-- `router/index.js`：移除 `/ai-assistant` 路由
-- `api/ai.js`：新增 `generateAnalysis()` 统一 AI 分析入口函数
-- `guide.js`（store）：四角色引导中 AI 助手相关步骤从"页面导航"改为"点击左下角火花"，合并对话/语音/Live2D 为一个步骤
-
-#### BUG 修复
-
-- **CSP 阻止 Live2D 加载**：Vite 开发服务器默认 CSP 策略阻止 `eval()` 执行，导致 Live2D SDK（Cubism5 core）无法初始化。在 `vite.config.js` 中添加 `Content-Security-Policy` header 允许 `unsafe-eval`
-- **AI 对话和 Live2D 重复**：原来 AI 对话是独立页面 + Live2D 是独立浮动组件 + VoiceChat 又是另一个组件，三者功能重叠。现整合为 `HuahuoAssistant.vue` 一个组件
+- **CSP 阻止 Live2D 加载**：Vite 开发服务器 CSP 策略阻止 `eval()` 执行，添加 Content-Security-Policy header
+- **AI 对话和 Live2D 功能重复**：原来 AI 对话独立页面 + Live2D 独立浮动组件 + VoiceChat 又是另一个组件，三者功能重叠，整合为 `HuahuoAssistant.vue`
 
 ---
 
 ### v2.1.0 - 2026-05-01
 
-> 修复竞赛详情数据缺失、训练营/课程按钮无响应、Live2D 加载优化、引导系统全面升级、**四角色页面全面补全**
+> 修复竞赛详情数据缺失、训练营/课程按钮无响应、Live2D 加载优化、引导系统全面升级、四角色页面全面补全
 
 #### 新增功能
 
-- **竞赛详情页完整数据**：时间安排从 2 项扩展为 5 项（报名开始/截止 → 初赛评审 → 复赛决赛 → 结果公布），奖项从 1 项扩展为 5 级（特等奖/一等奖/二等奖/三等奖/最佳创意奖），每项含具体奖金和名额
-- **训练营学习系统**：4 大主题训练营（创新基础/BP写作/路演表达/AI孵化）完整实现，含课程大纲（可展开章节/课时）、讲师团队介绍、播放按钮、"立即开始学习"入口
-- **在线课程详情系统**：5 门课程（创业基础/市场调研/商业模式/路演技巧/法律知识）完整实现，含课程简介、章节目录（可展开）、免费/会员标签、评分/学习人数统计
-- **使用引导系统 v2 全面升级**：
-  - 学生引导从 9 步扩展至 14 步，覆盖全部新功能
-  - 每步配置 `target` CSS 选择器，引导时自动高亮对应 UI 元素（脉冲动画边框）
-  - 每步支持 `routePath` 路由跳转，跨页面引导时自动导航到目标页面再高亮
-  - 新增功能引导：训练营、课程、AI 对话、语音面板、Live2D 形象等
-  - 四角色（学生/教师/评委/管理员）引导内容均同步更新
-- **一键启动脚本**：`start.bat` 放于项目根目录，双击即可同时启动前后端服务，自动检测并安装前端依赖
+- **竞赛详情页完整数据**：时间安排 5 项 + 奖项 5 级 + 智能内容生成
+- **训练营学习系统**：4 大主题训练营完整实现（课程大纲/讲师团队/播放按钮）
+- **在线课程详情系统**：5 门课程完整实现（课程简介/章节目录/免费/会员标签）
+- **使用引导系统 v2**：学生 14 步引导 + CSS 选择器高亮 + 路由跳转 + 四角色同步更新
+- **一键启动脚本**：`start.bat` 双击启动前后端服务
+- **四角色页面全面补全**：教师仪表盘/指导项目、评委仪表盘/待评审、管理员用户/竞赛/项目管理
 
-#### 四角色页面全面补全（本次重点）
+#### Bug 修复
 
-**教师端**：
-- `teacher.vue`（仪表盘）：从空状态 → 完整数据看板（指导项目数/待审核/学生数）+ 指导项目列表 + 待审核提醒 + 快捷操作入口
-- `guide-projects.vue`（指导项目）：从"功能开发中" → 完整项目管理表格（搜索/筛选/状态统计）+ 审核弹窗（通过/需修改/驳回+意见）+ 反馈弹窗（改进建议+推荐训练营/课程资源）
-
-**评委端**：
-- `judge.vue`（仪表盘）：从空状态 → 完整数据看板（待评审/已评审/进度%）+ 待评审项目列表（含描述/类别/赛道标签）+ 评分分布可视化 + 快捷操作
-- `pending.vue`（待评审列表）：修复"开始评审"按钮无点击事件问题，现已正确绑定 `@click="goToReview(project.id)"`
-
-**管理员端**：
-- `users.vue`（用户管理）：从"功能开发中" → 完整用户管理表格（搜索/角色筛选/状态筛选/分页）+ 添加/编辑用户弹窗（姓名/学号/邮箱/角色/状态切换）+ 启用/禁用/删除操作（带确认弹框）
-- `competitions.vue`（比赛管理）：从"功能开发中" → 完整比赛批次管理（创建/编辑/启用停用）+ 统计卡片（全部/进行中/已完成/总报名数）+ 报名时间和比赛时间设置
-- `projects.vue`（项目管理）：从"功能开发中" → 完整项目管理表格（搜索/阶段筛选/状态筛选/分页/6维统计卡片/平均分计算/评分颜色分级）+ 项目详情链接 + 评审记录查看
-
-#### 前端变更
-
-- `CompetitionDetail.vue`：时间安排和奖项设置补充完整的 fallback 数据（基于竞赛时间动态计算）
-- `TrainingCamps.vue`：完全重写，新增弹窗式学习详情（`el-dialog`），含课程大纲折叠列表、讲师卡片、播放按钮
-- `Courses.vue`：完全重写，新增弹窗式课程详情（`el-dialog`），含渐变头部、章节目录、学习统计
-- `Live2dWidget.vue`：增强健壮性——分步加载 JS 库（index.js + index2.js + waifu-tips.js），增加加载状态提示（loading 动画 / 错误重试），超时保护（15s），canvas 渲染检测确认模型就绪
-- `teacher.vue`：完全重写仪表盘，含统计数据、指导项目列表、待审核提醒、快捷操作
-- `guide-projects.vue`：完全重写为完整的项目管理界面，含表格、搜索筛选、审核弹窗、反馈弹窗
-- `judge.vue`：完全重写仪表盘，含统计数据、待评审项目列表、评分分布图、快捷操作
-- `pending.vue`：修复"开始评审"按钮缺少 `@click` 事件绑定的问题
-- `users.vue`：完全重写为完整的 CRUD 用户管理界面
-- `competitions.vue`：完全重写为完整的比赛批次管理界面
-- `projects.vue`：完全重写为完整的项目管理总览界面
-- `guide.js`（store）：全面重写引导步骤，每步添加 `target` CSS 选择器和可选 `routePath` 路由路径
-- `GuideSystem.vue`：新增路由导航能力（`useRouter`），步骤切换时检测 `routePath` 并自动跳转
-- `start.bat`：新增项目根目录一键启动批处理脚本
-
-#### BUG 修复
-
-- **竞赛详情页信息缺失**：后端未返回 schedule/awards 时，前端 fallback 数据过于简略（仅 2 个时间点 / 1 个奖项），现已补充为完整的 5 阶段时间线和 5 级奖项体系
-- **训练营"开始学习"按钮无响应**：按钮缺少 `@click` 事件绑定，现已实现打开学习详情弹窗的完整交互
-- **课程"查看课程"按钮无响应**：同上，按钮无事件绑定，现已实现打开课程详情弹窗的完整交互
-- **Live2D 形象不显示**：原初始化逻辑依赖单一 waifu-tips.js 的 onload 回调，若 CDN 加载缓慢或失败则静默失败。现改为：分步加载所有依赖库 + 轮询检测 initWidget 就绪 + canvas 渲染检测 + 加载状态 UI 反馈 + 错误重试机制（最多 3 次）
-- **教师/评委/管理员大量页面空壳**：6 个页面原为"功能开发中"或空状态，现全部补全为具有完整交互功能的界面
-- **评委"开始评审"按钮无响应**：`pending.vue` 第 27 行 `<el-button>` 缺少 `@click` 绑定，已修复
+- **竞赛详情页信息缺失**：fallback 数据过于简略，补充为完整 5 阶段时间线和 5 级奖项体系
+- **训练营"开始学习"按钮无响应**：缺少 `@click` 事件绑定
+- **课程"查看课程"按钮无响应**：同上
+- **Live2D 形象不显示**：改为分步加载 + 轮询检测 + canvas 渲染检测 + 错误重试（最多 3 次）
+- **教师/评委/管理员大量页面空壳**：6 个页面从"功能开发中"补全为完整交互界面
+- **评委"开始评审"按钮无响应**：`pending.vue` 缺少 `@click` 绑定
 
 ---
 

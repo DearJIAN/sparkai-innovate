@@ -90,7 +90,7 @@
           <template #header><span>快捷操作</span></template>
           <div class="quick-actions">
             <el-button type="primary" plain @click="$router.push('/pending-reviews')">待评审列表</el-button>
-            <el-button type="success" plain @click="$router.push('/ai-assistant')">AI 辅助分析</el-button>
+            <el-button type="success" plain @click="openReviewAgent">AI 辅助分析</el-button>
           </div>
         </el-card>
       </el-col>
@@ -101,6 +101,12 @@
 <script setup>
 import { ref } from 'vue'
 import { StarFilled, DocumentChecked, Odometer } from '@element-plus/icons-vue'
+
+const openReviewAgent = () => {
+  window.dispatchEvent(new CustomEvent('open-huahuo-agent', {
+    detail: { capability: 'review_assist', source: 'judge_dashboard' }
+  }))
+}
 
 const stats = ref({
   pending: 8,

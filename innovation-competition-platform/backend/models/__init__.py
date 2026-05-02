@@ -10,6 +10,8 @@ from models.project_file import ProjectFile
 from models.project_task import ProjectTask
 from models.review import Review
 from models.ai_record import AiRecord
+from models.agent_task import AgentTask
+from models.agent_material_index import AgentMaterialIndex
 
 __all__ = [
     'User',
@@ -23,5 +25,7 @@ __all__ = [
     'ProjectFile',
     'ProjectTask',
     'Review',
-    'AiRecord'
+    'AiRecord',
+    'AgentTask',
+    'AgentMaterialIndex'
 ]

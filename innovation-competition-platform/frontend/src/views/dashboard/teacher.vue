@@ -85,7 +85,7 @@
           <div class="quick-actions">
             <el-button type="primary" plain @click="$router.push('/guide-projects')">查看所有项目</el-button>
             <el-button type="success" plain @click="$router.push('/training-camps')">推荐训练营</el-button>
-            <el-button type="warning" plain @click="$router.push('/ai-assistant')">AI 助手</el-button>
+            <el-button type="warning" plain @click="openTeacherAgent">AI 助手</el-button>
           </div>
         </el-card>
       </el-col>
@@ -96,6 +96,12 @@
 <script setup>
 import { ref } from 'vue'
 import { Folder, Clock, User, WarningFilled } from '@element-plus/icons-vue'
+
+const openTeacherAgent = () => {
+  window.dispatchEvent(new CustomEvent('open-huahuo-agent', {
+    detail: { capability: 'review_assist', source: 'teacher_dashboard' }
+  }))
+}
 
 const stats = ref({
   guideProjects: 12,
