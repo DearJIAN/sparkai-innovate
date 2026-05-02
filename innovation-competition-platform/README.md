@@ -842,7 +842,7 @@ done:1                     # 流结束标记
 | `/api/agent/index-materials` | POST | JWT | 所有角色 | 索引项目/报名材料（支持 .docx/.pptx/.pdf，自动解析文档并建立向量索引） |
 | `/api/agent/material-qa` | POST | JWT | 所有角色 | AI 材料问答（基于已索引材料进行 RAG 检索问答） |
 | `/api/agent/bp-check` | POST | JWT | 所有角色 | 商业计划书体检（多维度结构化审查，**不返回具体评分**） |
-| `/api/agent/roadshow` | POST | JWT | 所有角色 | 路演稿生成（根据项目信息生成结构化演讲稿） |
+| `/api/agent/roadshow` | POST | JWT | student/teacher/admin（评委不允许） | 路演稿生成（根据项目信息生成结构化演讲稿） |
 | `/api/agent/review-assist` | POST | JWT | teacher/judge/admin | 评审辅助（项目亮点/风险/改进建议摘要，**严格不返回具体分数，仅提供定性评价参考**） |
 | `/api/agent/competition-recommend` | POST | JWT | student/admin | 智能竞赛推荐（根据项目信息匹配推荐竞赛+推荐理由） |
 | `/api/agent/tasks` | GET | JWT | 所有角色 | 任务记录列表（分页，按时间倒序） |
@@ -920,7 +920,6 @@ done:1                     # 流结束标记
 | `/courses` | portal/Courses.vue | 在线课程 |
 | `/courses/:id` | portal/CourseDetail.vue | 课程详情 |
 | `/industry-topics` | portal/IndustryTopics.vue | 产业命题 |
-| `/accept-topic/:id` | portal/AcceptTopic.vue | 承接命题（填写承接信息） |
 
 ### 通用路由（所有角色）
 
@@ -944,6 +943,7 @@ done:1                     # 流结束标记
 | `/competitions/:id/register` | portal/CompetitionRegister.vue | 竞赛报名 |
 | `/my-registrations` | portal/MyRegistrations.vue | 我的赛事 |
 | `/certificates` | portal/Certificates.vue | 证书成果 |
+| `/accept-topic/:id` | portal/AcceptTopic.vue | 承接命题（填写承接信息） |
 
 ### 教师专属路由
 
@@ -1286,7 +1286,7 @@ def create_competition():
 |--------------|------|----------|------|--------|------|
 | AI 材料问答 | ✅ | ✅ | ✅ | ✅ | 所有角色可对自己参与/负责的项目材料进行问答 |
 | AI 商业计划书体检 | ✅ | ✅ | ✅ | ✅ | 所有角色可对项目商业计划书进行体检 |
-| AI 路演稿生成 | ✅ | ✅ | ✅ | ✅ | 所有角色可为项目生成路演稿 |
+| AI 路演稿生成 | ✅ | ✅ | ❌ | ✅ | 评委不允许使用路演稿生成功能 |
 | AI 评审辅助 | ❌ | ✅ | ✅ | ✅ | 仅 teacher/judge/admin 可使用，**严格不返回具体分数** |
 | 智能竞赛推荐 | ✅ | ❌ | ❌ | ✅ | 仅 student/admin 可使用 |
 | 索引项目材料 | ✅ | ✅ | ✅ | ✅ | 所有角色可索引自己参与项目的材料 |
