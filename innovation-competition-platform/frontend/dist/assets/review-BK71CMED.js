@@ -1,1 +1,0 @@
-import{i as e}from"./index-BFAveDQn.js";var t=()=>e.get(`/reviews/projects`),n=t=>e.get(`/reviews/projects/${t}`),r=(t,n)=>e.post(`/reviews/projects/${t}`,n),i=t=>e.get(`/projects/${t}/reviews`);export{r as i,n,i as r,t};
