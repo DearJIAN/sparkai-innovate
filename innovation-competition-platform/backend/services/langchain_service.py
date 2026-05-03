@@ -661,9 +661,10 @@ def roadshow_generate(project=None, search_result=None, duration=3, style='forma
         'formal': '正式专业',
         'passionate': '激情澎湃',
         'concise': '简洁精炼',
+        'story': '故事叙述',
     }.get(style, '正式专业')
 
-    word_target = 850 if duration == 3 else 1400
+    word_target = 850 if duration == 3 else (1400 if duration == 5 else 2200)
 
     if not context.strip():
         prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，专门帮助生成路演稿。

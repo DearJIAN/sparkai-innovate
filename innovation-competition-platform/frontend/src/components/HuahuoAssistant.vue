@@ -263,6 +263,7 @@ let speechPulseInterval = null
 let dragState = { dragging: false, startX: 0, startY: 0 }
 let modelDragState = { dragging: false, startX: 0, startY: 0, origLeft: 0, origBottom: 0 }
 let modelPatchLoopId = null
+let autoExpressionTimer = null
 
 const analysisForm = reactive({ project_name: '', description: '', category: '', track: '', ai_type: 'summary' })
 const analysisLoading = ref(false)
@@ -298,6 +299,22 @@ function openPanel() {
 function closePanel() {
   panelOpen.value = false
   expressionPanelOpen.value = false
+}
+
+function startAutoExpression() {
+  stopAutoExpression()
+  autoExpressionTimer = window.setInterval(() => {
+    if (!isStreaming.value && !isSpeaking.value) {
+      switchExpression()
+    }
+  }, 10000)
+}
+
+function stopAutoExpression() {
+  if (autoExpressionTimer) {
+    clearInterval(autoExpressionTimer)
+    autoExpressionTimer = null
+  }
 }
 
 function switchToAnalysis() {
@@ -843,7 +860,7 @@ async function initLive2D() {
     // 绑定点击事件到 waifu 元素
     const waifuEl = document.getElementById('waifu')
     if (waifuEl) {
-      waifuEl.addEventListener('click', () => openPanel())
+      waifuEl.addEventListener('click', () => { switchExpression(); openPanel() })
       waifuEl.style.cursor = 'pointer'
       const hint = document.createElement('div')
       hint.className = 'waifu-click-hint'
@@ -872,6 +889,7 @@ async function initLive2D() {
       if (model) {
         window.__syncExpressionState(model)
       }
+      startAutoExpression()
     }, 1000)
 
   } catch (err) {
@@ -1281,6 +1299,7 @@ onBeforeUnmount(() => {
   stopVoiceRecognition()
   stopSpeechMouthPulse()
   stopModelPatchLoop()
+  stopAutoExpression()
   if (window.speechSynthesis) window.speechSynthesis.cancel()
   const waifuEl = document.getElementById('waifu')
   if (waifuEl) {

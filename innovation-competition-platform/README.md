@@ -4,9 +4,9 @@
 
 一个面向高校的**创新创业竞赛全流程服务平台**，覆盖竞赛发现、报名、项目创建、团队管理、材料上传、任务进度、评审打分、AI 辅助的完整流程。平台采用**前后端分离架构**，支持学生、指导老师、评委、管理员四种角色，提供竞赛广场、项目工作室、训练营、在线课程、产业命题等多元化功能。
 
-平台集成了 **Live2D 虚拟形象「火花」**、**语音交互**、**AI 智能对话**、**AI 项目智能体**等特色功能，为用户提供沉浸式智能辅助体验。其中 AI 项目智能体提供材料问答、商业计划书体检、路演稿生成、评审辅助、智能竞赛推荐 5 大 AI 能力，基于 LangChain + FAISS + BM25 混合检索技术实现。
+平台集成了 **Live2D 虚拟形象「火花」**、**语音交互**、**AI 智能对话**、**AI 项目智能体**等特色功能，为用户提供沉浸式智能辅助体验。其中 AI 项目智能体提供智能引航、材料问答、商业计划书体检、路演稿生成、评审辅助、竞赛推荐、项目创意生成、模拟答辩、批量审核、智能反馈、评审草稿、评分检查 12 大 AI 能力，基于 LangChain + FAISS + BM25 混合检索技术实现。
 
----
+***
 
 ## 项目环境依赖
 
@@ -14,66 +14,66 @@
 
 ### 后端核心依赖（newyolo conda 环境）
 
-| 库名 | 版本 | 用途 |
-|------|------|------|
-| Python | 3.10+ | 运行环境 |
-| Flask | 3.0.3 | Web 框架 |
-| Flask-SQLAlchemy | 3.1.1 | ORM 数据库工具 |
-| Flask-Migrate | 4.0.7 | 数据库迁移（Alembic） |
-| Flask-JWT-Extended | 4.6.0 | JWT 认证 |
-| Flask-Cors | 4.0.1 | 跨域支持 |
-| PyMySQL | 1.1.1 | MySQL 驱动 |
-| SQLAlchemy | 2.0.49 | ORM 核心 |
-| Alembic | 1.18.4 | 数据库迁移引擎 |
-| Werkzeug | 3.0.3 | WSGI 工具库 |
-| python-dotenv | 1.0.1 | 环境变量管理 |
-| cryptography | 47.0.0 | 加密库 |
-| PyJWT | 2.12.1 | JWT Token 处理 |
-| volcengine-python-sdk | 5.0.24 | 火山方舟 AI SDK（备选模型通道） |
-| openai | 2.32.0 | OpenAI 兼容接口（通义千问 qwen-plus 通过此接口接入） |
-| langchain | 1.2.15 | AI 编排框架 |
-| langchain-core | 1.3.0 | LangChain 核心 |
-| langchain-openai | 1.1.15 | LangChain OpenAI 兼容接口 |
-| langchain-community | 0.4.1 | LangChain 社区扩展 |
-| langchain-text-splitters | 1.1.2 | 文本分割器 |
-| langchain-volcengine | 0.1.2 | 火山方舟 LangChain 集成 |
-| faiss-cpu | 1.13.2 | Facebook 向量相似性搜索 |
-| rank-bm25 | 0.2.2 | BM25 稀疏检索 |
-| jieba | 0.42.1 | 中文分词（BM25 中文支持） |
-| python-docx | 1.2.0 | Word 文档解析 |
-| python-pptx | 1.0.2 | PowerPoint 文档解析 |
-| pypdf | 6.10.2 | PDF 文档解析 |
-| websockets | 16.0 | WebSocket 客户端 |
-| requests | 2.32.5 | HTTP 请求库 |
-| Pillow | 11.2.1 | 图像处理（海报生成） |
-| opencc-python-reimplemented | 0.1.7 | 简繁转换 |
-| tiktoken | 0.12.0 | Token 计数 |
-| numpy | 2.2.6 | 数值计算 |
+| 库名                          | 版本     | 用途                                  |
+| --------------------------- | ------ | ----------------------------------- |
+| Python                      | 3.10+  | 运行环境                                |
+| Flask                       | 3.0.3  | Web 框架                              |
+| Flask-SQLAlchemy            | 3.1.1  | ORM 数据库工具                           |
+| Flask-Migrate               | 4.0.7  | 数据库迁移（Alembic）                      |
+| Flask-JWT-Extended          | 4.6.0  | JWT 认证                              |
+| Flask-Cors                  | 4.0.1  | 跨域支持                                |
+| PyMySQL                     | 1.1.1  | MySQL 驱动                            |
+| SQLAlchemy                  | 2.0.49 | ORM 核心                              |
+| Alembic                     | 1.18.4 | 数据库迁移引擎                             |
+| Werkzeug                    | 3.0.3  | WSGI 工具库                            |
+| python-dotenv               | 1.0.1  | 环境变量管理                              |
+| cryptography                | 47.0.0 | 加密库                                 |
+| PyJWT                       | 2.12.1 | JWT Token 处理                        |
+| volcengine-python-sdk       | 5.0.24 | 火山方舟 AI SDK（备选模型通道）                 |
+| openai                      | 2.32.0 | OpenAI 兼容接口（通义千问 qwen-plus 通过此接口接入） |
+| langchain                   | 1.2.15 | AI 编排框架                             |
+| langchain-core              | 1.3.0  | LangChain 核心                        |
+| langchain-openai            | 1.1.15 | LangChain OpenAI 兼容接口               |
+| langchain-community         | 0.4.1  | LangChain 社区扩展                      |
+| langchain-text-splitters    | 1.1.2  | 文本分割器                               |
+| langchain-volcengine        | 0.1.2  | 火山方舟 LangChain 集成                   |
+| faiss-cpu                   | 1.13.2 | Facebook 向量相似性搜索                    |
+| rank-bm25                   | 0.2.2  | BM25 稀疏检索                           |
+| jieba                       | 0.42.1 | 中文分词（BM25 中文支持）                     |
+| python-docx                 | 1.2.0  | Word 文档解析                           |
+| python-pptx                 | 1.0.2  | PowerPoint 文档解析                     |
+| pypdf                       | 6.10.2 | PDF 文档解析                            |
+| websockets                  | 16.0   | WebSocket 客户端                       |
+| requests                    | 2.32.5 | HTTP 请求库                            |
+| Pillow                      | 11.2.1 | 图像处理（海报生成）                          |
+| opencc-python-reimplemented | 0.1.7  | 简繁转换                                |
+| tiktoken                    | 0.12.0 | Token 计数                            |
+| numpy                       | 2.2.6  | 数值计算                                |
 
 ### 前端核心依赖
 
-| 库名 | 版本 | 用途 |
-|------|------|------|
-| Node.js | 18+ | 运行环境 |
-| Vue | ^3.5.32 | 渐进式 JavaScript 框架 |
-| Vite | ^8.0.10 | 前端构建工具 |
-| Element Plus | ^2.13.7 | Vue 3 组件库 |
-| Pinia | ^3.0.4 | 状态管理 |
-| Vue Router | ^5.0.6 | 前端路由 |
-| Axios | ^1.15.2 | HTTP 客户端 |
-| ECharts | ^6.0.0 | 数据可视化 |
-| marked | ^18.0.2 | Markdown 渲染 |
-| DOMPurify | ^3.2.6 | HTML 安全净化 |
+| 库名           | 版本      | 用途                |
+| ------------ | ------- | ----------------- |
+| Node.js      | 18+     | 运行环境              |
+| Vue          | ^3.5.32 | 渐进式 JavaScript 框架 |
+| Vite         | ^8.0.10 | 前端构建工具            |
+| Element Plus | ^2.13.7 | Vue 3 组件库         |
+| Pinia        | ^3.0.4  | 状态管理              |
+| Vue Router   | ^5.0.6  | 前端路由              |
+| Axios        | ^1.15.2 | HTTP 客户端          |
+| ECharts      | ^6.0.0  | 数据可视化             |
+| marked       | ^18.0.2 | Markdown 渲染       |
+| DOMPurify    | ^3.2.6  | HTML 安全净化         |
 
 ### 基础设施
 
-| 依赖 | 版本 | 说明 |
-|------|------|------|
-| MySQL | 8.0+ | 关系型数据库 |
-| ffmpeg | - | 音频格式转换（ASR 需要，需加入系统 PATH） |
-| conda | - | Python 环境管理（`newyolo` 环境） |
+| 依赖     | 版本   | 说明                        |
+| ------ | ---- | ------------------------- |
+| MySQL  | 8.0+ | 关系型数据库                    |
+| ffmpeg | -    | 音频格式转换（ASR 需要，需加入系统 PATH） |
+| conda  | -    | Python 环境管理（`newyolo` 环境） |
 
----
+***
 
 ## 技术栈
 
@@ -81,33 +81,33 @@
 
 ### 前端
 
-| 技术 | 说明 |
-|------|------|
-| Vue 3 | 渐进式 JavaScript 框架（Composition API + `<script setup>`） |
-| Vite | 下一代前端构建工具 |
-| Element Plus | 基于 Vue 3 的组件库 |
-| Pinia | Vue 状态管理方案 |
-| Vue Router | 前端路由管理（createWebHistory） |
-| Axios | HTTP 客户端（baseURL: `/api`，30s 超时） |
-| ECharts | 数据可视化图表库 |
-| marked + DOMPurify | Markdown 渲染 + XSS 防护 |
-| Live2D Widget | Live2D 看板娘组件（CDN + 本地 SDK） |
+| 技术                 | 说明                                                    |
+| ------------------ | ----------------------------------------------------- |
+| Vue 3              | 渐进式 JavaScript 框架（Composition API + `<script setup>`） |
+| Vite               | 下一代前端构建工具                                             |
+| Element Plus       | 基于 Vue 3 的组件库                                         |
+| Pinia              | Vue 状态管理方案                                            |
+| Vue Router         | 前端路由管理（createWebHistory）                              |
+| Axios              | HTTP 客户端（baseURL: `/api`，30s 超时）                      |
+| ECharts            | 数据可视化图表库                                              |
+| marked + DOMPurify | Markdown 渲染 + XSS 防护                                  |
+| Live2D Widget      | Live2D 看板娘组件（CDN + 本地 SDK）                            |
 
 ### 后端
 
-| 技术 | 说明 |
-|------|------|
-| Flask | 轻量级 Web 框架（应用工厂模式） |
-| Flask-SQLAlchemy | ORM 数据库工具 |
-| Flask-JWT-Extended | JWT 认证（Access 24h / Refresh 7d） |
-| LangChain | AI 编排框架（RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐 / 统一对话路由 / 智能导航） |
-| FAISS + BM25 | 混合检索方案（向量索引 + 稀疏检索 + 关键词回退） |
-| 通义千问 qwen-plus | AI 大模型（通过 LangChain ChatOpenAI 兼容接口接入，支持多轮对话 / 意图识别 / 角色感知） |
-| 火山方舟 SDK | AI 大模型 + Embedding + ASR + TTS（备选模型通道） |
-| python-docx / python-pptx / pypdf | 文档解析（.docx / .pptx / .pdf） |
-| PyMySQL | MySQL 驱动 |
+| 技术                                | 说明                                                          |
+| --------------------------------- | ----------------------------------------------------------- |
+| Flask                             | 轻量级 Web 框架（应用工厂模式）                                          |
+| Flask-SQLAlchemy                  | ORM 数据库工具                                                   |
+| Flask-JWT-Extended                | JWT 认证（Access 24h / Refresh 7d）                             |
+| LangChain                         | AI 编排框架（RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐 / 统一对话路由 / 智能导航） |
+| FAISS + BM25                      | 混合检索方案（向量索引 + 稀疏检索 + 关键词回退）                                 |
+| 通义千问 qwen-plus                    | AI 大模型（通过 LangChain ChatOpenAI 兼容接口接入，支持多轮对话 / 意图识别 / 角色感知） |
+| 火山方舟 SDK                          | AI 大模型 + Embedding + ASR + TTS（备选模型通道）                      |
+| python-docx / python-pptx / pypdf | 文档解析（.docx / .pptx / .pdf）                                  |
+| PyMySQL                           | MySQL 驱动                                                    |
 
----
+***
 
 ## 特色功能
 
@@ -117,6 +117,7 @@
 - 拖拽位置持久化到 localStorage，刷新页面后自动恢复
 - 10 种基础表情（黑脸 / 脸红爱心 / 生气 / 晕 / ＞＜ / 0.0 / 星星眼 / 流泪 / 捧心 / 要饭）+ 2 种叠加效果（月卡 / 水印）
 - AI 对话时自动切换表情（基于关键词的情绪检测：开心 / 害羞 / 生气 / 难过 / 晕 / 惊讶）
+- 每 10 秒自动随机切换表情（AI 流式输出或朗读期间跳过），点击形象时也会随机切换
 - 语音朗读时口型驱动动画（正弦波模拟 + 文本长度驱动）
 - 可拖拽、可隐藏、可切换表情
 - 表情 / 情绪联动逻辑抽取为共享 composable（`useLive2d.js`）
@@ -153,13 +154,20 @@
 
 ### AI 项目智能体
 
-基于 LangChain + FAISS + BM25 混合检索的 AI 项目智能体系统，为竞赛全流程提供 5 大 AI 能力：
+基于 LangChain + FAISS + BM25 混合检索的 AI 项目智能体系统，为竞赛全流程提供 12 大 AI 能力：
 
+- **智能引航**：用户输入模糊指令（如"我想报名比赛""帮我看看项目"），AI 自动识别意图并返回路由跳转建议，前端自动执行页面跳转
 - **AI 材料问答**：上传项目/报名材料（支持 .docx / .pptx / .pdf），自动解析文档内容并建立向量索引，用户可针对材料内容进行自然语言问答，AI 基于检索结果精准回答
 - **AI 商业计划书体检**：对商业计划书进行全方位结构化审查，从执行摘要、市场分析、商业模式、团队介绍、财务规划、风险分析等维度给出改进建议，**不给出具体评分**
-- **AI 路演稿生成**：根据项目信息和材料内容，自动生成结构化路演演讲稿（开场白 / 痛点分析 / 解决方案 / 市场前景 / 团队介绍 / 结尾呼吁），支持自定义时长和风格
+- **AI 路演稿生成**：根据项目信息和材料内容，自动生成结构化路演演讲稿（开场白 / 痛点分析 / 解决方案 / 市场前景 / 团队介绍 / 结尾呼吁），支持 3/5/8 分钟时长和正式/激情/精炼/故事 4 种风格
 - **AI 评审辅助**（仅 teacher / judge / admin）：辅助评审人员快速了解项目全貌，生成项目亮点/风险/改进建议的摘要分析，**严格不返回具体分数，仅提供定性评价参考**
 - **智能竞赛推荐**（仅 student / admin）：根据项目类别、赛道、阶段等信息，智能匹配推荐适合参加的竞赛，给出推荐理由和匹配度分析
+- **项目创意生成**（仅 student / admin）：基于学生技能特长和兴趣方向，生成 3-5 个创新项目方向建议，含核心创意/痛点/技术路线/创新亮点/可行性分析
+- **模拟路演答辩**（仅 student / teacher / admin）：AI 扮演 3 位不同风格评委（温和/专业/犀利），各提出 1-2 个问题并给出参考回答要点，支持通用/技术/商业/挑战 4 种提问风格
+- **批量审核助手**（仅 teacher / admin）：批量分析待审核项目，给出审核概览/逐项审核建议/优先级排序，辅助老师高效审核
+- **智能反馈生成**（仅 teacher / admin）：生成项目审核反馈意见，支持修改建议/建议通过/建议驳回 3 种反馈类型
+- **评审意见草稿**（仅 judge / admin）：帮助评委快速生成评审意见草稿，含项目概述/各维度评审意见/综合评审意见/建议追问问题
+- **评分一致性检查**（仅 judge / admin）：检查评委评分与文字评价之间是否存在不一致，给出详细分析和改进建议
 
 ### 火山实时语音对话
 
@@ -191,7 +199,7 @@
 - 全屏铺满，动态高度检测
 - IntersectionObserver 懒加载触发
 
----
+***
 
 ## 项目结构
 
@@ -424,27 +432,28 @@ innovation-competition-platform/
     └── README/
 ```
 
----
+***
 
 ## 环境要求
 
 > 具体库版本信息见顶部 [项目环境依赖](#项目环境依赖) 章节
 
-| 依赖 | 版本要求 | 说明 |
-|------|----------|------|
-| Python | 3.10+ | 后端运行环境（指定使用 `newyolo` conda 环境） |
-| Node.js | 18+ | 前端构建环境 |
-| MySQL | 8.0+ | 关系型数据库 |
-| ffmpeg | - | 音频格式转换（ASR 功能需要，需加入系统 PATH） |
-| conda | - | Python 环境管理（`newyolo` 环境） |
+| 依赖      | 版本要求  | 说明                              |
+| ------- | ----- | ------------------------------- |
+| Python  | 3.10+ | 后端运行环境（指定使用 `newyolo` conda 环境） |
+| Node.js | 18+   | 前端构建环境                          |
+| MySQL   | 8.0+  | 关系型数据库                          |
+| ffmpeg  | -     | 音频格式转换（ASR 功能需要，需加入系统 PATH）     |
+| conda   | -     | Python 环境管理（`newyolo` 环境）       |
 
 > **重要**：本项目指定使用 `newyolo` conda 环境，Python 解释器路径为 `D:\TOOLS\anaconda\envs\newyolo\python.exe`。`start.bat` 已配置使用此环境。
 
----
+***
 
 ## 快速开始
 
 > **仓库内容说明**：`.gitignore` 已配置忽略以下内容，clone 后这些目录会自动从源码运行，无需手动处理：
+>
 > - `frontend/dist/` — Vite `npm run build` 产生的打包产物，`npm run dev` 开发模式直接使用 `src/` 源码
 > - `backend/vector_stores/` — FAISS/BM25 运行时生成的向量索引，启动服务后自动重建
 > - `node_modules/`、`__pycache__/`、`venv/` — 依赖缓存
@@ -453,14 +462,16 @@ innovation-competition-platform/
 ### 方式一：一键启动（推荐）
 
 双击项目根目录的 `start.bat`，脚本会自动：
+
 1. 停止占用 5000/5173 端口的旧进程
 2. 检测并安装前端依赖（首次运行时 `npm install`）
 3. 使用 `newyolo` conda 环境启动后端服务（端口 5000）
 4. 启动前端开发服务器（端口 5173）
 
 启动完成后访问：
-- 前端：http://localhost:5173
-- 后端：http://localhost:5000
+
+- 前端：<http://localhost:5173>
+- 后端：<http://localhost:5000>
 
 ### 方式二：手动启动
 
@@ -562,7 +573,7 @@ flask db upgrade
 python app.py
 ```
 
-后端服务默认运行在 http://localhost:5000
+后端服务默认运行在 <http://localhost:5000>
 
 > **启动流程**：`app.py` → `create_app()` → 加载配置 → 初始化扩展 → 注册蓝图 → 注册错误处理 → `init_database()` 检查数据库连接并创建表 → `app.run(host='0.0.0.0', port=5000, debug=True)`
 
@@ -574,11 +585,11 @@ npm install
 npm run dev
 ```
 
-前端服务默认运行在 http://localhost:5173
+前端服务默认运行在 <http://localhost:5173>
 
 > **Vite 代理配置**：`/api` 和 `/uploads` 请求代理到 `http://localhost:5000`，CSP header 允许 `unsafe-eval`（Live2D SDK 需要）。
 
-> **`frontend/dist/` 目录说明**：`npm run build` 时 Vite 将 `src/` 源码编译打包后输出的静态文件目录，包含 `index.html`、编译后的 JS/CSS 以及 `public/` 目录的拷贝（Live2D 模型、Widget SDK 等）。此目录已被 `.gitignore` 忽略，协作者 clone 后 `npm run dev` 会自动使用源码目录运行，无需手动处理。
+> **`frontend/dist/`** **目录说明**：`npm run build` 时 Vite 将 `src/` 源码编译打包后输出的静态文件目录，包含 `index.html`、编译后的 JS/CSS 以及 `public/` 目录的拷贝（Live2D 模型、Widget SDK 等）。此目录已被 `.gitignore` 忽略，协作者 clone 后 `npm run dev` 会自动使用源码目录运行，无需手动处理。
 
 #### 6. 初始化测试数据
 
@@ -588,35 +599,37 @@ python seed.py
 ```
 
 seed.py 会自动创建：
+
 - 8 个测试用户（4 种角色）
 - 10 个竞赛（含赛道、Pillow 海报自动生成）
 - 2 个项目
 - 8 条报名记录（含队员信息，多种状态：draft/submitted/approved/rejected）
 
----
+***
 
 ## 后端配置详情
 
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| `SECRET_KEY` | `dev-secret-key-change-in-production` | Flask 密钥（生产环境必须修改） |
-| `SQLALCHEMY_DATABASE_URI` | `mysql+pymysql://root:123456@localhost:3306/innovation_competition?charset=utf8mb4` | 数据库连接字符串 |
-| `SQLALCHEMY_TRACK_MODIFICATIONS` | False | 关闭修改追踪 |
-| `SQLALCHEMY_ENGINE_OPTIONS.pool_size` | 10 | 数据库连接池大小 |
-| `SQLALCHEMY_ENGINE_OPTIONS.pool_recycle` | 3600 | 连接回收时间（秒） |
-| `SQLALCHEMY_ENGINE_OPTIONS.pool_pre_ping` | True | 连接前检测可用性 |
-| `JWT_SECRET_KEY` | `dev-jwt-secret-key-change-in-production` | JWT 签名密钥（生产环境必须修改） |
-| `JWT_ACCESS_TOKEN_EXPIRES` | 24 小时 | Access Token 有效期 |
-| `JWT_REFRESH_TOKEN_EXPIRES` | 7 天 | Refresh Token 有效期 |
-| `MAX_CONTENT_LENGTH` | 4 GB | 文件上传大小限制 |
-| `DEFAULT_PAGE_SIZE` | 10 | 默认分页大小 |
-| `MAX_PAGE_SIZE` | 100 | 最大分页大小 |
-| `UPLOAD_FOLDER` | backend/uploads | 文件上传目录 |
-| `ALLOWED_EXTENSIONS` | png/jpg/jpeg/gif/bmp/doc/docx/ppt/pptx/pdf/mp4/avi/mov/wmv/mkv/zip/rar/7z | 允许上传的文件类型 |
+| 配置项                                       | 默认值                                                                                 | 说明                 |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- | ------------------ |
+| `SECRET_KEY`                              | `dev-secret-key-change-in-production`                                               | Flask 密钥（生产环境必须修改） |
+| `SQLALCHEMY_DATABASE_URI`                 | `mysql+pymysql://root:123456@localhost:3306/innovation_competition?charset=utf8mb4` | 数据库连接字符串           |
+| `SQLALCHEMY_TRACK_MODIFICATIONS`          | False                                                                               | 关闭修改追踪             |
+| `SQLALCHEMY_ENGINE_OPTIONS.pool_size`     | 10                                                                                  | 数据库连接池大小           |
+| `SQLALCHEMY_ENGINE_OPTIONS.pool_recycle`  | 3600                                                                                | 连接回收时间（秒）          |
+| `SQLALCHEMY_ENGINE_OPTIONS.pool_pre_ping` | True                                                                                | 连接前检测可用性           |
+| `JWT_SECRET_KEY`                          | `dev-jwt-secret-key-change-in-production`                                           | JWT 签名密钥（生产环境必须修改） |
+| `JWT_ACCESS_TOKEN_EXPIRES`                | 24 小时                                                                               | Access Token 有效期   |
+| `JWT_REFRESH_TOKEN_EXPIRES`               | 7 天                                                                                 | Refresh Token 有效期  |
+| `MAX_CONTENT_LENGTH`                      | 4 GB                                                                                | 文件上传大小限制           |
+| `DEFAULT_PAGE_SIZE`                       | 10                                                                                  | 默认分页大小             |
+| `MAX_PAGE_SIZE`                           | 100                                                                                 | 最大分页大小             |
+| `UPLOAD_FOLDER`                           | backend/uploads                                                                     | 文件上传目录             |
+| `ALLOWED_EXTENSIONS`                      | png/jpg/jpeg/gif/bmp/doc/docx/ppt/pptx/pdf/mp4/avi/mov/wmv/mkv/zip/rar/7z           | 允许上传的文件类型          |
 
 ### CORS 配置
 
 后端 CORS 仅允许以下来源访问 API：
+
 - `http://localhost:5173`
 - `http://127.0.0.1:5173`
 
@@ -625,28 +638,28 @@ seed.py 会自动创建：
 
 ### 环境配置类
 
-| 配置类 | 说明 | 数据库 |
-|--------|------|--------|
-| `DevelopmentConfig` | 开发环境（DEBUG=True） | MySQL |
-| `ProductionConfig` | 生产环境（DEBUG=False） | MySQL |
-| `TestingConfig` | 测试环境（TESTING=True） | SQLite 内存数据库 |
+| 配置类                 | 说明                 | 数据库          |
+| ------------------- | ------------------ | ------------ |
+| `DevelopmentConfig` | 开发环境（DEBUG=True）   | MySQL        |
+| `ProductionConfig`  | 生产环境（DEBUG=False）  | MySQL        |
+| `TestingConfig`     | 测试环境（TESTING=True） | SQLite 内存数据库 |
 
----
+***
 
 ## 演示账号
 
-| 用户名 | 密码 | 角色 | 真实姓名 | 邮箱 |
-|--------|------|------|----------|------|
-| admin | admin123 | 管理员 | 管理员 | admin@example.com |
-| student1 | student123 | 学生 | 张三 | student1@example.com |
-| student2 | student123 | 学生 | 李四 | student2@example.com |
-| student3 | student123 | 学生 | 王五 | student3@example.com |
-| teacher1 | teacher123 | 指导老师 | 赵老师 | teacher1@example.com |
-| teacher2 | teacher123 | 指导老师 | 钱老师 | teacher2@example.com |
-| judge1 | judge123 | 评委 | 孙评委 | judge1@example.com |
-| judge2 | judge123 | 评委 | 周评委 | judge2@example.com |
+| 用户名      | 密码         | 角色   | 真实姓名 | 邮箱                     |
+| -------- | ---------- | ---- | ---- | ---------------------- |
+| admin    | admin123   | 管理员  | 管理员  | <admin@example.com>    |
+| student1 | student123 | 学生   | 张三   | <student1@example.com> |
+| student2 | student123 | 学生   | 李四   | <student2@example.com> |
+| student3 | student123 | 学生   | 王五   | <student3@example.com> |
+| teacher1 | teacher123 | 指导老师 | 赵老师  | <teacher1@example.com> |
+| teacher2 | teacher123 | 指导老师 | 钱老师  | <teacher2@example.com> |
+| judge1   | judge123   | 评委   | 孙评委  | <judge1@example.com>   |
+| judge2   | judge123   | 评委   | 周评委  | <judge2@example.com>   |
 
----
+***
 
 ## API 接口文档
 
@@ -672,14 +685,15 @@ seed.py 会自动创建：
 
 ### 认证接口 `/api/auth`
 
-| 接口 | 方法 | 认证 | 说明 |
-|------|------|------|------|
-| `/api/auth/register` | POST | 无 | 用户注册（username/password 必填，email/role/real_name/phone/college/major 可选） |
-| `/api/auth/login` | POST | 无 | 用户登录（返回 `{token, user}`，JWT Token 存 localStorage） |
-| `/api/auth/me` | GET | JWT | 获取当前登录用户信息 |
-| `/api/auth/logout` | POST | JWT | 登出（前端清除 Token） |
+| 接口                   | 方法   | 认证  | 说明                                                                      |
+| -------------------- | ---- | --- | ----------------------------------------------------------------------- |
+| `/api/auth/register` | POST | 无   | 用户注册（username/password 必填，email/role/real\_name/phone/college/major 可选） |
+| `/api/auth/login`    | POST | 无   | 用户登录（返回 `{token, user}`，JWT Token 存 localStorage）                       |
+| `/api/auth/me`       | GET  | JWT | 获取当前登录用户信息                                                              |
+| `/api/auth/logout`   | POST | JWT | 登出（前端清除 Token）                                                          |
 
 **注册请求示例**：
+
 ```json
 {
   "username": "student1",
@@ -694,6 +708,7 @@ seed.py 会自动创建：
 ```
 
 **登录响应示例**：
+
 ```json
 {
   "code": 200,
@@ -712,6 +727,7 @@ seed.py 会自动创建：
 ```
 
 **注册校验规则**：
+
 - 用户名至少 3 个字符，不可重复
 - 密码至少 6 个字符
 - 邮箱不可重复（可选）
@@ -720,88 +736,88 @@ seed.py 会自动创建：
 
 ### 用户接口 `/api/users`
 
-| 接口 | 方法 | 认证 | 权限 | 说明 |
-|------|------|------|------|------|
-| `/api/users/` | GET | JWT | admin | 获取所有用户列表 |
-| `/api/users/<id>` | GET | JWT | 本人或admin | 获取用户详情 |
+| 接口                | 方法  | 认证  | 权限       | 说明       |
+| ----------------- | --- | --- | -------- | -------- |
+| `/api/users/`     | GET | JWT | admin    | 获取所有用户列表 |
+| `/api/users/<id>` | GET | JWT | 本人或admin | 获取用户详情   |
 
 ### 竞赛接口
 
 #### 公开接口（无需登录）
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/public/competitions` | GET | 获取可报名竞赛列表（支持 keyword/category/level/status/page/per_page 参数） |
-| `/api/public/competitions/:id` | GET | 获取竞赛详情（含赛道信息，自动增加浏览量） |
-| `/api/public/competitions/:id/tracks` | GET | 获取竞赛赛道列表 |
-| `/api/public/competition-categories` | GET | 获取竞赛分类列表（10 个分类） |
+| 接口                                    | 方法  | 说明                                                            |
+| ------------------------------------- | --- | ------------------------------------------------------------- |
+| `/api/public/competitions`            | GET | 获取可报名竞赛列表（支持 keyword/category/level/status/page/per\_page 参数） |
+| `/api/public/competitions/:id`        | GET | 获取竞赛详情（含赛道信息，自动增加浏览量）                                         |
+| `/api/public/competitions/:id/tracks` | GET | 获取竞赛赛道列表                                                      |
+| `/api/public/competition-categories`  | GET | 获取竞赛分类列表（10 个分类）                                              |
 
 #### 管理员接口
 
-| 接口 | 方法 | 权限 | 说明 |
-|------|------|------|------|
-| `/api/competitions` | GET | JWT | 获取竞赛列表（支持 status 筛选） |
-| `/api/competitions` | POST | admin | 创建竞赛 |
-| `/api/competitions/:id` | PUT | admin | 更新竞赛 |
-| `/api/competitions/:id` | DELETE | admin | 删除竞赛 |
-| `/api/competitions/:id/tracks` | POST | admin | 创建赛道 |
+| 接口                             | 方法     | 权限    | 说明                   |
+| ------------------------------ | ------ | ----- | -------------------- |
+| `/api/competitions`            | GET    | JWT   | 获取竞赛列表（支持 status 筛选） |
+| `/api/competitions`            | POST   | admin | 创建竞赛                 |
+| `/api/competitions/:id`        | PUT    | admin | 更新竞赛                 |
+| `/api/competitions/:id`        | DELETE | admin | 删除竞赛                 |
+| `/api/competitions/:id/tracks` | POST   | admin | 创建赛道                 |
 
 ### 报名接口
 
 #### 学生接口
 
-| 接口 | 方法 | 权限 | 说明 |
-|------|------|------|------|
-| `/api/registrations` | POST | student | 创建报名草稿（competition_id/track_id 必填） |
-| `/api/registrations/:id` | GET | student | 查看报名详情（仅自己的） |
-| `/api/registrations/:id` | PUT | student | 更新报名信息（已提交不可修改） |
-| `/api/registrations/:id/members` | POST | student | 添加队员 |
-| `/api/registration-members/:id` | PUT | student | 编辑队员 |
-| `/api/registration-members/:id` | DELETE | student | 删除队员 |
-| `/api/registrations/:id/materials` | POST | student | 上传报名材料（multipart/form-data） |
-| `/api/registration-materials/:id` | DELETE | student | 删除报名材料 |
-| `/api/registrations/:id/submit` | POST | student | 提交报名（team_name 必填） |
-| `/api/my-registrations` | GET | student | 查看我的报名列表（含竞赛名/赛道名/海报） |
+| 接口                                 | 方法     | 权限      | 说明                                   |
+| ---------------------------------- | ------ | ------- | ------------------------------------ |
+| `/api/registrations`               | POST   | student | 创建报名草稿（competition\_id/track\_id 必填） |
+| `/api/registrations/:id`           | GET    | student | 查看报名详情（仅自己的）                         |
+| `/api/registrations/:id`           | PUT    | student | 更新报名信息（已提交不可修改）                      |
+| `/api/registrations/:id/members`   | POST   | student | 添加队员                                 |
+| `/api/registration-members/:id`    | PUT    | student | 编辑队员                                 |
+| `/api/registration-members/:id`    | DELETE | student | 删除队员                                 |
+| `/api/registrations/:id/materials` | POST   | student | 上传报名材料（multipart/form-data）          |
+| `/api/registration-materials/:id`  | DELETE | student | 删除报名材料                               |
+| `/api/registrations/:id/submit`    | POST   | student | 提交报名（team\_name 必填）                  |
+| `/api/my-registrations`            | GET    | student | 查看我的报名列表（含竞赛名/赛道名/海报）                |
 
 #### 管理员接口
 
-| 接口 | 方法 | 权限 | 说明 |
-|------|------|------|------|
-| `/api/admin/registrations` | GET | admin | 获取所有报名记录（支持 competition_id/status/keyword/page/per_page） |
-| `/api/admin/registrations/:id` | GET | admin | 查看报名详情 |
-| `/api/admin/registrations/:id/approve` | POST | admin | 审核通过报名 |
-| `/api/admin/registrations/:id/reject` | POST | admin | 驳回报名（可附 remark） |
-| `/api/admin/registrations/statistics` | GET | admin | 报名统计数据 |
+| 接口                                     | 方法   | 权限    | 说明                                                         |
+| -------------------------------------- | ---- | ----- | ---------------------------------------------------------- |
+| `/api/admin/registrations`             | GET  | admin | 获取所有报名记录（支持 competition\_id/status/keyword/page/per\_page） |
+| `/api/admin/registrations/:id`         | GET  | admin | 查看报名详情                                                     |
+| `/api/admin/registrations/:id/approve` | POST | admin | 审核通过报名                                                     |
+| `/api/admin/registrations/:id/reject`  | POST | admin | 驳回报名（可附 remark）                                            |
+| `/api/admin/registrations/statistics`  | GET  | admin | 报名统计数据                                                     |
 
 ### 项目接口 `/api/projects`
 
-| 接口 | 方法 | 权限 | 说明 |
-|------|------|------|------|
-| `/api/projects` | GET | JWT | 获取项目列表（按角色过滤：学生看自己参与/负责的，教师看指导的，评委看已提交的，admin 看全部） |
-| `/api/projects` | POST | student/admin | 创建项目（name 必填，stage 默认 idea，status 默认 draft） |
-| `/api/projects/:id` | GET | JWT | 获取项目详情（含成员/文件数/任务数，需权限检查） |
-| `/api/projects/:id` | PUT | JWT | 更新项目（仅负责人或 admin，评审阶段不可修改） |
-| `/api/projects/:id` | DELETE | JWT | 删除项目（仅 draft 状态，仅负责人或 admin） |
-| `/api/projects/:id/submit` | POST | JWT | 提交项目进入评审（draft/need_modify → submitted） |
+| 接口                         | 方法     | 权限            | 说明                                                 |
+| -------------------------- | ------ | ------------- | -------------------------------------------------- |
+| `/api/projects`            | GET    | JWT           | 获取项目列表（按角色过滤：学生看自己参与/负责的，教师看指导的，评委看已提交的，admin 看全部） |
+| `/api/projects`            | POST   | student/admin | 创建项目（name 必填，stage 默认 idea，status 默认 draft）        |
+| `/api/projects/:id`        | GET    | JWT           | 获取项目详情（含成员/文件数/任务数，需权限检查）                          |
+| `/api/projects/:id`        | PUT    | JWT           | 更新项目（仅负责人或 admin，评审阶段不可修改）                         |
+| `/api/projects/:id`        | DELETE | JWT           | 删除项目（仅 draft 状态，仅负责人或 admin）                       |
+| `/api/projects/:id/submit` | POST   | JWT           | 提交项目进入评审（draft/need\_modify → submitted）           |
 
-**项目查询参数**：keyword / status / stage / track / page / per_page
+**项目查询参数**：keyword / status / stage / track / page / per\_page
 
 ### AI 分析工具 `/api/ai`
 
-| 接口 | 方法 | 认证 | 说明 |
-|------|------|------|------|
-| `/api/ai/project-summary` | POST | JWT | 生成项目简介（AI 驱动，失败回退模板） |
+| 接口                             | 方法   | 认证  | 说明                    |
+| ------------------------------ | ---- | --- | --------------------- |
+| `/api/ai/project-summary`      | POST | JWT | 生成项目简介（AI 驱动，失败回退模板）  |
 | `/api/ai/business-plan-advice` | POST | JWT | 商业计划书建议（AI 驱动，失败回退模板） |
-| `/api/ai/risk-analysis` | POST | JWT | 风险分析（AI 驱动，失败回退模板） |
-| `/api/ai/records` | GET | JWT | AI 使用记录（按时间倒序） |
+| `/api/ai/risk-analysis`        | POST | JWT | 风险分析（AI 驱动，失败回退模板）    |
+| `/api/ai/records`              | GET  | JWT | AI 使用记录（按时间倒序）        |
 
 ### AI 对话 `/api/ai`
 
-| 接口 | 方法 | 认证 | 说明 |
-|------|------|------|------|
-| `/api/ai/chat` | POST | JWT | 文本聊天（非流式，返回 reply/sessionId/model/mode） |
-| `/api/ai/chat/stream` | POST | JWT | 文本聊天（SSE 流式，text/event-stream，支持统一对话路由：自动识别导航/对话/智能体意图） |
-| `/api/ai/voice/chat/stream` | POST | JWT | 语音聊天（SSE 流式，优先火山实时语音，回退文本模型） |
+| 接口                          | 方法   | 认证  | 说明                                                      |
+| --------------------------- | ---- | --- | ------------------------------------------------------- |
+| `/api/ai/chat`              | POST | JWT | 文本聊天（非流式，返回 reply/sessionId/model/mode）                 |
+| `/api/ai/chat/stream`       | POST | JWT | 文本聊天（SSE 流式，text/event-stream，支持统一对话路由：自动识别导航/对话/智能体意图） |
+| `/api/ai/voice/chat/stream` | POST | JWT | 语音聊天（SSE 流式，优先火山实时语音，回退文本模型）                            |
 
 **请求参数**：`message`（必填）/ `question` / `scene`（默认"创新创业平台"）/ `sessionId` / `role`（当前用户角色，用于角色感知对话）
 
@@ -809,13 +825,14 @@ seed.py 会自动创建：
 
 `/api/ai/chat/stream` 接口内置意图识别，根据用户消息自动分发到不同处理逻辑：
 
-| 意图类型 | 触发条件 | 处理方式 |
-|----------|----------|----------|
+| 意图类型       | 触发条件                        | 处理方式                                    |
+| ---------- | --------------------------- | --------------------------------------- |
 | `navigate` | 用户输入包含导航意图（如"我想报名""帮我看看项目"） | 调用 `smart_navigate` 返回路由跳转建议，前端自动执行页面跳转 |
-| `agent` | 用户请求智能体能力（如"帮我体检商业计划书"） | 调用对应 LangChain 智能体能力 |
-| `chat` | 通用对话 | 调用 qwen-plus 模型进行多轮对话 |
+| `agent`    | 用户请求智能体能力（如"帮我体检商业计划书"）     | 调用对应 LangChain 智能体能力                    |
+| `chat`     | 通用对话                        | 调用 qwen-plus 模型进行多轮对话                   |
 
 **导航响应示例**：
+
 ```json
 {
   "type": "navigate",
@@ -839,42 +856,42 @@ done:1                     # 流结束标记
 
 ### 语音交互 `/api/ai`
 
-| 接口 | 方法 | 认证 | 说明 |
-|------|------|------|------|
-| `/api/ai/asr` | POST | JWT | 语音识别（multipart/form-data，豆包 ASR / faster-whisper 回退，返回 text/provider/model） |
-| `/api/ai/tts/synthesize` | POST | JWT | TTS 语音合成（火山 TTS，返回 audio_url） |
-| `/api/ai/tts/audio/<filename>` | GET | 无 | 获取合成音频文件（MP3） |
-| `/api/ai/voice/config` | GET | JWT | 语音配置信息（realtime_configured/speaker/bot_name/input_mod） |
+| 接口                             | 方法   | 认证  | 说明                                                                          |
+| ------------------------------ | ---- | --- | --------------------------------------------------------------------------- |
+| `/api/ai/asr`                  | POST | JWT | 语音识别（multipart/form-data，豆包 ASR / faster-whisper 回退，返回 text/provider/model） |
+| `/api/ai/tts/synthesize`       | POST | JWT | TTS 语音合成（火山 TTS，返回 audio\_url）                                              |
+| `/api/ai/tts/audio/<filename>` | GET  | 无   | 获取合成音频文件（MP3）                                                               |
+| `/api/ai/voice/config`         | GET  | JWT | 语音配置信息（realtime\_configured/speaker/bot\_name/input\_mod）                   |
 
 ### Live2D / 健康 `/api/ai`
 
-| 接口 | 方法 | 认证 | 说明 |
-|------|------|------|------|
-| `/api/ai/expressions` | GET | 无 | 获取表情列表（base 10 个 + overlay 2 个含概率） |
-| `/api/ai/model-info` | GET | 无 | 获取 Live2D 模型信息（name: huahuo, path: /live2d/huahuo/火花.model3.json） |
-| `/api/ai/health` | GET | 无 | AI 服务健康检查（chat_configured / voice_realtime_configured / model） |
+| 接口                    | 方法  | 认证 | 说明                                                                |
+| --------------------- | --- | -- | ----------------------------------------------------------------- |
+| `/api/ai/expressions` | GET | 无  | 获取表情列表（base 10 个 + overlay 2 个含概率）                                |
+| `/api/ai/model-info`  | GET | 无  | 获取 Live2D 模型信息（name: huahuo, path: /live2d/huahuo/火花.model3.json） |
+| `/api/ai/health`      | GET | 无  | AI 服务健康检查（chat\_configured / voice\_realtime\_configured / model） |
 
 ### 看板接口 `/api/dashboard`
 
-| 接口 | 方法 | 权限 | 说明 |
-|------|------|------|------|
-| `/api/dashboard/stats` | GET | admin | 管理员统计数据（用户/项目/文件/评审/竞赛/AI 使用，含角色分布/阶段分布/赛道分布） |
-| `/api/dashboard/recent` | GET | admin | 最近数据（最近 5 个项目/文件/评审） |
+| 接口                      | 方法  | 权限    | 说明                                            |
+| ----------------------- | --- | ----- | --------------------------------------------- |
+| `/api/dashboard/stats`  | GET | admin | 管理员统计数据（用户/项目/文件/评审/竞赛/AI 使用，含角色分布/阶段分布/赛道分布） |
+| `/api/dashboard/recent` | GET | admin | 最近数据（最近 5 个项目/文件/评审）                          |
 
 ### 系统接口
 
-| 接口 | 方法 | 认证 | 说明 |
-|------|------|------|------|
-| `/api/health` | GET | 无 | 系统健康检查（数据库连接状态，503 表示降级） |
-| `/uploads/<path:filename>` | GET | 无 | 静态文件访问（上传文件，含海报/报名材料等） |
+| 接口                         | 方法  | 认证 | 说明                       |
+| -------------------------- | --- | -- | ------------------------ |
+| `/api/health`              | GET | 无  | 系统健康检查（数据库连接状态，503 表示降级） |
+| `/uploads/<path:filename>` | GET | 无  | 静态文件访问（上传文件，含海报/报名材料等）   |
 
 ### 其他接口
 
-| 接口前缀 | 说明 |
-|----------|------|
-| `/api/` | 成员（member.py）/ 文件（file.py）/ 任务（task.py）/ 评审（review.py） |
-| `/api/teams` | 团队管理 |
-| `/api/materials` | 材料管理 |
+| 接口前缀             | 说明                                                      |
+| ---------------- | ------------------------------------------------------- |
+| `/api/`          | 成员（member.py）/ 文件（file.py）/ 任务（task.py）/ 评审（review\.py） |
+| `/api/teams`     | 团队管理                                                    |
+| `/api/materials` | 材料管理                                                    |
 
 ### AI 智能体 `/api/agent`
 
@@ -883,13 +900,22 @@ done:1                     # 流结束标记
 | `/api/agent/index-materials` | POST | JWT | 所有角色 | 索引项目/报名材料（支持 .docx/.pptx/.pdf，自动解析文档并建立向量索引） |
 | `/api/agent/material-qa` | POST | JWT | 所有角色 | AI 材料问答（基于已索引材料进行 RAG 检索问答） |
 | `/api/agent/bp-check` | POST | JWT | 所有角色 | 商业计划书体检（多维度结构化审查，**不返回具体评分**） |
-| `/api/agent/roadshow` | POST | JWT | student/teacher/admin（评委不允许） | 路演稿生成（根据项目信息生成结构化演讲稿） |
+| `/api/agent/roadshow` | POST | JWT | student/teacher/admin（评委不允许） | 路演稿生成（支持 3/5/8 分钟时长，formal/passionate/concise/story 风格） |
 | `/api/agent/review-assist` | POST | JWT | teacher/judge/admin | 评审辅助（项目亮点/风险/改进建议摘要，**严格不返回具体分数，仅提供定性评价参考**） |
 | `/api/agent/competition-recommend` | POST | JWT | student/admin | 智能竞赛推荐（根据项目信息匹配推荐竞赛+推荐理由） |
+| `/api/agent/navigate` | POST | JWT | 所有角色 | 智能引航（模糊指令识别，返回路由跳转建议） |
+| `/api/agent/project-idea` | POST | JWT | student/admin | 项目创意生成（基于技能/兴趣/竞赛方向生成创意建议） |
+| `/api/agent/mock-defense` | POST | JWT | student/teacher/admin | 模拟路演答辩（AI 扮演 3 位评委提问，支持 general/technical/business/tough 类型） |
+| `/api/agent/batch-review` | POST | JWT | teacher/admin | 批量审核助手（批量分析待审核项目，给出审核建议） |
+| `/api/agent/smart-feedback` | POST | JWT | teacher/admin | 智能反馈生成（生成项目审核反馈意见，支持 modify/approve/reject 类型） |
+| `/api/agent/review-draft` | POST | JWT | judge/admin | 评审意见草稿（生成评审意见草稿，含各维度定性评价） |
+| `/api/agent/score-check` | POST | JWT | judge/admin | 评分一致性检查（检查评分与文字评价是否一致） |
+| `/api/agent/capabilities` | GET | JWT | 所有角色 | 获取当前角色可用的 AI 智能体能力列表 |
 | `/api/agent/tasks` | GET | JWT | 所有角色 | 任务记录列表（分页，按时间倒序） |
 | `/api/agent/tasks/<id>` | GET | JWT | 所有角色 | 任务详情（含输入参数和 AI 输出结果） |
 
 **索引材料请求示例**：
+
 ```json
 {
   "project_id": 1,
@@ -899,6 +925,7 @@ done:1                     # 流结束标记
 ```
 
 **材料问答请求示例**：
+
 ```json
 {
   "project_id": 1,
@@ -907,6 +934,7 @@ done:1                     # 流结束标记
 ```
 
 **商业计划书体检请求示例**：
+
 ```json
 {
   "project_id": 1
@@ -914,15 +942,19 @@ done:1                     # 流结束标记
 ```
 
 **路演稿生成请求示例**：
+
 ```json
 {
   "project_id": 1,
-  "duration_minutes": 5,
+  "duration": 5,
   "style": "formal"
 }
 ```
 
+> 路演稿 `duration` 支持 3/5/8（分钟），`style` 支持 formal（正式）/passionate（激情）/concise（精炼）/story（故事）。
+
 **评审辅助请求示例**：
+
 ```json
 {
   "project_id": 1
@@ -932,83 +964,143 @@ done:1                     # 流结束标记
 > **重要**：评审辅助端点严格不返回具体分数，仅提供项目亮点、风险点和改进建议的定性评价参考，避免影响评审公正性。
 
 **智能竞赛推荐请求示例**：
+
 ```json
 {
   "project_id": 1
 }
 ```
 
----
+**智能引航请求示例**：
+
+```json
+{
+  "message": "我想报名互联网+比赛"
+}
+```
+
+**项目创意生成请求示例**：
+
+```json
+{
+  "skills": "Python、产品设计",
+  "interests": "环保、教育"
+}
+```
+
+**模拟路演答辩请求示例**：
+
+```json
+{
+  "project_id": 1,
+  "question_type": "tough"
+}
+```
+
+> `question_type` 支持 general（通用）/technical（技术）/business（商业）/tough（挑战）。
+
+**智能反馈生成请求示例**：
+
+```json
+{
+  "project_id": 1,
+  "feedback_type": "modify"
+}
+```
+
+> `feedback_type` 支持 modify（修改建议）/approve（建议通过）/reject（建议驳回）。
+
+**评审意见草稿请求示例**：
+
+```json
+{
+  "project_id": 1
+}
+```
+
+**评分一致性检查请求示例**：
+
+```json
+{
+  "review_data": {
+    "innovation_score": 85,
+    "feasibility_score": 80,
+    "comment": "项目创新性一般，可行性较好"
+  }
+}
+```
+
+***
 
 ## 路由配置
 
 ### 公共路由（无需登录）
 
-| 路径 | 组件 | 说明 |
-|------|------|------|
-| `/login` | login/index.vue | 登录页 |
+| 路径          | 组件                 | 说明  |
+| ----------- | ------------------ | --- |
+| `/login`    | login/index.vue    | 登录页 |
 | `/register` | login/register.vue | 注册页 |
 
 ### 平台页面（所有角色，无侧边栏）
 
-| 路径 | 组件 | 说明 |
-|------|------|------|
-| `/portal` | portal/PortalHome.vue | 平台首页 |
-| `/competitions` | portal/CompetitionSquare.vue | 竞赛广场 |
-| `/competitions/:id` | portal/CompetitionDetail.vue | 竞赛详情 |
-| `/training-camps` | portal/TrainingCamps.vue | 训练营 |
+| 路径                    | 组件                            | 说明    |
+| --------------------- | ----------------------------- | ----- |
+| `/portal`             | portal/PortalHome.vue         | 平台首页  |
+| `/competitions`       | portal/CompetitionSquare.vue  | 竞赛广场  |
+| `/competitions/:id`   | portal/CompetitionDetail.vue  | 竞赛详情  |
+| `/training-camps`     | portal/TrainingCamps.vue      | 训练营   |
 | `/training-camps/:id` | portal/TrainingCampDetail.vue | 训练营详情 |
-| `/courses` | portal/Courses.vue | 在线课程 |
-| `/courses/:id` | portal/CourseDetail.vue | 课程详情 |
-| `/industry-topics` | portal/IndustryTopics.vue | 产业命题 |
+| `/courses`            | portal/Courses.vue            | 在线课程  |
+| `/courses/:id`        | portal/CourseDetail.vue       | 课程详情  |
+| `/industry-topics`    | portal/IndustryTopics.vue     | 产业命题  |
 
 ### 通用路由（所有角色）
 
-| 路径 | 组件 | 说明 |
-|------|------|------|
-| `/dashboard` | dashboard/index.vue | 工作台（按角色加载不同看板） |
-| `/projects/:id` | projects/detail.vue | 项目详情 |
-| `/projects/:id/edit` | projects/edit.vue | 编辑项目 |
-| `/projects/:id/members` | projects/members.vue | 团队成员 |
-| `/projects/:id/files` | projects/files.vue | 项目材料 |
-| `/projects/:id/tasks` | projects/tasks.vue | 任务进度 |
-| `/reviews/:id` | reviews/detail.vue | 评审详情 |
-| `/ai-assistant` | ai-assistant/index.vue | AI 助手备用页面（hidden: true，不显示在导航菜单） |
+| 路径                      | 组件                     | 说明                               |
+| ----------------------- | ---------------------- | -------------------------------- |
+| `/dashboard`            | dashboard/index.vue    | 工作台（按角色加载不同看板）                   |
+| `/projects/:id`         | projects/detail.vue    | 项目详情                             |
+| `/projects/:id/edit`    | projects/edit.vue      | 编辑项目                             |
+| `/projects/:id/members` | projects/members.vue   | 团队成员                             |
+| `/projects/:id/files`   | projects/files.vue     | 项目材料                             |
+| `/projects/:id/tasks`   | projects/tasks.vue     | 任务进度                             |
+| `/reviews/:id`          | reviews/detail.vue     | 评审详情                             |
+| `/ai-assistant`         | ai-assistant/index.vue | AI 助手备用页面（hidden: true，不显示在导航菜单） |
 
 ### 学生专属路由
 
-| 路径 | 组件 | 说明 |
-|------|------|------|
-| `/my-projects` | projects/my-projects.vue | 我的项目 |
-| `/create-project` | projects/create.vue | 创建项目 |
-| `/competitions/:id/register` | portal/CompetitionRegister.vue | 竞赛报名 |
-| `/my-registrations` | portal/MyRegistrations.vue | 我的赛事 |
-| `/certificates` | portal/Certificates.vue | 证书成果 |
-| `/accept-topic/:id` | portal/AcceptTopic.vue | 承接命题（填写承接信息） |
+| 路径                           | 组件                             | 说明           |
+| ---------------------------- | ------------------------------ | ------------ |
+| `/my-projects`               | projects/my-projects.vue       | 我的项目         |
+| `/create-project`            | projects/create.vue            | 创建项目         |
+| `/competitions/:id/register` | portal/CompetitionRegister.vue | 竞赛报名         |
+| `/my-registrations`          | portal/MyRegistrations.vue     | 我的赛事         |
+| `/certificates`              | portal/Certificates.vue        | 证书成果         |
+| `/accept-topic/:id`          | portal/AcceptTopic.vue         | 承接命题（填写承接信息） |
 
 ### 教师专属路由
 
-| 路径 | 组件 | 说明 |
-|------|------|------|
+| 路径                | 组件                          | 说明   |
+| ----------------- | --------------------------- | ---- |
 | `/guide-projects` | projects/guide-projects.vue | 指导项目 |
-| `/project-review` | reviews/teacher-review.vue | 项目审核 |
+| `/project-review` | reviews/teacher-review\.vue | 项目审核 |
 
 ### 评委专属路由
 
-| 路径 | 组件 | 说明 |
-|------|------|------|
+| 路径                 | 组件                  | 说明    |
+| ------------------ | ------------------- | ----- |
 | `/pending-reviews` | reviews/pending.vue | 待评审项目 |
-| `/review-history` | reviews/history.vue | 评审记录 |
+| `/review-history`  | reviews/history.vue | 评审记录  |
 
 ### 管理员专属路由
 
-| 路径 | 组件 | 说明 |
-|------|------|------|
-| `/user-management` | admin/users.vue | 用户管理 |
-| `/project-management` | admin/projects.vue | 项目管理 |
-| `/competition-management` | competitions/index.vue | 比赛批次管理 |
-| `/registration-management` | admin/RegistrationManagement.vue | 报名管理 |
-| `/review-management` | admin/reviews.vue | 评审管理 |
+| 路径                         | 组件                               | 说明     |
+| -------------------------- | -------------------------------- | ------ |
+| `/user-management`         | admin/users.vue                  | 用户管理   |
+| `/project-management`      | admin/projects.vue               | 项目管理   |
+| `/competition-management`  | competitions/index.vue           | 比赛批次管理 |
+| `/registration-management` | admin/RegistrationManagement.vue | 报名管理   |
+| `/review-management`       | admin/reviews.vue                | 评审管理   |
 
 ### 路由守卫逻辑
 
@@ -1019,282 +1111,282 @@ done:1                     # 流结束标记
 5. **角色权限检查**：路由 `meta.roles` 指定允许访问的角色，无权限时重定向到 /dashboard
 6. **404 匹配**：未匹配路由显示 404 页面
 
----
+***
 
 ## 数据库模型
 
 ### 表结构总览
 
-| 模型 | 表名 | 说明 |
-|------|------|------|
-| User | users | 用户信息 |
-| Competition | competitions | 竞赛信息 |
-| CompetitionTrack | competition_tracks | 竞赛赛道 |
-| CompetitionRegistration | competition_registrations | 竞赛报名 |
-| RegistrationMember | registration_members | 报名队员 |
-| RegistrationMaterial | registration_materials | 报名材料 |
-| Project | projects | 项目信息 |
-| ProjectMember | project_members | 项目成员 |
-| ProjectFile | project_files | 项目文件 |
-| ProjectTask | project_tasks | 项目任务 |
-| Review | reviews | 评审记录 |
-| AiRecord | ai_records | AI 使用记录 |
-| AgentTask | agent_tasks | AI 智能体任务 |
-| AgentMaterialIndex | agent_material_indices | AI 智能体材料索引 |
+| 模型                      | 表名                         | 说明         |
+| ----------------------- | -------------------------- | ---------- |
+| User                    | users                      | 用户信息       |
+| Competition             | competitions               | 竞赛信息       |
+| CompetitionTrack        | competition\_tracks        | 竞赛赛道       |
+| CompetitionRegistration | competition\_registrations | 竞赛报名       |
+| RegistrationMember      | registration\_members      | 报名队员       |
+| RegistrationMaterial    | registration\_materials    | 报名材料       |
+| Project                 | projects                   | 项目信息       |
+| ProjectMember           | project\_members           | 项目成员       |
+| ProjectFile             | project\_files             | 项目文件       |
+| ProjectTask             | project\_tasks             | 项目任务       |
+| Review                  | reviews                    | 评审记录       |
+| AiRecord                | ai\_records                | AI 使用记录    |
+| AgentTask               | agent\_tasks               | AI 智能体任务   |
+| AgentMaterialIndex      | agent\_material\_indices   | AI 智能体材料索引 |
 
 ### 模型详细字段
 
 #### User（用户信息）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 用户 ID |
-| username | String(80) | 用户名（唯一，索引） |
-| password_hash | String(255) | 密码哈希（Werkzeug generate_password_hash） |
-| real_name | String(50) | 真实姓名 |
-| email | String(120) | 邮箱（唯一） |
-| phone | String(20) | 手机号 |
-| role | String(20) | 角色（student/teacher/judge/admin，默认 student） |
-| college | String(100) | 学院 |
-| major | String(100) | 专业 |
-| avatar | String(255) | 头像 URL |
-| is_active | Boolean | 是否启用（默认 True） |
-| created_at | DateTime | 创建时间 |
-| updated_at | DateTime | 更新时间 |
+| 字段             | 类型           | 说明                                         |
+| -------------- | ------------ | ------------------------------------------ |
+| id             | Integer (PK) | 用户 ID                                      |
+| username       | String(80)   | 用户名（唯一，索引）                                 |
+| password\_hash | String(255)  | 密码哈希（Werkzeug generate\_password\_hash）    |
+| real\_name     | String(50)   | 真实姓名                                       |
+| email          | String(120)  | 邮箱（唯一）                                     |
+| phone          | String(20)   | 手机号                                        |
+| role           | String(20)   | 角色（student/teacher/judge/admin，默认 student） |
+| college        | String(100)  | 学院                                         |
+| major          | String(100)  | 专业                                         |
+| avatar         | String(255)  | 头像 URL                                     |
+| is\_active     | Boolean      | 是否启用（默认 True）                              |
+| created\_at    | DateTime     | 创建时间                                       |
+| updated\_at    | DateTime     | 更新时间                                       |
 
-**关系**：projects（负责的项目）/ teacher_projects（指导的项目）/ reviews（评审记录）/ tasks（分配的任务）/ ai_records（AI 使用记录）
+**关系**：projects（负责的项目）/ teacher\_projects（指导的项目）/ reviews（评审记录）/ tasks（分配的任务）/ ai\_records（AI 使用记录）
 
 **方法**：`set_password(password)` / `check_password(password)` / `is_admin()` / `is_teacher()` / `is_judge()` / `is_student()`
 
 #### Competition（竞赛信息）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 竞赛 ID |
-| name | String(200) | 竞赛名称 |
-| description | Text | 竞赛描述 |
-| organizer | String(200) | 主办方 |
-| category | String(50) | 分类（创新创业/人工智能/数字经济/乡村振兴/电子商务/软件开发/智能制造/职业规划/公益实践/产业命题） |
-| level | String(20) | 级别（校级/省级/国家级/企业命题） |
-| registration_start | DateTime | 报名开始时间 |
-| registration_end | DateTime | 报名截止时间 |
-| competition_start | DateTime | 比赛开始时间 |
-| competition_end | DateTime | 比赛结束时间 |
-| status | String(20) | 状态（draft/active/ended/archived/upcoming） |
-| poster_url | String(500) | 海报 URL |
-| tags | String(500) | 标签（逗号分隔，to_dict 时转为数组） |
-| target_audience | String(500) | 目标受众 |
-| requirements | Text | 参赛要求 |
-| awards | Text | 奖项设置 |
-| schedule | Text | 赛程安排 |
-| view_count | Integer | 浏览量（默认 0） |
-| registration_count | Integer | 报名数（默认 0） |
-| created_at | DateTime | 创建时间 |
-| updated_at | DateTime | 更新时间 |
+| 字段                  | 类型           | 说明                                                    |
+| ------------------- | ------------ | ----------------------------------------------------- |
+| id                  | Integer (PK) | 竞赛 ID                                                 |
+| name                | String(200)  | 竞赛名称                                                  |
+| description         | Text         | 竞赛描述                                                  |
+| organizer           | String(200)  | 主办方                                                   |
+| category            | String(50)   | 分类（创新创业/人工智能/数字经济/乡村振兴/电子商务/软件开发/智能制造/职业规划/公益实践/产业命题） |
+| level               | String(20)   | 级别（校级/省级/国家级/企业命题）                                    |
+| registration\_start | DateTime     | 报名开始时间                                                |
+| registration\_end   | DateTime     | 报名截止时间                                                |
+| competition\_start  | DateTime     | 比赛开始时间                                                |
+| competition\_end    | DateTime     | 比赛结束时间                                                |
+| status              | String(20)   | 状态（draft/active/ended/archived/upcoming）              |
+| poster\_url         | String(500)  | 海报 URL                                                |
+| tags                | String(500)  | 标签（逗号分隔，to\_dict 时转为数组）                               |
+| target\_audience    | String(500)  | 目标受众                                                  |
+| requirements        | Text         | 参赛要求                                                  |
+| awards              | Text         | 奖项设置                                                  |
+| schedule            | Text         | 赛程安排                                                  |
+| view\_count         | Integer      | 浏览量（默认 0）                                             |
+| registration\_count | Integer      | 报名数（默认 0）                                             |
+| created\_at         | DateTime     | 创建时间                                                  |
+| updated\_at         | DateTime     | 更新时间                                                  |
 
 **关系**：projects / tracks（级联删除）/ registrations（级联删除）
 
 #### CompetitionTrack（竞赛赛道）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 赛道 ID |
-| competition_id | Integer (FK) | 所属竞赛 |
-| name | String | 赛道名称 |
-| description | Text | 赛道描述 |
-| category | String | 赛道分类 |
-| team_min | Integer | 最小团队人数（默认 1） |
-| team_max | Integer | 最大团队人数（默认 5） |
-| material_requirements | Text | 材料要求 |
-| status | String | 赛道状态（默认 open） |
+| 字段                     | 类型           | 说明            |
+| ---------------------- | ------------ | ------------- |
+| id                     | Integer (PK) | 赛道 ID         |
+| competition\_id        | Integer (FK) | 所属竞赛          |
+| name                   | String       | 赛道名称          |
+| description            | Text         | 赛道描述          |
+| category               | String       | 赛道分类          |
+| team\_min              | Integer      | 最小团队人数（默认 1）  |
+| team\_max              | Integer      | 最大团队人数（默认 5）  |
+| material\_requirements | Text         | 材料要求          |
+| status                 | String       | 赛道状态（默认 open） |
 
 #### CompetitionRegistration（竞赛报名）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 报名 ID |
-| competition_id | Integer (FK) | 竞赛 ID |
-| track_id | Integer (FK) | 赛道 ID |
-| project_id | Integer | 关联项目 ID |
-| leader_id | Integer (FK) | 队长用户 ID |
-| team_name | String | 队伍名称 |
-| school | String | 学校 |
-| college | String | 学院 |
-| major | String | 专业 |
-| teacher_name | String | 指导老师姓名 |
-| teacher_phone | String | 指导老师电话 |
-| contact_phone | String | 联系电话 |
-| contact_email | String | 联系邮箱 |
-| status | String | 状态（draft/submitted/approved/rejected/withdrawn） |
-| remark | Text | 备注（驳回原因等） |
-| submitted_at | DateTime | 提交时间 |
-| created_at | DateTime | 创建时间 |
-| updated_at | DateTime | 更新时间 |
+| 字段              | 类型           | 说明                                              |
+| --------------- | ------------ | ----------------------------------------------- |
+| id              | Integer (PK) | 报名 ID                                           |
+| competition\_id | Integer (FK) | 竞赛 ID                                           |
+| track\_id       | Integer (FK) | 赛道 ID                                           |
+| project\_id     | Integer      | 关联项目 ID                                         |
+| leader\_id      | Integer (FK) | 队长用户 ID                                         |
+| team\_name      | String       | 队伍名称                                            |
+| school          | String       | 学校                                              |
+| college         | String       | 学院                                              |
+| major           | String       | 专业                                              |
+| teacher\_name   | String       | 指导老师姓名                                          |
+| teacher\_phone  | String       | 指导老师电话                                          |
+| contact\_phone  | String       | 联系电话                                            |
+| contact\_email  | String       | 联系邮箱                                            |
+| status          | String       | 状态（draft/submitted/approved/rejected/withdrawn） |
+| remark          | Text         | 备注（驳回原因等）                                       |
+| submitted\_at   | DateTime     | 提交时间                                            |
+| created\_at     | DateTime     | 创建时间                                            |
+| updated\_at     | DateTime     | 更新时间                                            |
 
 **关系**：members / materials
 
 #### RegistrationMember（报名队员）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 队员 ID |
-| registration_id | Integer (FK) | 报名记录 ID |
-| name | String | 姓名 |
-| student_no | String | 学号 |
-| college | String | 学院 |
-| major | String | 专业 |
-| phone | String | 手机号 |
-| email | String | 邮箱 |
-| role_in_team | String | 队内角色（leader/member，默认 member） |
+| 字段               | 类型           | 说明                            |
+| ---------------- | ------------ | ----------------------------- |
+| id               | Integer (PK) | 队员 ID                         |
+| registration\_id | Integer (FK) | 报名记录 ID                       |
+| name             | String       | 姓名                            |
+| student\_no      | String       | 学号                            |
+| college          | String       | 学院                            |
+| major            | String       | 专业                            |
+| phone            | String       | 手机号                           |
+| email            | String       | 邮箱                            |
+| role\_in\_team   | String       | 队内角色（leader/member，默认 member） |
 
 #### RegistrationMaterial（报名材料）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 材料 ID |
-| registration_id | Integer (FK) | 报名记录 ID |
-| uploader_id | Integer (FK) | 上传者 ID |
-| material_type | String | 材料类型 |
-| file_name | String | 文件名（UUID 重命名） |
-| original_name | String | 原始文件名 |
-| file_path | String | 文件存储路径 |
-| file_type | String | 文件扩展名 |
-| file_size | Integer | 文件大小（字节） |
+| 字段               | 类型           | 说明            |
+| ---------------- | ------------ | ------------- |
+| id               | Integer (PK) | 材料 ID         |
+| registration\_id | Integer (FK) | 报名记录 ID       |
+| uploader\_id     | Integer (FK) | 上传者 ID        |
+| material\_type   | String       | 材料类型          |
+| file\_name       | String       | 文件名（UUID 重命名） |
+| original\_name   | String       | 原始文件名         |
+| file\_path       | String       | 文件存储路径        |
+| file\_type       | String       | 文件扩展名         |
+| file\_size       | Integer      | 文件大小（字节）      |
 
 #### Project（项目信息）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 项目 ID |
-| name | String(100) | 项目名称 |
-| description | Text | 项目描述 |
-| category | String(50) | 项目类别 |
-| track | String(50) | 所属赛道 |
-| stage | String(30) | 当前阶段（idea/prototype/proof/development/production，默认 idea） |
-| status | String(30) | 项目状态（draft/submitted/teacher_review/need_modify/judging/passed/rejected，默认 draft） |
-| leader_id | Integer (FK → users) | 负责人 ID |
-| teacher_id | Integer (FK → users) | 指导老师 ID |
-| competition_id | Integer (FK → competitions) | 关联竞赛 ID |
-| start_date | Date | 开始日期 |
-| end_date | Date | 结束日期 |
-| progress | Integer | 进度百分比（默认 0） |
-| created_at | DateTime | 创建时间 |
-| updated_at | DateTime | 更新时间 |
+| 字段              | 类型                          | 说明                                                                                  |
+| --------------- | --------------------------- | ----------------------------------------------------------------------------------- |
+| id              | Integer (PK)                | 项目 ID                                                                               |
+| name            | String(100)                 | 项目名称                                                                                |
+| description     | Text                        | 项目描述                                                                                |
+| category        | String(50)                  | 项目类别                                                                                |
+| track           | String(50)                  | 所属赛道                                                                                |
+| stage           | String(30)                  | 当前阶段（idea/prototype/proof/development/production，默认 idea）                           |
+| status          | String(30)                  | 项目状态（draft/submitted/teacher\_review/need\_modify/judging/passed/rejected，默认 draft） |
+| leader\_id      | Integer (FK → users)        | 负责人 ID                                                                              |
+| teacher\_id     | Integer (FK → users)        | 指导老师 ID                                                                             |
+| competition\_id | Integer (FK → competitions) | 关联竞赛 ID                                                                             |
+| start\_date     | Date                        | 开始日期                                                                                |
+| end\_date       | Date                        | 结束日期                                                                                |
+| progress        | Integer                     | 进度百分比（默认 0）                                                                         |
+| created\_at     | DateTime                    | 创建时间                                                                                |
+| updated\_at     | DateTime                    | 更新时间                                                                                |
 
-**关系**：members（级联删除）/ files（级联删除）/ tasks（级联删除）/ reviews（级联删除）/ ai_records
+**关系**：members（级联删除）/ files（级联删除）/ tasks（级联删除）/ reviews（级联删除）/ ai\_records
 
 #### ProjectMember（项目成员）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 成员 ID |
-| project_id | Integer (FK) | 项目 ID |
-| user_id | Integer (FK) | 用户 ID |
-| member_name | String | 成员姓名 |
-| role_in_project | String | 项目角色 |
-| responsibility | String | 职责 |
+| 字段                | 类型           | 说明    |
+| ----------------- | ------------ | ----- |
+| id                | Integer (PK) | 成员 ID |
+| project\_id       | Integer (FK) | 项目 ID |
+| user\_id          | Integer (FK) | 用户 ID |
+| member\_name      | String       | 成员姓名  |
+| role\_in\_project | String       | 项目角色  |
+| responsibility    | String       | 职责    |
 
 #### ProjectFile（项目文件）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 文件 ID |
-| project_id | Integer (FK) | 项目 ID |
-| filename | String | 文件名 |
-| original_name | String | 原始文件名 |
-| file_type | String | 文件类型 |
-| material_type | String | 材料类型 |
-| file_size | Integer | 文件大小 |
-| storage_path | String | 存储路径 |
-| uploader_id | Integer (FK) | 上传者 ID |
+| 字段             | 类型           | 说明     |
+| -------------- | ------------ | ------ |
+| id             | Integer (PK) | 文件 ID  |
+| project\_id    | Integer (FK) | 项目 ID  |
+| filename       | String       | 文件名    |
+| original\_name | String       | 原始文件名  |
+| file\_type     | String       | 文件类型   |
+| material\_type | String       | 材料类型   |
+| file\_size     | Integer      | 文件大小   |
+| storage\_path  | String       | 存储路径   |
+| uploader\_id   | Integer (FK) | 上传者 ID |
 
 #### ProjectTask（项目任务）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 任务 ID |
-| project_id | Integer (FK) | 项目 ID |
-| title | String | 任务标题 |
-| description | Text | 任务描述 |
-| assignee_id | Integer (FK → users) | 负责人 ID |
-| status | String | 任务状态 |
-| priority | String | 优先级 |
-| deadline | DateTime | 截止日期 |
-| completed_at | DateTime | 完成时间 |
+| 字段            | 类型                   | 说明     |
+| ------------- | -------------------- | ------ |
+| id            | Integer (PK)         | 任务 ID  |
+| project\_id   | Integer (FK)         | 项目 ID  |
+| title         | String               | 任务标题   |
+| description   | Text                 | 任务描述   |
+| assignee\_id  | Integer (FK → users) | 负责人 ID |
+| status        | String               | 任务状态   |
+| priority      | String               | 优先级    |
+| deadline      | DateTime             | 截止日期   |
+| completed\_at | DateTime             | 完成时间   |
 
 #### Review（评审记录）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 评审 ID |
-| project_id | Integer (FK) | 项目 ID |
-| judge_id | Integer (FK → users) | 评委 ID |
-| innovation_score | Integer | 创新性评分 |
-| feasibility_score | Integer | 可行性评分 |
-| market_score | Integer | 市场评分 |
-| team_score | Integer | 团队评分 |
-| business_score | Integer | 商业评分 |
-| technology_score | Integer | 技术评分 |
-| presentation_score | Integer | 展示评分 |
-| total_score | Float | 总分 |
-| comment | Text | 评审意见 |
+| 字段                  | 类型                   | 说明    |
+| ------------------- | -------------------- | ----- |
+| id                  | Integer (PK)         | 评审 ID |
+| project\_id         | Integer (FK)         | 项目 ID |
+| judge\_id           | Integer (FK → users) | 评委 ID |
+| innovation\_score   | Integer              | 创新性评分 |
+| feasibility\_score  | Integer              | 可行性评分 |
+| market\_score       | Integer              | 市场评分  |
+| team\_score         | Integer              | 团队评分  |
+| business\_score     | Integer              | 商业评分  |
+| technology\_score   | Integer              | 技术评分  |
+| presentation\_score | Integer              | 展示评分  |
+| total\_score        | Float                | 总分    |
+| comment             | Text                 | 评审意见  |
 
 #### AiRecord（AI 使用记录）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 记录 ID |
-| user_id | Integer (FK → users) | 用户 ID |
-| project_id | Integer (FK → projects) | 项目 ID |
-| type | String | 类型（summary/business_advice/risk_analysis） |
-| prompt | Text | 输入提示 |
-| result | Text | AI 输出结果 |
-| created_at | DateTime | 创建时间 |
+| 字段          | 类型                      | 说明                                          |
+| ----------- | ----------------------- | ------------------------------------------- |
+| id          | Integer (PK)            | 记录 ID                                       |
+| user\_id    | Integer (FK → users)    | 用户 ID                                       |
+| project\_id | Integer (FK → projects) | 项目 ID                                       |
+| type        | String                  | 类型（summary/business\_advice/risk\_analysis） |
+| prompt      | Text                    | 输入提示                                        |
+| result      | Text                    | AI 输出结果                                     |
+| created\_at | DateTime                | 创建时间                                        |
 
 #### AgentTask（AI 智能体任务）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 任务 ID |
-| user_id | Integer (FK → users) | 发起用户 ID |
-| project_id | Integer (FK → projects) | 关联项目 ID |
-| registration_id | Integer | 关联报名 ID（可选） |
-| task_type | String | 任务类型（material_qa / bp_check / roadshow / review_assist / competition_recommend / index_materials） |
-| status | String | 任务状态（pending / processing / completed / failed，默认 pending） |
-| input_params | Text | 输入参数（JSON 格式） |
-| result | Text | AI 输出结果 |
-| error_message | Text | 错误信息（失败时记录） |
-| created_at | DateTime | 创建时间 |
-| updated_at | DateTime | 更新时间 |
+| 字段               | 类型                      | 说明                                                                                                     |
+| ---------------- | ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| id               | Integer (PK)            | 任务 ID                                                                                                  |
+| user\_id         | Integer (FK → users)    | 发起用户 ID                                                                                                |
+| project\_id      | Integer (FK → projects) | 关联项目 ID                                                                                                |
+| registration\_id | Integer                 | 关联报名 ID（可选）                                                                                            |
+| task\_type       | String                  | 任务类型（material\_qa / bp\_check / roadshow / review\_assist / competition\_recommend / index\_materials） |
+| status           | String                  | 任务状态（pending / processing / completed / failed，默认 pending）                                             |
+| input\_params    | Text                    | 输入参数（JSON 格式）                                                                                          |
+| result           | Text                    | AI 输出结果                                                                                                |
+| error\_message   | Text                    | 错误信息（失败时记录）                                                                                            |
+| created\_at      | DateTime                | 创建时间                                                                                                   |
+| updated\_at      | DateTime                | 更新时间                                                                                                   |
 
 #### AgentMaterialIndex（AI 智能体材料索引）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | Integer (PK) | 索引 ID |
-| project_id | Integer (FK → projects) | 关联项目 ID |
-| registration_id | Integer | 关联报名 ID（可选） |
-| file_id | Integer (FK → project_files) | 关联文件 ID |
-| file_name | String | 文件名 |
-| file_type | String | 文件类型（docx/pptx/pdf） |
-| chunk_count | Integer | 文本分块数量 |
-| index_status | String | 索引状态（pending / indexing / completed / failed，默认 pending） |
-| index_path | String | FAISS 索引文件路径 |
-| created_at | DateTime | 创建时间 |
-| updated_at | DateTime | 更新时间 |
+| 字段               | 类型                            | 说明                                                       |
+| ---------------- | ----------------------------- | -------------------------------------------------------- |
+| id               | Integer (PK)                  | 索引 ID                                                    |
+| project\_id      | Integer (FK → projects)       | 关联项目 ID                                                  |
+| registration\_id | Integer                       | 关联报名 ID（可选）                                              |
+| file\_id         | Integer (FK → project\_files) | 关联文件 ID                                                  |
+| file\_name       | String                        | 文件名                                                      |
+| file\_type       | String                        | 文件类型（docx/pptx/pdf）                                      |
+| chunk\_count     | Integer                       | 文本分块数量                                                   |
+| index\_status    | String                        | 索引状态（pending / indexing / completed / failed，默认 pending） |
+| index\_path      | String                        | FAISS 索引文件路径                                             |
+| created\_at      | DateTime                      | 创建时间                                                     |
+| updated\_at      | DateTime                      | 更新时间                                                     |
 
----
+***
 
 ## 用户角色与权限
 
 ### 角色定义
 
-| 角色 | 标识 | 层级 | 说明 |
-|------|------|------|------|
-| 学生 | `student` | 1 | 项目负责人 / 团队成员 |
-| 指导老师 | `teacher` | 2 | 项目指导 |
-| 评委 | `judge` | 3 | 项目评审 |
-| 管理员 | `admin` | 4 | 系统管理 |
+| 角色   | 标识        | 层级 | 说明           |
+| ---- | --------- | -- | ------------ |
+| 学生   | `student` | 1  | 项目负责人 / 团队成员 |
+| 指导老师 | `teacher` | 2  | 项目指导         |
+| 评委   | `judge`   | 3  | 项目评审         |
+| 管理员  | `admin`   | 4  | 系统管理         |
 
 ### 权限控制
 
@@ -1314,26 +1406,33 @@ def create_competition():
 
 ### 侧边栏菜单
 
-| 角色 | 侧边栏菜单 |
-|------|------------|
-| 学生 | 工作台、我的赛事、我的项目、创建项目、训练营、在线课程、产业命题、证书成果、AI 助手 |
-| 指导老师 | 工作台、指导项目、项目审核、训练营、在线课程、产业命题、AI 助手 |
-| 评委 | 工作台、待评审项目、评审记录、AI 助手 |
-| 管理员 | 工作台、比赛批次管理、报名管理、项目管理、评审管理、用户管理、数据看板、AI 助手 |
+| 角色   | 侧边栏菜单                                       |
+| ---- | ------------------------------------------- |
+| 学生   | 工作台、我的赛事、我的项目、创建项目、训练营、在线课程、产业命题、证书成果、AI 助手 |
+| 指导老师 | 工作台、指导项目、项目审核、训练营、在线课程、产业命题、AI 助手           |
+| 评委   | 工作台、待评审项目、评审记录、AI 助手                        |
+| 管理员  | 工作台、比赛批次管理、报名管理、项目管理、评审管理、用户管理、数据看板、AI 助手   |
 
 ### AI 智能体权限矩阵
 
-| AI 智能体能力 | 学生 | 指导老师 | 评委 | 管理员 | 说明 |
-|--------------|------|----------|------|--------|------|
-| AI 材料问答 | ✅ | ✅ | ✅ | ✅ | 所有角色可对自己参与/负责的项目材料进行问答 |
-| AI 商业计划书体检 | ✅ | ✅ | ✅ | ✅ | 所有角色可对项目商业计划书进行体检 |
-| AI 路演稿生成 | ✅ | ✅ | ❌ | ✅ | 评委不允许使用路演稿生成功能 |
-| AI 评审辅助 | ❌ | ✅ | ✅ | ✅ | 仅 teacher/judge/admin 可使用，**严格不返回具体分数** |
-| 智能竞赛推荐 | ✅ | ❌ | ❌ | ✅ | 仅 student/admin 可使用 |
-| 索引项目材料 | ✅ | ✅ | ✅ | ✅ | 所有角色可索引自己参与项目的材料 |
-| 查看任务记录 | ✅ | ✅ | ✅ | ✅ | 所有角色可查看自己的任务记录 |
+| AI 智能体能力   | 学生 | 指导老师 | 评委 | 管理员 | 说明                                      |
+| ---------- | -- | ---- | -- | --- | --------------------------------------- |
+| 智能引航 | ✅ | ✅ | ✅ | ✅ | 所有角色可用，模糊指令识别与页面跳转 |
+| AI 材料问答    | ✅  | ✅    | ✅  | ✅   | 所有角色可对自己参与/负责的项目材料进行问答                  |
+| AI 商业计划书体检 | ✅  | ✅    | ✅  | ✅   | 所有角色可对项目商业计划书进行体检                       |
+| AI 路演稿生成   | ✅  | ✅    | ❌  | ✅   | 评委不允许使用路演稿生成功能                          |
+| AI 评审辅助    | ❌  | ✅    | ✅  | ✅   | 仅 teacher/judge/admin 可使用，**严格不返回具体分数** |
+| 智能竞赛推荐     | ✅  | ❌    | ❌  | ✅   | 仅 student/admin 可使用                     |
+| 项目创意生成 | ✅ | ❌ | ❌ | ✅ | 仅 student/admin 可使用，无需关联项目 |
+| 模拟路演答辩 | ✅ | ✅ | ❌ | ✅ | 学生和教师可用，AI 扮演评委进行模拟答辩 |
+| 批量审核助手 | ❌ | ✅ | ❌ | ✅ | 仅 teacher/admin 可使用，批量分析待审核项目 |
+| 智能反馈生成 | ❌ | ✅ | ❌ | ✅ | 仅 teacher/admin 可使用，生成项目审核反馈意见 |
+| 评审意见草稿 | ❌ | ❌ | ✅ | ✅ | 仅 judge/admin 可使用，生成评审意见草稿 |
+| 评分一致性检查 | ❌ | ❌ | ✅ | ✅ | 仅 judge/admin 可使用，检查评分与评价是否一致 |
+| 索引项目材料     | ✅  | ✅    | ✅  | ✅   | 所有角色可索引自己参与项目的材料                        |
+| 查看任务记录     | ✅  | ✅    | ✅  | ✅   | 所有角色可查看自己的任务记录                          |
 
----
+***
 
 ## 设计系统
 
@@ -1341,25 +1440,25 @@ def create_competition():
 
 项目使用 `design-system.css` 定义统一的设计变量：
 
-| 类别 | 变量前缀 | 说明 |
-|------|----------|------|
-| 主色调 | `--primary-50` ~ `--primary-900` | Cyan 专业色系（#06b6d4） |
-| 中性色 | `--gray-50` ~ `--gray-900` | 灰色系（Tailwind 风格） |
-| 语义色 | `--success/warning/danger/info` | 成功/警告/危险/信息色 |
-| 背景 | `--bg-primary/secondary/tertiary/sidebar` | 页面/侧边栏背景色 |
-| 文字 | `--text-primary/secondary/tertiary/inverse/sidebar` | 多层级文字色 |
-| 阴影 | `--shadow-sm/md/lg/xl` | 4 级阴影 |
-| 字体 | `--font-heading/body` | Poppins + Open Sans + 中文回退 |
-| 间距 | `--space-1` ~ `--space-12` | 0.25rem ~ 3rem |
-| 圆角 | `--radius-sm/md/lg/xl` | 0.375rem ~ 1rem |
-| 过渡 | `--transition-fast/normal/slow` | 150ms/200ms/300ms |
-| 布局 | `--sidebar-width/collapsed-width/header-height` | 240px/64px/64px |
+| 类别  | 变量前缀                                                | 说明                         |
+| --- | --------------------------------------------------- | -------------------------- |
+| 主色调 | `--primary-50` \~ `--primary-900`                   | Cyan 专业色系（#06b6d4）         |
+| 中性色 | `--gray-50` \~ `--gray-900`                         | 灰色系（Tailwind 风格）           |
+| 语义色 | `--success/warning/danger/info`                     | 成功/警告/危险/信息色               |
+| 背景  | `--bg-primary/secondary/tertiary/sidebar`           | 页面/侧边栏背景色                  |
+| 文字  | `--text-primary/secondary/tertiary/inverse/sidebar` | 多层级文字色                     |
+| 阴影  | `--shadow-sm/md/lg/xl`                              | 4 级阴影                      |
+| 字体  | `--font-heading/body`                               | Poppins + Open Sans + 中文回退 |
+| 间距  | `--space-1` \~ `--space-12`                         | 0.25rem \~ 3rem            |
+| 圆角  | `--radius-sm/md/lg/xl`                              | 0.375rem \~ 1rem           |
+| 过渡  | `--transition-fast/normal/slow`                     | 150ms/200ms/300ms          |
+| 布局  | `--sidebar-width/collapsed-width/header-height`     | 240px/64px/64px            |
 
 ### 暗黑模式预留
 
 通过 `data-theme="dark"` 属性切换暗黑模式变量（尚未启用）。
 
----
+***
 
 ## 开发规范
 
@@ -1375,7 +1474,7 @@ def create_competition():
 - 文件名使用 `werkzeug.utils.secure_filename` 安全处理 + UUID 重命名
 - 权限控制使用 `require_roles` 装饰器，支持角色层级（`ROLE_HIERARCHY`）
 
----
+***
 
 ## 常见问题
 
@@ -1385,7 +1484,7 @@ def create_competition():
 2. 确认数据库 `innovation_competition` 已创建（`utf8mb4` 字符集）
 3. 检查 `.env` 文件中的 `DATABASE_URL` 配置
 4. 确认用户名和密码正确
-5. 检查 MySQL 连接池配置（pool_size: 10, pool_recycle: 3600）
+5. 检查 MySQL 连接池配置（pool\_size: 10, pool\_recycle: 3600）
 
 ### 2. AI 对话失败
 
@@ -1395,8 +1494,8 @@ def create_competition():
 4. 检查 `GLM_MODEL` 是否为 `qwen-plus`
 5. 如使用火山方舟模型，检查 `ARK_API_KEY` 和 `ARK_BASE_URL` 是否正确
 6. 检查网络连接
-7. 访问 `/api/ai/health` 查看配置状态（chat_configured / voice_realtime_configured / model）
-8. AI 对话超时已设为 3 分钟（CHUNK_TIMEOUT = 180000ms），含重试机制（最多 2 次）
+7. 访问 `/api/ai/health` 查看配置状态（chat\_configured / voice\_realtime\_configured / model）
+8. AI 对话超时已设为 3 分钟（CHUNK\_TIMEOUT = 180000ms），含重试机制（最多 2 次）
 
 ### 3. Live2D 模型加载失败
 
@@ -1476,8 +1575,8 @@ def create_competition():
 1. 检查 `.env` 中 `GLM_API_KEY` 和 `GLM_BASE_URL` 是否正确配置（通义千问 Embedding）
 2. FAISS Embedding 优先使用通义千问 API，不可用时回退检查 `ARK_API_KEY` 和 `ARK_BASE_URL`
 3. 不可用时自动降级为 BM25 + 关键词检索
-3. 检查 `backend/vector_stores/` 目录下是否有索引文件
-4. BM25 中文分词依赖 jieba 库，确认已安装
+4. 检查 `backend/vector_stores/` 目录下是否有索引文件
+5. BM25 中文分词依赖 jieba 库，确认已安装
 
 ### 14. AI 评审辅助返回 403
 
@@ -1485,45 +1584,45 @@ def create_competition():
 2. 学生角色调用会返回 403 "权限不足，需要 teacher 及以上角色"
 3. 这是预期行为，评审辅助严格不返回具体分数
 
----
+***
 
 ## 当前开发状态
 
 ### 已完成功能模块
 
-| 模块 | 状态 | 说明 |
-|------|------|------|
-| 用户认证 | ✅ 完成 | 注册/登录/JWT Token/角色权限/账号禁用 |
-| 竞赛广场 | ✅ 完成 | 公开竞赛列表/详情/海报/时间安排/奖项设置/分类筛选/浏览量统计 |
-| 竞赛管理 | ✅ 完成 | 管理员 CRUD/赛道管理/状态控制 |
-| 竞赛报名 | ✅ 完成 | 学生报名/队员管理/材料上传/提交/管理员审核/驳回/统计 |
-| 训练营 | ✅ 完成 | 列表/详情/海报/章节大纲/讲师信息 |
-| 在线课程 | ✅ 完成 | 列表/详情/海报/章节视频/进度跟踪 |
-| 产业命题 | ✅ 完成 | 命题列表/承接填写页/跳转创建项目 |
-| 项目管理 | ✅ 完成 | 创建/编辑/详情/成员/文件/任务/提交评审/删除 |
-| AI 智能对话 | ✅ 完成 | 流式输出/重试机制/3分钟超时/会话管理/回答清洗/统一对话路由/智能导航/角色感知 |
-| AI 分析工具 | ✅ 完成 | 项目简介/商业计划书/风险分析/深色主题适配 |
-| 语音交互 | ✅ 完成 | ASR/TTS/实时语音对话/可拖拽面板 |
-| Live2D 虚拟形象 | ✅ 完成 | 全屏拖拽/表情联动/口型驱动/位置持久化/拖拽按钮跟随 |
-| 证书成果 | ✅ 完成 | 证书列表/获奖记录/查看详情弹窗/证书图片 |
-| 我的赛事 | ✅ 完成 | 报名列表/海报封面/状态跟踪 |
-| 全局引导系统 | ✅ 完成 | 首次登录引导/步骤导航/路由跳转/状态持久化 |
-| 数据看板 | ✅ 完成 | 4 角色看板/统计图表/动态数据/最近数据 |
-| 管理后台 | ✅ 完成 | 用户/项目/竞赛/报名/评审管理 |
-| 首页数字雨 | ✅ 完成 | 全局 Canvas 数字雨背景/科幻风格/扫描线/全屏铺满 |
-| Banner 动画 | ✅ 完成 | 竞赛/训练营/课程各具独特渐变色+光球动画 |
-| AI 项目智能体 | ✅ 完成 | 5 大 AI 能力（材料问答/BP 体检/路演稿/评审辅助/竞赛推荐）+ LangChain + FAISS + BM25 |
-| 一键启动 | ✅ 完成 | start.bat 自动检测依赖+启动前后端 |
+| 模块          | 状态   | 说明                                                            |
+| ----------- | ---- | ------------------------------------------------------------- |
+| 用户认证        | ✅ 完成 | 注册/登录/JWT Token/角色权限/账号禁用                                     |
+| 竞赛广场        | ✅ 完成 | 公开竞赛列表/详情/海报/时间安排/奖项设置/分类筛选/浏览量统计                             |
+| 竞赛管理        | ✅ 完成 | 管理员 CRUD/赛道管理/状态控制                                            |
+| 竞赛报名        | ✅ 完成 | 学生报名/队员管理/材料上传/提交/管理员审核/驳回/统计                                 |
+| 训练营         | ✅ 完成 | 列表/详情/海报/章节大纲/讲师信息                                            |
+| 在线课程        | ✅ 完成 | 列表/详情/海报/章节视频/进度跟踪                                            |
+| 产业命题        | ✅ 完成 | 命题列表/承接填写页/跳转创建项目                                             |
+| 项目管理        | ✅ 完成 | 创建/编辑/详情/成员/文件/任务/提交评审/删除                                     |
+| AI 智能对话     | ✅ 完成 | 流式输出/重试机制/3分钟超时/会话管理/回答清洗/统一对话路由/智能导航/角色感知                    |
+| AI 分析工具     | ✅ 完成 | 项目简介/商业计划书/风险分析/深色主题适配                                        |
+| 语音交互        | ✅ 完成 | ASR/TTS/实时语音对话/可拖拽面板                                          |
+| Live2D 虚拟形象 | ✅ 完成 | 全屏拖拽/表情联动/口型驱动/位置持久化/拖拽按钮跟随                                   |
+| 证书成果        | ✅ 完成 | 证书列表/获奖记录/查看详情弹窗/证书图片                                         |
+| 我的赛事        | ✅ 完成 | 报名列表/海报封面/状态跟踪                                                |
+| 全局引导系统      | ✅ 完成 | 首次登录引导/步骤导航/路由跳转/状态持久化                                        |
+| 数据看板        | ✅ 完成 | 4 角色看板/统计图表/动态数据/最近数据                                         |
+| 管理后台        | ✅ 完成 | 用户/项目/竞赛/报名/评审管理                                              |
+| 首页数字雨       | ✅ 完成 | 全局 Canvas 数字雨背景/科幻风格/扫描线/全屏铺满                                 |
+| Banner 动画   | ✅ 完成 | 竞赛/训练营/课程各具独特渐变色+光球动画                                         |
+| AI 项目智能体 | ✅ 完成 | 12 大 AI 能力（智能引航/材料问答/BP 体检/路演稿/评审辅助/竞赛推荐/项目创意/模拟答辩/批量审核/智能反馈/评审草稿/评分检查）+ LangChain + FAISS + BM25 |
+| 一键启动        | ✅ 完成 | start.bat 自动检测依赖+启动前后端                                        |
 
 ### 正在进行的开发任务
 
-| 任务 | 优先级 | 说明 |
-|------|--------|------|
-| 进度条横向滚动 | 高 | 多步骤流程场景的横向拖拽/滑动查看 |
-| 产业命题后端 API | 中 | 承接命题数据持久化、命题 CRUD 接口 |
-| 训练营/课程学习进度 | 中 | 视频观看进度、章节完成状态 |
-| 评审打分优化 | 中 | 多维度评分、评分模板、评审意见模板 |
-| 移动端适配 | 低 | 响应式布局优化、触屏交互 |
+| 任务         | 优先级 | 说明                   |
+| ---------- | --- | -------------------- |
+| 进度条横向滚动    | 高   | 多步骤流程场景的横向拖拽/滑动查看    |
+| 产业命题后端 API | 中   | 承接命题数据持久化、命题 CRUD 接口 |
+| 训练营/课程学习进度 | 中   | 视频观看进度、章节完成状态        |
+| 评审打分优化     | 中   | 多维度评分、评分模板、评审意见模板    |
+| 移动端适配      | 低   | 响应式布局优化、触屏交互         |
 
 ### 未来规划
 
@@ -1534,7 +1633,7 @@ def create_competition():
 - **性能优化**：前端懒加载、后端缓存、CDN 静态资源
 - **暗黑模式**：设计系统已预留暗黑模式变量，待实现切换逻辑
 
----
+***
 
 ## 调试指南
 
@@ -1542,11 +1641,11 @@ def create_competition():
 
 #### 开发工具
 
-| 工具 | 用途 | 访问方式 |
-|------|------|----------|
-| Vue DevTools | 组件树/状态/路由/事件/Pinia Store | 浏览器扩展 |
-| Chrome DevTools | 网络/性能/内存/Console | F12 |
-| Vite DevServer | HMR/代理/构建 | `npm run dev` |
+| 工具              | 用途                       | 访问方式          |
+| --------------- | ------------------------ | ------------- |
+| Vue DevTools    | 组件树/状态/路由/事件/Pinia Store | 浏览器扩展         |
+| Chrome DevTools | 网络/性能/内存/Console         | F12           |
+| Vite DevServer  | HMR/代理/构建                | `npm run dev` |
 
 #### 常用调试命令
 
@@ -1563,11 +1662,11 @@ cd frontend && npm audit
 
 #### 关键调试日志
 
-| 日志前缀 | 位置 | 说明 |
-|----------|------|------|
-| `[AI Stream]` | HuahuoAssistant.vue | AI 流式对话重试/超时/错误 |
-| `[CreateProject]` | create.vue | 项目创建请求数据/错误详情 |
-| `[Live2D]` | HuahuoAssistant.vue | 模型加载/表情切换/拖拽位置 |
+| 日志前缀              | 位置                  | 说明              |
+| ----------------- | ------------------- | --------------- |
+| `[AI Stream]`     | HuahuoAssistant.vue | AI 流式对话重试/超时/错误 |
+| `[CreateProject]` | create.vue          | 项目创建请求数据/错误详情   |
+| `[Live2D]`        | HuahuoAssistant.vue | 模型加载/表情切换/拖拽位置  |
 
 #### 前端断点调试技巧
 
@@ -1606,13 +1705,13 @@ curl http://localhost:5000/api/health
 
 #### 后端日志说明
 
-| 日志内容 | 说明 |
-|----------|------|
+| 日志内容              | 说明                           |
+| ----------------- | ---------------------------- |
 | `SQLAlchemy` 查询日志 | 设置 `SQLALCHEMY_ECHO=True` 开启 |
-| AI 会话管理日志 | 会话创建/清理/过期检查 |
-| TTS 缓存统计 | 缓存命中率/文件数量/总大小 |
-| 流式对话日志 | SSE 连接/断开/错误 |
-| 数据库连接日志 | `init_database()` 输出连接状态 |
+| AI 会话管理日志         | 会话创建/清理/过期检查                 |
+| TTS 缓存统计          | 缓存命中率/文件数量/总大小               |
+| 流式对话日志            | SSE 连接/断开/错误                 |
+| 数据库连接日志           | `init_database()` 输出连接状态     |
 
 #### 数据库调试
 
@@ -1642,53 +1741,77 @@ cd backend && flask db upgrade && python seed.py
 
 多个页面提供「快速填充」按钮用于调试，点击后自动填入合规的测试数据：
 
-| 页面 | 填充内容 |
-|------|----------|
+| 页面   | 填充内容                               |
+| ---- | ---------------------------------- |
 | 创建项目 | 项目名称/类别/赛道/简介/指导老师/日期（5 个预设名称随机选择） |
-| 竞赛报名 | 团队名称/学校/学院/专业/队员信息（3 名测试队员） |
-| 承接命题 | 负责人/电话/团队人数/方案/优势 |
+| 竞赛报名 | 团队名称/学校/学院/专业/队员信息（3 名测试队员）        |
+| 承接命题 | 负责人/电话/团队人数/方案/优势                  |
 
 ### 环境变量检查清单
 
-| 变量 | 必需 | 说明 |
-|------|------|------|
-| `DATABASE_URL` | ✅ | MySQL 连接字符串 |
-| `SECRET_KEY` | ✅ | Flask 密钥 |
-| `JWT_SECRET_KEY` | ✅ | JWT 签名密钥 |
-| `ARK_API_KEY` | ❌ | AI 对话（不配置则 AI 功能不可用） |
-| `ARK_BASE_URL` | ❌ | 火山方舟 API 地址 |
-| `ARK_MODEL` | ❌ | AI 模型名称 |
-| `GLM_API_KEY` | ❌ | AI 智能体对话（通义千问 qwen-plus，不配置则智能体对话不可用） |
-| `GLM_BASE_URL` | ❌ | 通义千问 API 地址（默认 https://dashscope.aliyuncs.com/compatible-mode/v1） |
-| `GLM_MODEL` | ❌ | AI 智能体模型名称（默认 qwen-plus） |
-| `VOICE_REALTIME_*` | ❌ | 实时语音对话（不配置则回退文本模式） |
-| `DOUBAO_ASR_*` | ❌ | 语音识别（不配置则仅 Chrome 原生 ASR） |
-| `ARK_API_KEY` | ❌ | AI 智能体向量检索 Embedding（不配置则 FAISS 向量检索不可用，需与 AI 对话共用） |
+| 变量                 | 必需 | 说明                                                                  |
+| ------------------ | -- | ------------------------------------------------------------------- |
+| `DATABASE_URL`     | ✅  | MySQL 连接字符串                                                         |
+| `SECRET_KEY`       | ✅  | Flask 密钥                                                            |
+| `JWT_SECRET_KEY`   | ✅  | JWT 签名密钥                                                            |
+| `ARK_API_KEY`      | ❌  | AI 对话（不配置则 AI 功能不可用）                                                |
+| `ARK_BASE_URL`     | ❌  | 火山方舟 API 地址                                                         |
+| `ARK_MODEL`        | ❌  | AI 模型名称                                                             |
+| `GLM_API_KEY`      | ❌  | AI 智能体对话（通义千问 qwen-plus，不配置则智能体对话不可用）                               |
+| `GLM_BASE_URL`     | ❌  | 通义千问 API 地址（默认 <https://dashscope.aliyuncs.com/compatible-mode/v1）> |
+| `GLM_MODEL`        | ❌  | AI 智能体模型名称（默认 qwen-plus）                                            |
+| `VOICE_REALTIME_*` | ❌  | 实时语音对话（不配置则回退文本模式）                                                  |
+| `DOUBAO_ASR_*`     | ❌  | 语音识别（不配置则仅 Chrome 原生 ASR）                                           |
+| `ARK_API_KEY`      | ❌  | AI 智能体向量检索 Embedding（不配置则 FAISS 向量检索不可用，需与 AI 对话共用）                 |
 
----
+***
 
 ## 版本变更记录
 
 > **变更记录撰写规范**：每条变更记录必须按以下分类组织，不可混写：
 >
-> | 分类 | 说明 | 示例 |
-> |------|------|------|
-> | **新增功能** | 从无到有的全新功能/页面/组件/API/模型 | "新增 AI 材料问答功能" |
-> | **功能修改** | 已有功能的逻辑、交互、UI 调整（不改变功能本质） | "HuahuoAssistant 新增 agent 模式" |
-> | **Bug 修复** | 解决某个明确的错误行为，需说明复现条件 | "修复 PortalHome /ai-assistant 链接 404" |
-> | **安全与稳定性** | 安全加固/性能优化/内存泄漏修复/异常处理 | "DOMPurify 安全渲染 Markdown" |
-> | **文档更新** | README/注释/说明文档的内容同步 | "README 全量更新至 v4.0.0" |
-> | **已知问题** | 当前版本已确认但未解决的缺陷/限制 | "FAISS 需要火山方舟 API 配置" |
+> | 分类         | 说明                        | 示例                                   |
+> | ---------- | ------------------------- | ------------------------------------ |
+> | **新增功能**   | 从无到有的全新功能/页面/组件/API/模型    | "新增 AI 材料问答功能"                       |
+> | **功能修改**   | 已有功能的逻辑、交互、UI 调整（不改变功能本质） | "HuahuoAssistant 新增 agent 模式"        |
+> | **Bug 修复** | 解决某个明确的错误行为，需说明复现条件       | "修复 PortalHome /ai-assistant 链接 404" |
+> | **安全与稳定性** | 安全加固/性能优化/内存泄漏修复/异常处理     | "DOMPurify 安全渲染 Markdown"            |
+> | **文档更新**   | README/注释/说明文档的内容同步       | "README 全量更新至 v4.0.0"                |
+> | **已知问题**   | 当前版本已确认但未解决的缺陷/限制         | "FAISS 需要火山方舟 API 配置"                |
 >
 > **版本号规则**：`主版本.次版本.修订号` — 新增功能 → 次版本 +1；Bug 修复/文档更新 → 修订号 +1；重大架构变更 → 主版本 +1。
 >
 > **撰写原则**：
+>
 > - 每条记录必须**可追溯**，写明涉及的具体文件名或 API 端点
 > - 不写"优化了部分功能""修复了一些 Bug"等模糊描述
 > - 不重复记录同一改动（如已在"新增功能"中写了，不再在"功能修改"中重复）
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
-### v4.1.0 - 2026-05-03（当前版本）
+### v4.1.1 - 2026-05-03（当前版本）
+
+> AI 智能体前后端参数校验一致性修复 + Live2D 表情自动切换 + 权限矩阵/API 文档补全
+
+#### 功能修改
+
+- **Live2D 表情自动切换**：火花形象加载完成后，每 10 秒自动随机切换表情（AI 流式输出或朗读期间跳过，避免打断表情联动）；点击火花形象时也会随机切换一次表情（[HuahuoAssistant.vue](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/frontend/src/components/HuahuoAssistant.vue)）
+
+#### Bug 修复
+
+- **模拟答辩 question\_type 前后端不一致**：前端传 `challenge`，后端校验仅允许 `tough`，导致选择"挑战"类型时返回 400 错误。修复：前端 `AgentPanel.vue` 将 `label="challenge"` 改为 `label="tough"`（[AgentPanel.vue:158](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/frontend/src/views/ai-assistant/AgentPanel.vue#L158)）
+- **智能反馈 feedback\_type 前后端不一致**：前端传 `encourage`/`question`，后端校验仅允许 `approve`/`reject`，导致选择"鼓励指导"/"提问引导"时返回 400 错误。修复：前端选项改为"建议通过"（`approve`）和"建议驳回"（`reject`）（[AgentPanel.vue:164-165](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/frontend/src/views/ai-assistant/AgentPanel.vue#L164)）
+- **路演稿 duration 前后端不一致**：前端允许 8 分钟，后端校验仅允许 3/5，导致选择 8 分钟时返回 400 错误。修复：后端 `agent.py` 校验扩展为 `(3, 5, 8)`，`langchain_service.py` 新增 8 分钟对应约 2200 字目标（[agent.py:368](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/backend/routes/agent.py#L368)）
+- **路演稿 style 前后端不一致**：前端传 `story`，后端校验仅允许 `formal`/`passionate`/`concise`，导致选择"故事"风格时返回 400 错误。修复：后端校验新增 `story`，`langchain_service.py` 新增故事叙述风格描述（[agent.py:369](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/backend/routes/agent.py#L369)）
+
+#### 文档更新
+
+- **AI 智能体权限矩阵补全**：从 5 行扩展为 12 行，新增项目创意生成/模拟答辩/批量审核/智能反馈/评审草稿/评分检查/智能引航 7 项能力的权限说明
+- **AI 智能体 API 文档补全**：从 8 个端点扩展为 14 个，新增 navigate/project-idea/mock-defense/batch-review/smart-feedback/re-review-draft/score-check/capabilities 端点文档
+- **AI 项目智能体特色功能描述更新**：从"5 大 AI 能力"更新为"12 大 AI 能力"
+
+***
+
+### v4.1.0 - 2026-05-03
 
 > 集成通义千问 qwen-plus 大模型 + 统一对话路由 + 智能导航 + 深色主题适配 + AgentPanel 交互优化
 
@@ -1702,8 +1825,8 @@ cd backend && flask db upgrade && python seed.py
 
 #### 功能修改
 
-- **ai_service.py**：从火山方舟 SDK 直接调用改为 LangChain + ChatOpenAI 兼容接口，新增 `unified_chat` 统一对话入口、`_stream_unified_model` 统一流式输出函数
-- **langchain_service.py**：新增 `smart_navigate` 智能导航函数、`detect_intent` 意图检测函数，扩展 LangChain 编排能力
+- **ai\_service.py**：从火山方舟 SDK 直接调用改为 LangChain + ChatOpenAI 兼容接口，新增 `unified_chat` 统一对话入口、`_stream_unified_model` 统一流式输出函数
+- **langchain\_service.py**：新增 `smart_navigate` 智能导航函数、`detect_intent` 意图检测函数，扩展 LangChain 编排能力
 - **AgentPanel.vue**：项目选择从下拉框改为文本输入框 + 可选下拉选择组合，解决无项目数据时无法选择的问题；优化表单布局和交互流程
 - **HuahuoAssistant.vue**：新增全局 CSS 样式（非 scoped），修复深色主题下表单标签、输入框、文本域的文字颜色不可见问题；输入框背景改为透明，去除黑框背景
 - **agent.py**：新增 AI 智能体相关 API 端点
@@ -1719,9 +1842,9 @@ cd backend && flask db upgrade && python seed.py
 
 #### 文档更新
 
-- **README 更新**：AI 智能对话章节补充 qwen-plus 模型和统一对话路由说明；后端技术栈新增通义千问 qwen-plus；环境变量配置新增 GLM_API_KEY / GLM_BASE_URL / GLM_MODEL；环境变量检查清单新增 3 项；常见问题更新 AI 对话失败排查步骤；版本变更记录新增 v4.1.0
+- **README 更新**：AI 智能对话章节补充 qwen-plus 模型和统一对话路由说明；后端技术栈新增通义千问 qwen-plus；环境变量配置新增 GLM\_API\_KEY / GLM\_BASE\_URL / GLM\_MODEL；环境变量检查清单新增 3 项；常见问题更新 AI 对话失败排查步骤；版本变更记录新增 v4.1.0
 
----
+***
 
 ### v4.0.0 - 2026-05-02
 
@@ -1739,8 +1862,8 @@ cd backend && flask db upgrade && python seed.py
 - **向量存储服务**（`vector_store.py`）：FAISS 向量索引 + BM25 稀疏检索混合方案，支持 Embedding 向量化 + 相似度搜索
 - **LangChain 编排服务**（`langchain_service.py`）：基于 LangChain 的 RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐 5 大能力编排
 - **agent 路由蓝图**（`agent.py`）：8 个 API 端点（index-materials / material-qa / bp-check / roadshow / review-assist / competition-recommend / tasks / tasks/<id>）
-- **AgentTask 模型**：AI 智能体任务记录（task_type / status / input_params / result / error_message）
-- **AgentMaterialIndex 模型**：AI 智能体材料索引记录（file_type / chunk_count / index_status / index_path）
+- **AgentTask 模型**：AI 智能体任务记录（task\_type / status / input\_params / result / error\_message）
+- **AgentMaterialIndex 模型**：AI 智能体材料索引记录（file\_type / chunk\_count / index\_status / index\_path）
 
 #### 功能修改
 
@@ -1769,27 +1892,27 @@ cd backend && flask db upgrade && python seed.py
 
 #### Chrome DevTools MCP 调试验证（2026-05-02）
 
-| 验收项 | 结果 | 说明 |
-|--------|------|------|
-| student1 登录 | ✅ | API 登录成功，JWT Token 正确 |
-| Portal AI 入口打开火花 Agent 模式 | ✅ | `open-huahuo-agent` 全局事件触发，面板自动打开并切换到 agent 模式 |
-| chat / analysis / agent 三模式切换 | ✅ | 三种模式均可正常切换，无状态污染 |
-| 全局事件 detail 参数自动选中能力 | ✅ | `capability: 'competition_recommend'` → 🎯 智能竞赛推荐 |
-| 材料索引 `/api/agent/index-materials` | ✅ | 200，索引成功 |
-| 材料问答 `/api/agent/material-qa` | ✅ | 200，返回问答结果 |
-| 商业计划书体检 `/api/agent/bp-check` | ✅ | 200，返回体检报告，不返回具体评分 |
-| 路演稿生成 `/api/agent/roadshow` | ✅ | 200，返回路演稿 |
-| 智能竞赛推荐 `/api/agent/competition-recommend` | ✅ | 200，返回推荐结果 |
-| judge1 评审辅助 `/api/agent/review-assist` | ✅ | 200，严格不返回具体分数 |
-| student1 评审辅助被拦截 | ✅ | 403 "权限不足，需要 teacher 及以上角色" |
-| Console 无新增关键错误 | ✅ | 仅 403 为学生角色访问管理看板（预期行为） |
-| Network /api/agent/* 无 404/500 | ✅ | 偶发 502 为 LLM 超时，重试可成功 |
-| 返回格式 {code, message, data} | ✅ | 所有 API 均符合统一响应格式 |
-| /ai-assistant 备用页面 | ✅ | 三个 Tab 可切换，顶部有备用提示 |
-| student 角色权限 | ✅ | 仅显示 4 个能力卡片（无评审辅助） |
-| 复制/朗读/表情联动 | ⚠️ | 需用户在浏览器中手动验证（MCP 无法模拟剪贴板和音频输出） |
+| 验收项                                       | 结果 | 说明                                                |
+| ----------------------------------------- | -- | ------------------------------------------------- |
+| student1 登录                               | ✅  | API 登录成功，JWT Token 正确                             |
+| Portal AI 入口打开火花 Agent 模式                 | ✅  | `open-huahuo-agent` 全局事件触发，面板自动打开并切换到 agent 模式    |
+| chat / analysis / agent 三模式切换             | ✅  | 三种模式均可正常切换，无状态污染                                  |
+| 全局事件 detail 参数自动选中能力                      | ✅  | `capability: 'competition_recommend'` → 🎯 智能竞赛推荐 |
+| 材料索引 `/api/agent/index-materials`         | ✅  | 200，索引成功                                          |
+| 材料问答 `/api/agent/material-qa`             | ✅  | 200，返回问答结果                                        |
+| 商业计划书体检 `/api/agent/bp-check`             | ✅  | 200，返回体检报告，不返回具体评分                                |
+| 路演稿生成 `/api/agent/roadshow`               | ✅  | 200，返回路演稿                                         |
+| 智能竞赛推荐 `/api/agent/competition-recommend` | ✅  | 200，返回推荐结果                                        |
+| judge1 评审辅助 `/api/agent/review-assist`    | ✅  | 200，严格不返回具体分数                                     |
+| student1 评审辅助被拦截                          | ✅  | 403 "权限不足，需要 teacher 及以上角色"                       |
+| Console 无新增关键错误                           | ✅  | 仅 403 为学生角色访问管理看板（预期行为）                           |
+| Network /api/agent/\* 无 404/500           | ✅  | 偶发 502 为 LLM 超时，重试可成功                             |
+| 返回格式 {code, message, data}                | ✅  | 所有 API 均符合统一响应格式                                  |
+| /ai-assistant 备用页面                        | ✅  | 三个 Tab 可切换，顶部有备用提示                                |
+| student 角色权限                              | ✅  | 仅显示 4 个能力卡片（无评审辅助）                                |
+| 复制/朗读/表情联动                                | ⚠️ | 需用户在浏览器中手动验证（MCP 无法模拟剪贴板和音频输出）                    |
 
----
+***
 
 ### v4.0.1 - 2026-05-02（引导系统全面修订）
 
@@ -1803,9 +1926,9 @@ cd backend && flask db upgrade && python seed.py
 #### 功能修改
 
 - **四角色引导全部接入 AI 智能体能力**：学生新增"AI 项目智能体"步骤（介绍 5 大能力 + 快捷入口提示）；教师新增 AI 智能体步骤（评审辅助/BP 体检/材料问答）；评委新增 AI 智能体步骤（带"评审辅助仅返回定性分析"提示）；管理员新增 AI 智能体步骤（全部 5 大能力）
-- **教师第 4 步「项目审核」补充 `routePath: '/project-review'`**：引导不再停在空中心步骤，自动导航到审核页
-- **评委第 5 步「评审记录」补充 `routePath: '/review-history'`**：引导自动跳转到评审记录页
-- **管理员第 5/7 步补充 `routePath`**：报名管理和评审管理步骤补充导航路径
+- **教师第 4 步「项目审核」补充** **`routePath: '/project-review'`**：引导不再停在空中心步骤，自动导航到审核页
+- **评委第 5 步「评审记录」补充** **`routePath: '/review-history'`**：引导自动跳转到评审记录页
+- **管理员第 5/7 步补充** **`routePath`**：报名管理和评审管理步骤补充导航路径
 - **引导步骤总数重新统计**：学生 12 步 / 教师 9 步 / 评委 8 步 / 管理员 11 步
 
 #### 文档更新
@@ -1815,7 +1938,7 @@ cd backend && flask db upgrade && python seed.py
 - `.gitignore` 新增 `frontend/dist/` 和 `backend/vector_stores/` 忽略规则
 - `start.bat` 每次启动强制 `npm install` 确保依赖最新
 
----
+***
 
 ### v3.0.0 - 2026-05-01
 
@@ -1868,7 +1991,7 @@ cd backend && flask db upgrade && python seed.py
 
 - 引导步骤更新为 v3.0 功能路径
 
----
+***
 
 ### v2.10.0 - 2026-05-01
 
@@ -1888,7 +2011,7 @@ cd backend && flask db upgrade && python seed.py
 
 - **项目创建数据预处理**：`teacher_id`/`competition_id` 字符串转整数，空字符串转 null，详细错误提示
 
----
+***
 
 ### v2.9.0 - 2026-05-01
 
@@ -1903,7 +2026,7 @@ cd backend && flask db upgrade && python seed.py
 
 - **训练营/课程详情页海报裁切**：`object-fit: cover` → `contain`，移除 `padding-top: 64px`
 
----
+***
 
 ### v2.8.0 - 2026-05-01
 
@@ -1913,7 +2036,7 @@ cd backend && flask db upgrade && python seed.py
 
 - **数字雨风格重设计**：《黑客帝国》风格数字雨（十六进制字符 + 编程符号 + 头部高亮 + 拖尾残影 + 水平扫描线），替代原粒子动画
 
----
+***
 
 ### v2.7.0 - 2026-05-01
 
@@ -1929,7 +2052,7 @@ cd backend && flask db upgrade && python seed.py
 
 - **Live2D 拖拽按钮跟随形象移动**：`applyModelPosition` 中同步计算按钮位置
 
----
+***
 
 ### v2.6.0 - 2026-05-01
 
@@ -1967,7 +2090,7 @@ cd backend && flask db upgrade && python seed.py
 
 - **竞赛详情页封面海报缺失**：使用本地竞赛海报图片替代渐变色占位
 
----
+***
 
 ### v2.3.0 - 2026-05-01
 
@@ -1993,7 +2116,7 @@ cd backend && flask db upgrade && python seed.py
 
 - **CSP 配置修复**：允许 Live2D SDK 执行 eval，加载时长 ≤ 3 秒
 
----
+***
 
 ### v2.2.0 - 2026-05-01
 
@@ -2013,7 +2136,7 @@ cd backend && flask db upgrade && python seed.py
 - **CSP 阻止 Live2D 加载**：Vite 开发服务器 CSP 策略阻止 `eval()` 执行，添加 Content-Security-Policy header
 - **AI 对话和 Live2D 功能重复**：原来 AI 对话独立页面 + Live2D 独立浮动组件 + VoiceChat 又是另一个组件，三者功能重叠，整合为 `HuahuoAssistant.vue`
 
----
+***
 
 ### v2.1.0 - 2026-05-01
 
@@ -2037,11 +2160,11 @@ cd backend && flask db upgrade && python seed.py
 - **教师/评委/管理员大量页面空壳**：6 个页面从"功能开发中"补全为完整交互界面
 - **评委"开始评审"按钮无响应**：`pending.vue` 缺少 `@click` 绑定
 
----
+***
 
 ### v2.0.0 - 2026-04-30
 
-> 从 my_huahuo 项目集成 Live2D 形象、语音交互、AI 大模型等核心功能
+> 从 my\_huahuo 项目集成 Live2D 形象、语音交互、AI 大模型等核心功能
 
 #### 新增功能
 
@@ -2064,7 +2187,7 @@ cd backend && flask db upgrade && python seed.py
 - `tts_service.py`：新增火山 TTS 语音合成服务（HTTP API + MD5 缓存键 + 7 天缓存 TTL + 缓存统计 / 清理）
 - `volc_realtime_bridge.py`：新增火山实时语音对话桥（WebSocket + 会话管理 + 流式回复 + 回答清洗）
 - `volc_realtime_protocol.py`：新增火山实时语音二进制协议编解码（Gzip 压缩）
-- `requirements.txt`：新增 volcengine-python-sdk[ark]、opencc-python-reimplemented、langchain、langchain-core、websockets、requests、cryptography
+- `requirements.txt`：新增 volcengine-python-sdk\[ark]、opencc-python-reimplemented、langchain、langchain-core、websockets、requests、cryptography
 - `.env`：新增 30+ 个 AI / ASR / TTS 相关配置项
 - `config.py`：JWT Token 有效期配置（Access 24h / Refresh 7d）、连接池配置、文件上传限制 4GB
 - `seed.py`：增强测试数据生成（10 个竞赛含赛道和海报、8 条报名含队员信息）
@@ -2093,14 +2216,14 @@ cd backend && flask db upgrade && python seed.py
 #### 调试验证
 
 - 后端健康检查 `/api/health`：通过（数据库连接正常）
-- AI 健康检查 `/api/ai/health`：通过（chat_configured: true, voice_realtime_configured: true）
+- AI 健康检查 `/api/ai/health`：通过（chat\_configured: true, voice\_realtime\_configured: true）
 - 登录功能（admin / admin123）：通过（JWT Token 正确生成）
 - Dashboard 数据：通过（8 用户 / 6 项目 / 10 竞赛 / 4 评审）
 - AI 流式对话：通过（SSE 流式响应正常）
 - Live2D 资源访问：通过（waifu-tips.js / waifu.css / 模型文件均可访问）
 - 前端构建：通过（0 错误，2315 模块编译成功）
 
----
+***
 
 ### v1.0.0 - 初始版本
 
@@ -2113,7 +2236,7 @@ cd backend && flask db upgrade && python seed.py
 - 全局引导系统
 - 双模式布局（平台页无侧边栏 / 工作台有侧边栏）
 
----
+***
 
 ## 许可证
 

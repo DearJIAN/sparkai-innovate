@@ -154,15 +154,15 @@
               <el-radio label="general">通用</el-radio>
               <el-radio label="technical">技术</el-radio>
               <el-radio label="business">商业</el-radio>
-              <el-radio label="challenge">挑战</el-radio>
+              <el-radio label="tough">挑战</el-radio>
             </el-radio-group>
           </el-form-item>
 
           <el-form-item v-if="selectedCapability.key === 'smart_feedback'" label="反馈类型">
             <el-radio-group v-model="form.feedbackType">
               <el-radio label="modify">修改建议</el-radio>
-              <el-radio label="encourage">鼓励指导</el-radio>
-              <el-radio label="question">提问引导</el-radio>
+              <el-radio label="approve">建议通过</el-radio>
+              <el-radio label="reject">建议驳回</el-radio>
             </el-radio-group>
           </el-form-item>
 

@@ -364,10 +364,10 @@ def roadshow():
 
     if not project_id:
         return error('参数缺失：project_id')
-    if duration not in (3, 5):
-        return error('duration 只支持 3 或 5')
-    if style not in ('formal', 'passionate', 'concise'):
-        return error('style 只支持 formal / passionate / concise')
+    if duration not in (3, 5, 8):
+        return error('duration 只支持 3、5 或 8')
+    if style not in ('formal', 'passionate', 'concise', 'story'):
+        return error('style 只支持 formal / passionate / concise / story')
 
     project = Project.query.get(project_id)
     if not project:
