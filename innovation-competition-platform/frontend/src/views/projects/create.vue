@@ -184,8 +184,8 @@ const quickFillProject = () => {
   form.track = tracks[Math.floor(Math.random() * tracks.length)]
   form.stage = stages[Math.floor(Math.random() * stages.length)]
   form.description = `本项目旨在通过${form.track}技术，打造一个面向大学生的${form.category}平台。项目将整合校园内外资源，为用户提供便捷的服务体验，同时探索可持续的商业模式。团队由跨学科成员组成，具备扎实的技术功底和丰富的实践经验。`
-  form.teacher_id = String(10000 + Math.floor(Math.random() * 100))
-  form.competition_id = String(Math.floor(Math.random() * 10) + 1)
+  form.teacher_id = ''
+  form.competition_id = ''
 
   const now = new Date()
   form.start_date = now.toISOString().split('T')[0]

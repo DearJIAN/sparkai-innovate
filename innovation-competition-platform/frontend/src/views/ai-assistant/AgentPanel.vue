@@ -597,15 +597,25 @@ onMounted(() => {
 .agent-panel :deep(.el-select .el-input__inner),
 .agent-panel :deep(.el-input .el-input__inner),
 .agent-panel :deep(.el-textarea .el-textarea__inner) {
-  color: #e2e8f0 !important;
-  background-color: transparent !important;
+  color: #1e293b !important;
+  background-color: #ffffff !important;
   border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.agent-panel :deep(.el-input__wrapper) {
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
+}
+
+.agent-panel :deep(.el-textarea__wrapper) {
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
 }
 
 .agent-panel :deep(.el-select .el-input__inner::placeholder),
 .agent-panel :deep(.el-input .el-input__inner::placeholder),
 .agent-panel :deep(.el-textarea .el-textarea__inner::placeholder) {
-  color: #64748b !important;
+  color: #94a3b8 !important;
 }
 
 .agent-panel :deep(.el-radio__label) {

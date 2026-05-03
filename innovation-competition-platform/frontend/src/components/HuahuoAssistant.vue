@@ -1579,14 +1579,24 @@ onBeforeUnmount(() => {
 
 .analysis-mode :deep(.el-input__inner),
 .analysis-mode :deep(.el-textarea__inner) {
-  color: #e2e8f0 !important;
-  background-color: rgba(30, 41, 59, 0.8) !important;
+  color: #1e293b !important;
+  background-color: #ffffff !important;
   border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.analysis-mode :deep(.el-input__wrapper) {
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
+}
+
+.analysis-mode :deep(.el-textarea__wrapper) {
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
 }
 
 .analysis-mode :deep(.el-input__inner::placeholder),
 .analysis-mode :deep(.el-textarea__inner::placeholder) {
-  color: #64748b !important;
+  color: #94a3b8 !important;
 }
 
 .analysis-mode :deep(.el-radio-button__inner) {
@@ -1864,14 +1874,24 @@ onBeforeUnmount(() => {
 
 .chat-panel .el-input__inner,
 .chat-panel .el-textarea__inner {
-  color: #e2e8f0 !important;
-  background-color: transparent !important;
+  color: #1e293b !important;
+  background-color: #ffffff !important;
   border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.chat-panel .el-input__wrapper {
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
+}
+
+.chat-panel .el-textarea__wrapper {
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
 }
 
 .chat-panel .el-input__inner::placeholder,
 .chat-panel .el-textarea__inner::placeholder {
-  color: #64748b !important;
+  color: #94a3b8 !important;
 }
 
 .chat-panel .el-radio-button__inner {

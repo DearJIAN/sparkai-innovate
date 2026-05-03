@@ -1,10 +1,12 @@
 from flask import Blueprint, request
 from sqlalchemy import or_
+from datetime import datetime
 from models.project import Project
 from models.project_member import ProjectMember
 from models.project_file import ProjectFile
 from models.project_task import ProjectTask
 from models.user import User
+from models.competition import Competition
 from extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from utils.response import success, error
@@ -116,24 +118,66 @@ def create_project():
     if not data or not data.get('name'):
         return error('项目名称不能为空', code=400, status_code=400)
 
-    project = Project(
-        name=data.get('name', '').strip(),
-        description=data.get('description', '').strip() or None,
-        category=data.get('category', '').strip() or None,
-        track=data.get('track', '').strip() or None,
-        stage='idea',
-        status='draft',
-        leader_id=user.id,
-        teacher_id=data.get('teacher_id') or None,
-        competition_id=data.get('competition_id') or None
-    )
+    teacher_id = data.get('teacher_id') or None
+    if teacher_id is not None:
+        try:
+            teacher_id = int(teacher_id)
+        except (ValueError, TypeError):
+            return error('指导老师ID格式错误', code=400, status_code=400)
+        if not User.query.get(teacher_id):
+            return error('指定的指导老师不存在', code=400, status_code=400)
 
-    db.session.add(project)
-    db.session.commit()
+    competition_id = data.get('competition_id') or None
+    if competition_id is not None:
+        try:
+            competition_id = int(competition_id)
+        except (ValueError, TypeError):
+            return error('竞赛ID格式错误', code=400, status_code=400)
+        if not Competition.query.get(competition_id):
+            return error('指定的竞赛不存在', code=400, status_code=400)
 
-    return success({
-        'project': project.to_dict()
-    }, message='项目创建成功', code=201)
+    start_date = None
+    end_date = None
+    if data.get('start_date'):
+        try:
+            start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return error('开始日期格式错误，应为 YYYY-MM-DD', code=400, status_code=400)
+    if data.get('end_date'):
+        try:
+            end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return error('结束日期格式错误，应为 YYYY-MM-DD', code=400, status_code=400)
+
+    valid_stages = ['idea', 'prototype', 'proof', 'development', 'production']
+    stage = data.get('stage', 'idea') or 'idea'
+    if stage not in valid_stages:
+        stage = 'idea'
+
+    try:
+        project = Project(
+            name=data.get('name', '').strip(),
+            description=data.get('description', '').strip() or None,
+            category=data.get('category', '').strip() or None,
+            track=data.get('track', '').strip() or None,
+            stage=stage,
+            status='draft',
+            leader_id=user.id,
+            teacher_id=teacher_id,
+            competition_id=competition_id,
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        db.session.add(project)
+        db.session.commit()
+
+        return success({
+            'project': project.to_dict()
+        }, message='项目创建成功', code=201)
+    except Exception as e:
+        db.session.rollback()
+        return error(f'项目创建失败：{str(e)}', code=500, status_code=500)
 
 
 @project_bp.route('/<int:project_id>', methods=['GET'])
