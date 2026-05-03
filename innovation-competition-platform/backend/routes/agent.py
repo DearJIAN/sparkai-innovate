@@ -25,6 +25,13 @@ from services.langchain_service import (
     roadshow_generate as _roadshow_generate,
     review_assist as _review_assist,
     competition_recommend as _competition_recommend,
+    smart_navigate as _smart_navigate,
+    project_idea_generate as _project_idea_generate,
+    mock_defense as _mock_defense,
+    batch_review_assist as _batch_review_assist,
+    smart_feedback_generate as _smart_feedback_generate,
+    review_draft_generate as _review_draft_generate,
+    score_consistency_check as _score_consistency_check,
 )
 
 logger = logging.getLogger(__name__)
@@ -73,6 +80,14 @@ def _check_capability_access(user, capability, project=None):
     if capability == 'roadshow':
         if user.role == 'judge':
             return False, '评委无法使用路演稿生成'
+
+    if capability == 'project_idea':
+        if user.role not in ('student', 'admin'):
+            return False, '项目创意生成仅限学生使用'
+
+    if capability == 'mock_defense':
+        if user.role not in ('student', 'teacher', 'admin'):
+            return False, '模拟路演答辩仅限学生和教师使用'
 
     if project and not _check_project_access(project, user):
         return False, '您没有权限访问该项目'
@@ -543,3 +558,303 @@ def get_task(task_id):
         return error('无权访问该任务', code=403, status_code=403)
 
     return success(task.to_dict())
+
+
+@agent_bp.route('/navigate', methods=['POST'])
+@jwt_required()
+def smart_navigate():
+    user = _get_current_user()
+    if not user:
+        return error('用户不存在', code=401, status_code=401)
+
+    data = request.get_json()
+    message = data.get('message', '').strip()
+    if not message:
+        return error('参数缺失：message')
+
+    try:
+        result = _smart_navigate(message, user.role)
+        return success(result)
+    except Exception as e:
+        logger.error(f'智能引航失败: {e}')
+        return error(f'智能引航失败: {str(e)[:200]}', code=500, status_code=500)
+
+
+@agent_bp.route('/project-idea', methods=['POST'])
+@jwt_required()
+def project_idea():
+    user = _get_current_user()
+    if not user:
+        return error('用户不存在', code=401, status_code=401)
+
+    allowed, msg = _check_capability_access(user, 'project_idea')
+    if not allowed:
+        return error(msg, code=403, status_code=403)
+
+    data = request.get_json()
+    competition_name = data.get('competition_name', '')
+    competition_category = data.get('competition_category', '')
+    track = data.get('track', '')
+    skills = data.get('skills', '')
+    interests = data.get('interests', '')
+
+    task = _create_task(user.id, 'project_idea', data)
+
+    try:
+        result = _project_idea_generate(competition_name, competition_category, track, skills, interests)
+        _complete_task(task, json.dumps(result, ensure_ascii=False))
+        return success({
+            'ideas': result['ideas'],
+            'is_fallback': result.get('is_fallback', False),
+            'task_id': task.id,
+        })
+    except Exception as e:
+        logger.error(f'项目创意生成失败: {e}')
+        _complete_task(task, None, str(e))
+        return error(f'项目创意生成失败: {str(e)[:200]}', code=500, status_code=500)
+
+
+@agent_bp.route('/mock-defense', methods=['POST'])
+@jwt_required()
+def mock_defense():
+    user = _get_current_user()
+    if not user:
+        return error('用户不存在', code=401, status_code=401)
+
+    allowed, msg = _check_capability_access(user, 'mock_defense')
+    if not allowed:
+        return error(msg, code=403, status_code=403)
+
+    data = request.get_json()
+    project_id = data.get('project_id')
+    question_type = data.get('question_type', 'general')
+
+    if question_type not in ('general', 'technical', 'business', 'tough'):
+        return error('question_type 只支持 general / technical / business / tough')
+
+    project = None
+    search_result = None
+    if project_id:
+        project = Project.query.get(project_id)
+        if not project:
+            return error('项目不存在', code=404, status_code=404)
+        if not _check_project_access(project, user):
+            return error('您没有权限访问该项目', code=403, status_code=403)
+        if index_exists('project', project_id):
+            search_result = search_documents('project', project_id, '路演答辩 创新点 可行性 市场 团队', 6)
+
+    task = _create_task(user.id, 'mock_defense', data, project_id)
+
+    try:
+        project_info_text = _get_project_info_text(project)
+        result = _mock_defense(project, search_result, question_type, project_info_text)
+        _complete_task(task, json.dumps(result, ensure_ascii=False))
+        return success({
+            'defense': result['defense'],
+            'question_type': result['question_type'],
+            'is_fallback': result.get('is_fallback', False),
+            'task_id': task.id,
+        })
+    except Exception as e:
+        logger.error(f'模拟答辩失败: {e}')
+        _complete_task(task, None, str(e))
+        return error(f'模拟答辩失败: {str(e)[:200]}', code=500, status_code=500)
+
+
+@agent_bp.route('/batch-review', methods=['POST'])
+@jwt_required()
+@require_min_role('teacher')
+def batch_review():
+    user = _get_current_user()
+    if not user:
+        return error('用户不存在', code=401, status_code=401)
+
+    data = request.get_json()
+    project_ids = data.get('project_ids', [])
+
+    projects_info = []
+    if project_ids:
+        for pid in project_ids[:10]:
+            p = Project.query.get(pid)
+            if p:
+                projects_info.append({
+                    'name': p.name,
+                    'description': p.description or '',
+                    'category': getattr(p, 'category', '') or '',
+                    'status': p.status,
+                    'leader': getattr(p, 'leader_id', ''),
+                })
+    else:
+        if user.role == 'teacher':
+            projects = Project.query.filter_by(teacher_id=user.id).limit(10).all()
+        else:
+            projects = Project.query.limit(10).all()
+        for p in projects:
+            projects_info.append({
+                'name': p.name,
+                'description': p.description or '',
+                'category': getattr(p, 'category', '') or '',
+                'status': p.status,
+                'leader': getattr(p, 'leader_id', ''),
+            })
+
+    task = _create_task(user.id, 'batch_review', data)
+
+    try:
+        result = _batch_review_assist(projects_info)
+        _complete_task(task, json.dumps(result, ensure_ascii=False))
+        return success({
+            'report': result['report'],
+            'is_fallback': result.get('is_fallback', False),
+            'task_id': task.id,
+        })
+    except Exception as e:
+        logger.error(f'批量审核失败: {e}')
+        _complete_task(task, None, str(e))
+        return error(f'批量审核失败: {str(e)[:200]}', code=500, status_code=500)
+
+
+@agent_bp.route('/smart-feedback', methods=['POST'])
+@jwt_required()
+@require_min_role('teacher')
+def smart_feedback():
+    user = _get_current_user()
+    if not user:
+        return error('用户不存在', code=401, status_code=401)
+
+    data = request.get_json()
+    project_id = data.get('project_id')
+    feedback_type = data.get('feedback_type', 'modify')
+
+    if feedback_type not in ('modify', 'approve', 'reject'):
+        return error('feedback_type 只支持 modify / approve / reject')
+    if not project_id:
+        return error('参数缺失：project_id')
+
+    project = Project.query.get(project_id)
+    if not project:
+        return error('项目不存在', code=404, status_code=404)
+    if not _check_project_access(project, user):
+        return error('您没有权限访问该项目', code=403, status_code=403)
+
+    task = _create_task(user.id, 'smart_feedback', data, project_id)
+
+    try:
+        search_result = None
+        if index_exists('project', project_id):
+            search_result = search_documents('project', project_id, '审核 反馈 修改 建议', 4)
+        project_info_text = _get_project_info_text(project)
+        result = _smart_feedback_generate(project, search_result, feedback_type, project_info_text)
+        _complete_task(task, json.dumps(result, ensure_ascii=False))
+        return success({
+            'feedback': result['feedback'],
+            'feedback_type': result['feedback_type'],
+            'is_fallback': result.get('is_fallback', False),
+            'task_id': task.id,
+        })
+    except Exception as e:
+        logger.error(f'智能反馈生成失败: {e}')
+        _complete_task(task, None, str(e))
+        return error(f'智能反馈生成失败: {str(e)[:200]}', code=500, status_code=500)
+
+
+@agent_bp.route('/review-draft', methods=['POST'])
+@jwt_required()
+@require_min_role('judge')
+def review_draft():
+    user = _get_current_user()
+    if not user:
+        return error('用户不存在', code=401, status_code=401)
+
+    data = request.get_json()
+    project_id = data.get('project_id')
+    scoring_dimensions = data.get('scoring_dimensions')
+
+    if not project_id:
+        return error('参数缺失：project_id')
+
+    project = Project.query.get(project_id)
+    if not project:
+        return error('项目不存在', code=404, status_code=404)
+    if not _check_project_access(project, user):
+        return error('您没有权限访问该项目', code=403, status_code=403)
+
+    task = _create_task(user.id, 'review_draft', data, project_id)
+
+    try:
+        search_result = None
+        if index_exists('project', project_id):
+            search_result = search_documents('project', project_id, '评审 创新 可行性 市场 团队 商业', 6)
+        project_info_text = _get_project_info_text(project)
+        result = _review_draft_generate(project, search_result, scoring_dimensions, project_info_text)
+        _complete_task(task, json.dumps(result, ensure_ascii=False))
+        return success({
+            'draft': result['draft'],
+            'dimensions': result['dimensions'],
+            'is_fallback': result.get('is_fallback', False),
+            'task_id': task.id,
+        })
+    except Exception as e:
+        logger.error(f'评审意见草稿生成失败: {e}')
+        _complete_task(task, None, str(e))
+        return error(f'评审意见草稿生成失败: {str(e)[:200]}', code=500, status_code=500)
+
+
+@agent_bp.route('/score-check', methods=['POST'])
+@jwt_required()
+@require_min_role('judge')
+def score_check():
+    user = _get_current_user()
+    if not user:
+        return error('用户不存在', code=401, status_code=401)
+
+    data = request.get_json()
+    review_data = data.get('review_data')
+
+    if not review_data:
+        return error('参数缺失：review_data')
+
+    task = _create_task(user.id, 'score_check', data)
+
+    try:
+        result = _score_consistency_check(review_data)
+        _complete_task(task, json.dumps(result, ensure_ascii=False))
+        return success({
+            'report': result['report'],
+            'is_fallback': result.get('is_fallback', False),
+            'task_id': task.id,
+        })
+    except Exception as e:
+        logger.error(f'评分一致性检查失败: {e}')
+        _complete_task(task, None, str(e))
+        return error(f'评分一致性检查失败: {str(e)[:200]}', code=500, status_code=500)
+
+
+@agent_bp.route('/capabilities', methods=['GET'])
+@jwt_required()
+def get_capabilities():
+    user = _get_current_user()
+    if not user:
+        return error('用户不存在', code=401, status_code=401)
+
+    all_capabilities = [
+        {'key': 'material_qa', 'name': 'AI 材料问答', 'roles': ['student', 'teacher', 'judge', 'admin'], 'icon': 'Document', 'description': '基于项目材料进行智能问答'},
+        {'key': 'bp_check', 'name': '商业计划书体检', 'roles': ['student', 'teacher', 'judge', 'admin'], 'icon': 'DataAnalysis', 'description': '检查商业计划书完整性和质量'},
+        {'key': 'roadshow', 'name': '路演稿生成', 'roles': ['student', 'teacher', 'admin'], 'icon': 'Microphone', 'description': '生成结构化路演演讲稿'},
+        {'key': 'review_assist', 'name': '评审辅助', 'roles': ['teacher', 'judge', 'admin'], 'icon': 'Star', 'description': '辅助评审人员了解项目全貌'},
+        {'key': 'competition_recommend', 'name': '智能竞赛推荐', 'roles': ['student', 'admin'], 'icon': 'Trophy', 'description': '根据项目推荐适合的竞赛'},
+        {'key': 'smart_navigate', 'name': '智能引航', 'roles': ['student', 'teacher', 'judge', 'admin'], 'icon': 'Compass', 'description': '模糊指令理解与页面跳转'},
+        {'key': 'project_idea', 'name': '项目创意生成', 'roles': ['student', 'admin'], 'icon': 'MagicStick', 'description': '基于竞赛和技能生成项目创意'},
+        {'key': 'mock_defense', 'name': '模拟路演答辩', 'roles': ['student', 'teacher', 'admin'], 'icon': 'ChatDotRound', 'description': 'AI扮演评委进行模拟答辩'},
+        {'key': 'batch_review', 'name': '批量审核助手', 'roles': ['teacher', 'admin'], 'icon': 'List', 'description': '批量分析待审核项目'},
+        {'key': 'smart_feedback', 'name': '智能反馈生成', 'roles': ['teacher', 'admin'], 'icon': 'EditPen', 'description': '生成项目审核反馈意见'},
+        {'key': 'review_draft', 'name': '评审意见草稿', 'roles': ['judge', 'admin'], 'icon': 'DocumentCopy', 'description': '生成评审意见草稿'},
+        {'key': 'score_check', 'name': '评分一致性检查', 'roles': ['judge', 'admin'], 'icon': 'Checked', 'description': '检查评分与评价是否一致'},
+    ]
+
+    user_capabilities = [c for c in all_capabilities if user.role in c['roles']]
+
+    return success({
+        'capabilities': user_capabilities,
+        'role': user.role,
+    })

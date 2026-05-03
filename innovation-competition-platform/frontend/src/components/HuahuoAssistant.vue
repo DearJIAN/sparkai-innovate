@@ -138,6 +138,14 @@
                   <div class="message-content">
                     <div v-if="msg.role === 'assistant'" class="markdown-body" v-html="renderMarkdown(msg.content)"></div>
                     <div v-else>{{ msg.content }}</div>
+                    <div v-if="msg.role === 'assistant' && msg.type === 'navigate' && msg.navigate" class="message-actions">
+                      <el-button type="primary" size="small" @click="handleNavigate(msg.navigate.route)">
+                        🧭 前往 {{ msg.navigate.label || '目标页面' }} →
+                      </el-button>
+                    </div>
+                    <div v-if="msg.role === 'assistant' && msg.type === 'agent_result'" class="message-capability-tag">
+                      <el-tag size="small" type="success">🤖 智能体 · {{ getCapabilityLabel(msg.capability) }}</el-tag>
+                    </div>
                   </div>
                 </div>
                 <div v-if="isStreaming" class="message-item assistant">
@@ -201,6 +209,7 @@
 
 <script setup>
 import { ref, reactive, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { marked } from 'marked'
 import { chatStream, generateAnalysis } from '@/api/ai'
 import { ElMessage } from 'element-plus'
@@ -237,6 +246,9 @@ const inputText = ref('')
 const isStreaming = ref(false)
 const streamingText = ref('')
 const currentReplyText = ref('')
+const currentResponseType = ref('chat')
+const currentNavigateData = ref(null)
+const currentCapability = ref('')
 const sessionId = ref('')
 const isListening = ref(false)
 const isAsrProcessing = ref(false)
@@ -262,7 +274,20 @@ marked.setOptions({ breaks: true, gfm: true })
 
 function renderMarkdown(text) {
   if (!text) return ''
-  try { return marked.parse(text) } catch { return text }
+  try {
+    let processed = text
+    processed = processed.replace(/^(#{1,6})\s+/gm, (match, hashes) => {
+      const level = hashes.length
+      return `<h${level}>`
+    })
+    processed = processed.replace(/<h([1-6])>(.*)/g, (match, level, content) => {
+      if (content.includes(`</h${level}>`)) return match
+      return `<h${level}>${content}</h${level}>`
+    })
+    let html = marked.parse(processed, { breaks: true, gfm: true })
+    html = html.replace(/#{1,6}\s/g, '')
+    return html
+  } catch { return text }
 }
 
 function openPanel() {
@@ -878,6 +903,9 @@ async function sendMessage() {
   isStreaming.value = true
   streamingText.value = ''
   currentReplyText.value = ''
+  currentResponseType.value = 'chat'
+  currentNavigateData.value = null
+  currentCapability.value = ''
   notifyLive2dHook('onStreamStart')
 
   let fullResponse = ''
@@ -895,7 +923,7 @@ async function sendMessage() {
       const decoder = new TextDecoder()
       let buffer = ''
       let lastChunkTime = Date.now()
-      const CHUNK_TIMEOUT = 180000 // 3分钟超时
+      const CHUNK_TIMEOUT = 180000
 
       while (true) {
         const { done, value } = await reader.read()
@@ -912,6 +940,14 @@ async function sendMessage() {
 
           if (trimmed.startsWith('sessionId:')) {
             sessionId.value = trimmed.slice(10).trim()
+          } else if (trimmed.startsWith('type:')) {
+            currentResponseType.value = trimmed.slice(5).trim()
+          } else if (trimmed.startsWith('navigate:')) {
+            try {
+              currentNavigateData.value = JSON.parse(trimmed.slice(9))
+            } catch (e) {}
+          } else if (trimmed.startsWith('capability:')) {
+            currentCapability.value = trimmed.slice(11).trim()
           } else if (trimmed.startsWith('delta:')) {
             const delta = trimmed.slice(6)
             streamingText.value += delta
@@ -921,17 +957,14 @@ async function sendMessage() {
           } else if (trimmed.startsWith('error:')) {
             const errMsg = trimmed.slice(6)
             console.error('[AI Stream] Server error:', errMsg)
-            // 不中断，继续读取后续内容
           }
         }
 
-        // 检查超时
         if (Date.now() - lastChunkTime > CHUNK_TIMEOUT) {
           throw new Error('数据接收超时')
         }
       }
 
-      // 处理缓冲区剩余内容
       if (buffer.trim()) {
         const trimmed = buffer.trim()
         if (trimmed.startsWith('delta:')) {
@@ -949,14 +982,23 @@ async function sendMessage() {
         ElMessage.error('AI 对话服务暂时不可用，请稍后重试')
         break
       }
-      // 等待后重试
       await new Promise(r => setTimeout(r, 1000 * retryCount))
     }
   }
 
-  // 保存完整回复到消息列表
   if (fullResponse) {
-    messages.value.push({ role: 'assistant', content: fullResponse })
+    const msg = {
+      role: 'assistant',
+      content: fullResponse,
+      type: currentResponseType.value || 'chat',
+    }
+    if (currentResponseType.value === 'navigate' && currentNavigateData.value) {
+      msg.navigate = currentNavigateData.value
+    }
+    if (currentResponseType.value === 'agent_result' && currentCapability.value) {
+      msg.capability = currentCapability.value
+    }
+    messages.value.push(msg)
   }
 
   isStreaming.value = false
@@ -965,6 +1007,32 @@ async function sendMessage() {
 }
 
 function sendQuickQuestion(q) { inputText.value = q; sendMessage() }
+
+const CAPABILITY_LABELS = {
+  project_idea: '项目创意生成',
+  mock_defense: '模拟路演答辩',
+  batch_review: '批量审核助手',
+  smart_feedback: '智能反馈生成',
+  review_draft: '评审意见草稿',
+  score_check: '评分一致性检查',
+  material_qa: '材料智能问答',
+  bp_check: '商业计划书体检',
+  roadshow: '路演稿生成',
+  review_assist: '评审辅助',
+  competition_recommend: '智能竞赛推荐',
+}
+
+function getCapabilityLabel(key) {
+  return CAPABILITY_LABELS[key] || key
+}
+
+const router = useRouter()
+
+function handleNavigate(route) {
+  if (route) {
+    router.push(route).catch(() => {})
+  }
+}
 
 function toggleVoiceRecognition() { isListening.value ? stopVoiceRecognition() : startVoiceRecognition() }
 
@@ -1046,8 +1114,16 @@ function startSpeechMouthPulse() {
 
 function stopSpeechMouthPulse() { if (speechPulseInterval) { clearInterval(speechPulseInterval); speechPulseInterval = null } }
 
-function clearMessages() { messages.value = []; currentReplyText.value = ''; streamingText.value = '' }
-function newSession() { clearMessages(); sessionId.value = '' }
+function clearMessages() {
+  messages.value = []
+  currentReplyText.value = ''
+  streamingText.value = ''
+  sessionId.value = ''
+  currentResponseType.value = 'chat'
+  currentNavigateData.value = null
+  currentCapability.value = ''
+}
+function newSession() { clearMessages() }
 
 async function handleAnalysis() {
   if (!analysisForm.project_name && !analysisForm.description) { ElMessage.warning('请填写项目信息'); return }
@@ -1501,8 +1577,111 @@ onBeforeUnmount(() => {
   font-size: 12px;
 }
 
+.analysis-mode :deep(.el-input__inner),
+.analysis-mode :deep(.el-textarea__inner) {
+  color: #e2e8f0 !important;
+  background-color: rgba(30, 41, 59, 0.8) !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.analysis-mode :deep(.el-input__inner::placeholder),
+.analysis-mode :deep(.el-textarea__inner::placeholder) {
+  color: #64748b !important;
+}
+
+.analysis-mode :deep(.el-radio-button__inner) {
+  color: #e2e8f0 !important;
+  background-color: rgba(30, 41, 59, 0.6) !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.analysis-mode :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  color: #fff !important;
+  background-color: #06b6d4 !important;
+  border-color: #06b6d4 !important;
+}
+
 .analysis-result {
   margin-top: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(6, 182, 212, 0.15);
+}
+
+.analysis-result :deep(.el-divider__text) {
+  color: #06b6d4;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.analysis-result .markdown-body {
+  color: #e2e8f0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.analysis-result .markdown-body h1,
+.analysis-result .markdown-body h2,
+.analysis-result .markdown-body h3,
+.analysis-result .markdown-body h4,
+.analysis-result .markdown-body h5,
+.analysis-result .markdown-body h6 {
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 6px 0 2px;
+}
+
+.analysis-result .markdown-body p {
+  color: #e2e8f0;
+  margin: 4px 0;
+}
+
+.analysis-result .markdown-body strong {
+  color: #22d3ee;
+}
+
+.analysis-result .markdown-body ul,
+.analysis-result .markdown-body ol {
+  color: #e2e8f0;
+}
+
+.analysis-result .markdown-body li {
+  color: #e2e8f0;
+}
+
+.analysis-result .markdown-body table {
+  color: #e2e8f0;
+}
+
+.analysis-result .markdown-body th {
+  color: #06b6d4;
+  background: rgba(6, 182, 212, 0.15);
+}
+
+.analysis-result .markdown-body td {
+  color: #e2e8f0;
+}
+
+.analysis-result .markdown-body code {
+  color: #22d3ee;
+  background: rgba(6, 182, 212, 0.1);
+}
+
+.analysis-result .markdown-body blockquote {
+  color: rgba(255,255,255,0.7);
+  border-left-color: rgba(6, 182, 212, 0.4);
+}
+
+.analysis-result .markdown-body hr {
+  border-top-color: rgba(255,255,255,0.1);
+}
+
+.analysis-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
 }
 
 .analysis-actions {
@@ -1563,11 +1742,11 @@ onBeforeUnmount(() => {
 }
 
 .message-content {
-  max-width: 280px;
+  max-width: 360px;
   padding: 8px 12px;
   border-radius: 10px;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.6;
   word-break: break-word;
 }
 
@@ -1583,11 +1762,36 @@ onBeforeUnmount(() => {
   border-bottom-left-radius: 4px;
 }
 
+.message-item.assistant .message-content .markdown-body {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.message-item.assistant .message-content .markdown-body h1,
+.message-item.assistant .message-content .markdown-body h2,
+.message-item.assistant .message-content .markdown-body h3,
+.message-item.assistant .message-content .markdown-body h4,
+.message-item.assistant .message-content .markdown-body h5,
+.message-item.assistant .message-content .markdown-body h6 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 6px 0 2px;
+  color: inherit;
+}
+
 .message-content.streaming { min-height: 20px; }
 
 .cursor-blink {
   animation: blink 1s step-end infinite;
   color: #06b6d4;
+}
+
+.message-actions {
+  margin-top: 8px;
+}
+
+.message-capability-tag {
+  margin-top: 6px;
 }
 
 @keyframes blink {
@@ -1610,23 +1814,32 @@ onBeforeUnmount(() => {
 }
 
 .markdown-body {
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.7;
+  word-break: break-word;
 }
 
-.markdown-body :deep(h1), .markdown-body :deep(h2), .markdown-body :deep(h3) { margin: 6px 0 4px; color: #06b6d4; font-weight: 600; }
-.markdown-body :deep(h1) { font-size: 15px; }
-.markdown-body :deep(h2) { font-size: 14px; }
-.markdown-body :deep(h3) { font-size: 13px; }
-.markdown-body :deep(ul), .markdown-body :deep(ol) { padding-left: 14px; margin: 4px 0; }
+.markdown-body :deep(h1), .markdown-body :deep(h2), .markdown-body :deep(h3),
+.markdown-body :deep(h4), .markdown-body :deep(h5), .markdown-body :deep(h6) {
+  margin: 8px 0 4px;
+  font-weight: 600;
+  font-size: 14px;
+  color: inherit;
+}
+.markdown-body :deep(h1)::before { content: ''; }
+.markdown-body :deep(p) { margin: 4px 0; }
+.markdown-body :deep(ul), .markdown-body :deep(ol) { padding-left: 16px; margin: 4px 0; }
 .markdown-body :deep(li) { margin: 2px 0; }
-.markdown-body :deep(strong) { color: #22d3ee; }
-.markdown-body :deep(table) { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 12px; }
-.markdown-body :deep(th), .markdown-body :deep(td) { border: 1px solid rgba(6, 182, 212, 0.2); padding: 3px 6px; text-align: left; }
-.markdown-body :deep(th) { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
-.markdown-body :deep(code) { background: rgba(6, 182, 212, 0.1); padding: 1px 4px; border-radius: 3px; font-size: 12px; }
-.markdown-body :deep(pre) { background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 6px; overflow-x: auto; margin: 6px 0; }
-.markdown-body :deep(pre code) { background: none; padding: 0; }
+.markdown-body :deep(strong) { color: #22d3ee; font-weight: 600; }
+.markdown-body :deep(em) { font-style: italic; }
+.markdown-body :deep(blockquote) { border-left: 3px solid rgba(6, 182, 212, 0.4); padding-left: 10px; margin: 6px 0; color: rgba(255,255,255,0.7); }
+.markdown-body :deep(hr) { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 8px 0; }
+.markdown-body :deep(table) { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 13px; }
+.markdown-body :deep(th), .markdown-body :deep(td) { border: 1px solid rgba(6, 182, 212, 0.2); padding: 4px 8px; text-align: left; }
+.markdown-body :deep(th) { background: rgba(6, 182, 212, 0.15); color: #06b6d4; font-weight: 600; }
+.markdown-body :deep(code) { background: rgba(6, 182, 212, 0.1); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+.markdown-body :deep(pre) { background: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 6px; overflow-x: auto; margin: 6px 0; }
+.markdown-body :deep(pre code) { background: none; padding: 0; font-size: 13px; }
 
 .panel-slide-enter-active, .panel-slide-leave-active {
   transition: all 0.3s ease;
@@ -1640,5 +1853,74 @@ onBeforeUnmount(() => {
 .panel-slide-leave-to {
   opacity: 0;
   transform: translateY(20px) scale(0.95);
+}
+</style>
+
+<style>
+.chat-panel .el-form-item__label {
+  color: #94a3b8 !important;
+  font-size: 12px !important;
+}
+
+.chat-panel .el-input__inner,
+.chat-panel .el-textarea__inner {
+  color: #e2e8f0 !important;
+  background-color: transparent !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.chat-panel .el-input__inner::placeholder,
+.chat-panel .el-textarea__inner::placeholder {
+  color: #64748b !important;
+}
+
+.chat-panel .el-radio-button__inner {
+  color: #e2e8f0 !important;
+  background-color: transparent !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.chat-panel .el-radio-button__original-radio:checked + .el-radio-button__inner {
+  color: #fff !important;
+  background-color: #06b6d4 !important;
+  border-color: #06b6d4 !important;
+}
+
+.chat-panel .el-select .el-input__inner {
+  color: #e2e8f0 !important;
+  background-color: transparent !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.chat-panel .el-select-dropdown {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+}
+
+.chat-panel .el-select-dropdown__item {
+  color: #e2e8f0 !important;
+}
+
+.chat-panel .el-select-dropdown__item.hover,
+.chat-panel .el-select-dropdown__item:hover {
+  background-color: rgba(6, 182, 212, 0.15) !important;
+}
+
+.chat-panel .el-select-dropdown__item.selected {
+  color: #06b6d4 !important;
+  font-weight: 600;
+}
+
+.chat-panel .el-divider__text {
+  color: #06b6d4 !important;
+  font-size: 13px !important;
+  font-weight: 600;
+}
+
+.chat-panel .el-input-group__append {
+  background-color: rgba(6, 182, 212, 0.2) !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+  color: #06b6d4 !important;
+  box-shadow: none !important;
 }
 </style>

@@ -1,7 +1,8 @@
 <template>
   <div class="agent-panel" :class="{ 'agent-panel--compact': compact }">
     <div v-if="!selectedCapability" class="capability-cards">
-      <div class="capability-cards__title">项目智能体</div>
+      <div class="capability-cards__title">🤖 项目智能体</div>
+      <div class="capability-cards__desc">选择一个 AI 能力，让我来帮你</div>
       <div class="capability-cards__grid">
         <div
           v-for="cap in capabilities"
@@ -14,6 +15,34 @@
           <div v-if="compact" class="capability-card__desc">{{ cap.brief }}</div>
         </div>
       </div>
+
+      <div class="smart-navigate-section">
+        <div class="smart-navigate-title">🧭 智能引航</div>
+        <div class="smart-navigate-desc">告诉我你想做什么，我帮你快速到达</div>
+        <div class="smart-navigate-input">
+          <el-input
+            v-model="navigateInput"
+            placeholder="例如：我想报名互联网+比赛"
+            size="small"
+            @keyup.enter="doNavigate"
+          >
+            <template #append>
+              <el-button :loading="navigateLoading" @click="doNavigate">出发</el-button>
+            </template>
+          </el-input>
+        </div>
+        <div v-if="navigateResult" class="navigate-result">
+          <div class="navigate-reply">{{ navigateResult.reply }}</div>
+          <el-button
+            v-if="navigateResult.action === 'navigate' && navigateResult.route"
+            type="primary"
+            size="small"
+            @click="goToRoute(navigateResult.route)"
+          >
+            前往 {{ navigateResult.label }} →
+          </el-button>
+        </div>
+      </div>
     </div>
 
     <div v-else class="capability-form">
@@ -24,13 +53,29 @@
 
       <div class="capability-form__body">
         <el-form label-position="top" size="small">
-          <el-form-item label="选择项目" required>
+          <el-form-item
+            v-if="needsProject"
+            label="请输入项目名称"
+            :required="needsProjectRequired"
+          >
+            <el-input
+              v-model="form.projectName"
+              placeholder="例如：智能垃圾分类助手"
+              style="width: 100%"
+            />
+          </el-form-item>
+
+          <el-form-item
+            v-if="needsProject && projects.length > 0"
+            label="或从已有项目中选择"
+          >
             <el-select
               v-model="form.projectId"
-              placeholder="请选择项目"
-              filterable
+              placeholder="选择已有项目"
+              clearable
+              teleported="false"
               style="width: 100%"
-              @change="onProjectChange"
+              @change="onProjectSelect"
             >
               <el-option
                 v-for="p in projects"
@@ -49,7 +94,7 @@
               v-model="form.registrationId"
               placeholder="可选，优先从报名材料检索"
               clearable
-              filterable
+              teleported="false"
               style="width: 100%"
             >
               <el-option
@@ -85,7 +130,47 @@
             </el-radio-group>
           </el-form-item>
 
-          <el-form-item v-if="!indexExists" label="">
+          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="竞赛名称（可选）">
+            <el-input v-model="form.competitionName" placeholder="例如：互联网+、挑战杯" />
+          </el-form-item>
+
+          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="竞赛类别（可选）">
+            <el-input v-model="form.competitionCategory" placeholder="例如：科技创新、创业实践" />
+          </el-form-item>
+
+          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="赛道（可选）">
+            <el-input v-model="form.track" placeholder="例如：人工智能、生物医药" />
+          </el-form-item>
+
+          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="你的技能特长（可选）">
+            <el-input v-model="form.skills" type="textarea" :rows="2" placeholder="例如：Python、机器学习、产品设计" />
+          </el-form-item>
+
+          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="兴趣方向（可选）">
+            <el-input v-model="form.interests" type="textarea" :rows="2" placeholder="例如：智慧医疗、绿色能源、教育科技" />
+          </el-form-item>
+
+          <el-form-item v-if="selectedCapability.key === 'mock_defense'" label="提问风格">
+            <el-radio-group v-model="form.questionType">
+              <el-radio value="general">综合提问</el-radio>
+              <el-radio value="technical">技术深度</el-radio>
+              <el-radio value="business">商业提问</el-radio>
+              <el-radio value="tough">压力提问</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item v-if="selectedCapability.key === 'smart_feedback'" label="反馈类型">
+            <el-radio-group v-model="form.feedbackType">
+              <el-radio value="modify">建议修改</el-radio>
+              <el-radio value="approve">建议通过</el-radio>
+              <el-radio value="reject">建议驳回</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item
+            v-if="needsProject && !indexExists && needsIndex"
+            label=""
+          >
             <el-button
               type="warning"
               size="small"
@@ -153,6 +238,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { DocumentCopy, Microphone } from '@element-plus/icons-vue'
 import { marked } from 'marked'
@@ -164,8 +250,18 @@ import {
   generateRoadshow,
   reviewAssist,
   competitionRecommend,
+  smartNavigate,
+  projectIdea,
+  mockDefense,
+  batchReview,
+  smartFeedback,
+  reviewDraft,
+  scoreCheck,
+  getCapabilities,
 } from '@/api/agent'
 import { getProjects } from '@/api/project'
+
+const router = useRouter()
 
 const props = defineProps({
   userRole: { type: String, default: 'student' },
@@ -173,14 +269,21 @@ const props = defineProps({
   compact: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['result', 'speak'])
+const emit = defineEmits(['result', 'speak', 'navigate'])
 
 const ALL_CAPABILITIES = [
+  { key: 'smart_navigate', name: '智能引航', icon: '🧭', brief: '模糊指令跳转', roles: ['student', 'teacher', 'judge', 'admin'], noProject: true },
   { key: 'material_qa', name: 'AI 材料问答', icon: '📄', brief: '基于材料问答', roles: ['student', 'teacher', 'judge', 'admin'] },
   { key: 'bp_check', name: '商业计划书体检', icon: '🏥', brief: '检查完整性', roles: ['student', 'teacher', 'judge', 'admin'] },
   { key: 'roadshow', name: '路演稿生成', icon: '🎤', brief: '生成路演稿', roles: ['student', 'teacher', 'admin'] },
   { key: 'review_assist', name: 'AI 评审辅助', icon: '📋', brief: '评审参考', roles: ['teacher', 'judge', 'admin'] },
   { key: 'competition_recommend', name: '智能竞赛推荐', icon: '🎯', brief: '推荐竞赛', roles: ['student', 'admin'] },
+  { key: 'project_idea', name: '项目创意生成', icon: '💡', brief: '生成项目创意', roles: ['student', 'admin'], noProject: true },
+  { key: 'mock_defense', name: '模拟路演答辩', icon: '🎓', brief: 'AI模拟评委', roles: ['student', 'teacher', 'admin'] },
+  { key: 'batch_review', name: '批量审核助手', icon: '📑', brief: '批量审核分析', roles: ['teacher', 'admin'], noProject: true },
+  { key: 'smart_feedback', name: '智能反馈生成', icon: '✏️', brief: '生成反馈意见', roles: ['teacher', 'admin'] },
+  { key: 'review_draft', name: '评审意见草稿', icon: '📝', brief: '生成评审草稿', roles: ['judge', 'admin'] },
+  { key: 'score_check', name: '评分一致性检查', icon: '✅', brief: '检查评分一致性', roles: ['judge', 'admin'], noProject: true },
 ]
 
 const capabilities = computed(() =>
@@ -189,35 +292,69 @@ const capabilities = computed(() =>
 
 const selectedCapability = ref(null)
 const projects = ref([])
+const projectsLoading = ref(false)
 const registrations = ref([])
 const loading = ref(false)
 const indexing = ref(false)
 const indexExists = ref(false)
 const result = ref(null)
 
+const navigateInput = ref('')
+const navigateLoading = ref(false)
+const navigateResult = ref(null)
+
 const form = ref({
   projectId: null,
+  projectName: '',
   registrationId: null,
   question: '',
   duration: 3,
   style: 'formal',
+  competitionName: '',
+  competitionCategory: '',
+  track: '',
+  skills: '',
+  interests: '',
+  questionType: 'general',
+  feedbackType: 'modify',
+})
+
+const needsProject = computed(() => {
+  if (!selectedCapability.value) return false
+  return !selectedCapability.value.noProject
+})
+
+const needsProjectRequired = computed(() => {
+  if (!selectedCapability.value) return false
+  const key = selectedCapability.value.key
+  return !['mock_defense'].includes(key)
+})
+
+const needsIndex = computed(() => {
+  if (!selectedCapability.value) return false
+  const key = selectedCapability.value.key
+  return ['material_qa', 'bp_check', 'review_assist', 'smart_feedback', 'review_draft'].includes(key)
 })
 
 const resultHtml = computed(() => {
   if (!result.value) return ''
-  const text = result.value.answer || result.value.report || result.value.script || result.value.analysis || result.value.recommendation || ''
+  const text = result.value.answer || result.value.report || result.value.script || result.value.analysis || result.value.recommendation || result.value.ideas || result.value.defense || result.value.feedback || result.value.draft || ''
   if (!text) return ''
   return DOMPurify.sanitize(marked.parse(text))
 })
 
 const canExecute = computed(() => {
   if (loading.value) return false
-  if (!form.value.projectId) return false
+  if (needsProjectRequired.value && !form.value.projectId && !form.value.projectName.trim()) return false
   if (selectedCapability.value?.key === 'material_qa' && !form.value.question.trim()) return false
   return true
 })
 
 function selectCapability(cap) {
+  if (cap.key === 'smart_navigate') {
+    selectedCapability.value = null
+    return
+  }
   selectedCapability.value = cap
   result.value = null
 }
@@ -227,20 +364,74 @@ function goBack() {
   result.value = null
 }
 
+function goToRoute(route) {
+  if (route) {
+    emit('navigate', route)
+    router.push(route).catch(() => {})
+  }
+}
+
+async function doNavigate() {
+  if (!navigateInput.value.trim()) {
+    ElMessage.warning('请输入你想做的事情')
+    return
+  }
+  navigateLoading.value = true
+  navigateResult.value = null
+  try {
+    const res = await smartNavigate({ message: navigateInput.value })
+    const d = res.data || res
+    navigateResult.value = d
+    if (d.action === 'navigate' && d.route) {
+      emit('navigate', d.route)
+    }
+  } catch (e) {
+    ElMessage.error('智能引航失败：' + (e.response?.data?.message || e.message))
+  } finally {
+    navigateLoading.value = false
+  }
+}
+
 async function fetchProjects() {
   try {
     const res = await getProjects({ page: 1, per_page: 100 })
-    projects.value = res.projects || res.data?.projects || []
+    projects.value = res.data?.projects || res.projects || []
   } catch (e) {
     console.error('获取项目列表失败:', e)
   }
 }
 
-async function onProjectChange(projectId) {
-  indexExists.value = false
-  form.value.registrationId = null
-  registrations.value = []
+async function searchProjects(query) {
+  if (!query) {
+    await fetchProjects()
+    return
+  }
+  projectsLoading.value = true
+  try {
+    const res = await getProjects({ page: 1, per_page: 50, search: query })
+    projects.value = res.data?.projects || res.projects || []
+  } catch (e) {
+    console.error('搜索项目失败:', e)
+  } finally {
+    projectsLoading.value = false
+  }
 }
+
+async function onProjectChange(projectId) {
+    indexExists.value = false
+    form.value.registrationId = null
+    registrations.value = []
+  }
+
+  function onProjectSelect(projectId) {
+    if (projectId) {
+      const p = projects.value.find(item => item.id === projectId)
+      if (p) {
+        form.value.projectName = p.name
+      }
+    }
+    onProjectChange(projectId)
+  }
 
 async function doIndex() {
   if (!form.value.projectId) {
@@ -298,6 +489,38 @@ async function execute() {
       case 'competition_recommend':
         res = await competitionRecommend(baseData)
         break
+      case 'project_idea':
+        res = await projectIdea({
+          competition_name: form.value.competitionName,
+          competition_category: form.value.competitionCategory,
+          track: form.value.track,
+          skills: form.value.skills,
+          interests: form.value.interests,
+        })
+        break
+      case 'mock_defense':
+        res = await mockDefense({
+          ...baseData,
+          question_type: form.value.questionType,
+        })
+        break
+      case 'batch_review':
+        res = await batchReview({})
+        break
+      case 'smart_feedback':
+        res = await smartFeedback({
+          ...baseData,
+          feedback_type: form.value.feedbackType,
+        })
+        break
+      case 'review_draft':
+        res = await reviewDraft(baseData)
+        break
+      case 'score_check':
+        res = await scoreCheck({
+          review_data: form.value.reviewData || {},
+        })
+        break
     }
 
     const d = res.data || res
@@ -312,7 +535,7 @@ async function execute() {
 }
 
 function getResultText(d) {
-  return d.answer || d.report || d.script || d.analysis || d.recommendation || ''
+  return d.answer || d.report || d.script || d.analysis || d.recommendation || d.ideas || d.defense || d.feedback || d.draft || ''
 }
 
 function copyResult() {
@@ -358,6 +581,7 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  color: #e2e8f0;
 }
 
 .agent-panel--compact {
@@ -365,17 +589,87 @@ onMounted(() => {
   font-size: 13px;
 }
 
+.agent-panel :deep(.el-form-item__label) {
+  color: #94a3b8 !important;
+  font-size: 12px;
+}
+
+.agent-panel :deep(.el-select .el-input__inner),
+.agent-panel :deep(.el-input .el-input__inner),
+.agent-panel :deep(.el-textarea .el-textarea__inner) {
+  color: #e2e8f0 !important;
+  background-color: transparent !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.agent-panel :deep(.el-select .el-input__inner::placeholder),
+.agent-panel :deep(.el-input .el-input__inner::placeholder),
+.agent-panel :deep(.el-textarea .el-textarea__inner::placeholder) {
+  color: #64748b !important;
+}
+
+.agent-panel :deep(.el-radio__label) {
+  color: #e2e8f0 !important;
+}
+
+.agent-panel :deep(.el-select-dropdown__item) {
+  color: #e2e8f0 !important;
+}
+
+.agent-panel :deep(.el-select-dropdown) {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+}
+
+.agent-panel :deep(.el-select-dropdown__item.hover),
+.agent-panel :deep(.el-select-dropdown__item:hover) {
+  background-color: rgba(6, 182, 212, 0.15) !important;
+}
+
+.agent-panel :deep(.el-select-dropdown__item.selected) {
+  color: #06b6d4 !important;
+  font-weight: 600;
+}
+
+.agent-panel :deep(.el-popper.is-light) {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+}
+
+.agent-panel :deep(.el-popper.is-light .el-popper__arrow::before) {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.smart-navigate-section :deep(.el-input-group__append) {
+  background-color: rgba(6, 182, 212, 0.2) !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+  color: #06b6d4 !important;
+  box-shadow: none !important;
+}
+
+.smart-navigate-section :deep(.el-input-group__append:hover) {
+  background-color: rgba(6, 182, 212, 0.3) !important;
+}
+
 .capability-cards__title {
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
-  margin-bottom: 8px;
+  color: #e2e8f0;
+  margin-bottom: 4px;
   text-align: center;
+}
+
+.capability-cards__desc {
+  font-size: 12px;
+  color: #94a3b8;
+  text-align: center;
+  margin-bottom: 8px;
 }
 
 .capability-cards__grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
 }
 
@@ -386,17 +680,17 @@ onMounted(() => {
 
 .capability-card {
   padding: 10px 6px;
-  border: 1px solid #e4e7ed;
+  border: 1px solid rgba(6, 182, 212, 0.2);
   border-radius: 8px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
-  background: #fafafa;
+  background: rgba(15, 23, 42, 0.6);
 }
 
 .capability-card:hover {
-  border-color: #409eff;
-  background: #ecf5ff;
+  border-color: #06b6d4;
+  background: rgba(6, 182, 212, 0.15);
   transform: translateY(-1px);
 }
 
@@ -406,15 +700,54 @@ onMounted(() => {
 }
 
 .capability-card__name {
-  font-size: 12px;
-  color: #303133;
+  font-size: 11px;
+  color: #e2e8f0;
   font-weight: 500;
 }
 
 .capability-card__desc {
   font-size: 11px;
-  color: #909399;
+  color: #94a3b8;
   margin-top: 2px;
+}
+
+.smart-navigate-section {
+  margin-top: 12px;
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.smart-navigate-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #06b6d4;
+  margin-bottom: 2px;
+}
+
+.smart-navigate-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.smart-navigate-input {
+  width: 100%;
+}
+
+.navigate-result {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 6px;
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.navigate-reply {
+  font-size: 13px;
+  color: #e2e8f0;
+  margin-bottom: 6px;
 }
 
 .capability-form__header {
@@ -423,13 +756,13 @@ onMounted(() => {
   gap: 8px;
   margin-bottom: 8px;
   padding-bottom: 6px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .capability-form__title {
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: #e2e8f0;
 }
 
 .capability-form__body {
@@ -441,7 +774,7 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   max-height: 300px;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 8px;
 }
 
@@ -450,8 +783,8 @@ onMounted(() => {
 }
 
 .capability-result__fallback {
-  background: #fdf6ec;
-  color: #e6a23c;
+  background: rgba(230, 162, 60, 0.15);
+  color: #f59e0b;
   padding: 6px 10px;
   border-radius: 4px;
   font-size: 12px;
@@ -459,8 +792,8 @@ onMounted(() => {
 }
 
 .capability-result__disclaimer {
-  background: #fef0f0;
-  color: #f56c6c;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
   padding: 6px 10px;
   border-radius: 4px;
   font-size: 12px;
@@ -471,15 +804,20 @@ onMounted(() => {
 .capability-result__content {
   font-size: 13px;
   line-height: 1.6;
-  color: #303133;
+  color: #e2e8f0;
   word-break: break-word;
 }
 
 .capability-result__content :deep(h1),
 .capability-result__content :deep(h2),
-.capability-result__content :deep(h3) {
-  margin: 8px 0 4px;
+.capability-result__content :deep(h3),
+.capability-result__content :deep(h4),
+.capability-result__content :deep(h5),
+.capability-result__content :deep(h6) {
+  margin: 6px 0 2px;
   font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
 }
 
 .capability-result__content :deep(ul),
@@ -488,19 +826,46 @@ onMounted(() => {
   margin: 4px 0;
 }
 
+.capability-result__content :deep(li) {
+  color: #e2e8f0;
+}
+
 .capability-result__content :deep(p) {
   margin: 4px 0;
+  color: #e2e8f0;
+}
+
+.capability-result__content :deep(strong) {
+  color: #22d3ee;
+}
+
+.capability-result__content :deep(table) {
+  color: #e2e8f0;
+}
+
+.capability-result__content :deep(th) {
+  color: #06b6d4;
+  background: rgba(6, 182, 212, 0.15);
+}
+
+.capability-result__content :deep(td) {
+  color: #e2e8f0;
+}
+
+.capability-result__content :deep(code) {
+  color: #22d3ee;
+  background: rgba(6, 182, 212, 0.1);
 }
 
 .capability-result__sources {
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px dashed #dcdfe6;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
 }
 
 .capability-result__sources-title {
   font-size: 12px;
-  color: #909399;
+  color: #94a3b8;
   margin-bottom: 4px;
 }
 

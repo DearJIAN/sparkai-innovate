@@ -17,12 +17,13 @@ from services.ai_service import (
     generate_project_summary,
     generate_business_advice,
     generate_risk_analysis,
-    call_ark_responses,
+    call_llm_chat,
     sanitize_answer_text,
     normalize_session_id,
     get_chat_record,
     trim_chat_history,
     generate_stream_response,
+    generate_unified_stream,
     get_chat_config,
     get_env_value,
 )
@@ -141,7 +142,7 @@ def chat():
         session_id = os.urandom(8).hex()
 
     try:
-        reply, user_prompt, record = call_ark_responses(question, scene_name, session_id)
+        reply, user_prompt, record = call_llm_chat(question, scene_name, session_id)
         if not reply:
             reply = '我刚刚没有组织出合适的回答，你可以换个方式再问一次。'
         if record is not None:
@@ -152,7 +153,7 @@ def chat():
             'reply': reply,
             'sessionId': session_id,
             'model': get_chat_config()['model_name'],
-            'mode': 'ark_responses',
+            'mode': 'langchain_chat',
         })
     except Exception as error:
         return jsonify({
@@ -173,7 +174,10 @@ def chat_stream():
     if not question:
         return jsonify({"error": "消息不能为空"}), 400
 
-    return generate_stream_response(question, scene_name, session_id, use_voice=False)
+    user = _get_current_user()
+    role = user.role if user else 'student'
+
+    return generate_unified_stream(question, role, scene_name, session_id)
 
 
 @ai_bp.route('/voice/chat/stream', methods=['POST'])
