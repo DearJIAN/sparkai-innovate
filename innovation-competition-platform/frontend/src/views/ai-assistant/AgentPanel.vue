@@ -55,26 +55,17 @@
         <el-form label-position="top" size="small">
           <el-form-item
             v-if="needsProject"
-            label="请输入项目名称"
+            label="选择项目"
             :required="needsProjectRequired"
-          >
-            <el-input
-              v-model="form.projectName"
-              placeholder="例如：智能垃圾分类助手"
-              style="width: 100%"
-            />
-          </el-form-item>
-
-          <el-form-item
-            v-if="needsProject && projects.length > 0"
-            label="或从已有项目中选择"
           >
             <el-select
               v-model="form.projectId"
-              placeholder="选择已有项目"
+              placeholder="请选择一个项目"
               clearable
-              teleported="false"
+              filterable
               style="width: 100%"
+              :loading="projectsLoading"
+              popper-class="agent-project-select-popper"
               @change="onProjectSelect"
             >
               <el-option
@@ -94,8 +85,8 @@
               v-model="form.registrationId"
               placeholder="可选，优先从报名材料检索"
               clearable
-              teleported="false"
               style="width: 100%"
+              popper-class="agent-project-select-popper"
             >
               <el-option
                 v-for="r in registrations"
@@ -345,7 +336,7 @@ const resultHtml = computed(() => {
 
 const canExecute = computed(() => {
   if (loading.value) return false
-  if (needsProjectRequired.value && !form.value.projectId && !form.value.projectName.trim()) return false
+  if (needsProjectRequired.value && !form.value.projectId) return false
   if (selectedCapability.value?.key === 'material_qa' && !form.value.question.trim()) return false
   return true
 })
@@ -393,11 +384,26 @@ async function doNavigate() {
 }
 
 async function fetchProjects() {
+  projectsLoading.value = true
   try {
     const res = await getProjects({ page: 1, per_page: 100 })
-    projects.value = res.data?.projects || res.projects || []
+    let list = []
+    if (res.data && res.data.projects) {
+      list = res.data.projects
+    } else if (res.projects) {
+      list = res.projects
+    } else if (Array.isArray(res.data)) {
+      list = res.data
+    } else if (Array.isArray(res)) {
+      list = res
+    }
+    console.log('[AgentPanel] fetchProjects got', list.length, 'projects')
+    projects.value = list
   } catch (e) {
     console.error('获取项目列表失败:', e)
+    projects.value = []
+  } finally {
+    projectsLoading.value = false
   }
 }
 
@@ -429,6 +435,8 @@ async function onProjectChange(projectId) {
       if (p) {
         form.value.projectName = p.name
       }
+    } else {
+      form.value.projectName = ''
     }
     onProjectChange(projectId)
   }
@@ -883,5 +891,39 @@ onMounted(() => {
   margin-top: 8px;
   display: flex;
   gap: 6px;
+}
+</style>
+
+<style>
+.agent-project-select-popper {
+  background-color: #1e293b !important;
+  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+}
+
+.agent-project-select-popper .el-select-dropdown__item {
+  color: #e2e8f0 !important;
+}
+
+.agent-project-select-popper .el-select-dropdown__item:hover,
+.agent-project-select-popper .el-select-dropdown__item.hover {
+  background-color: rgba(6, 182, 212, 0.15) !important;
+}
+
+.agent-project-select-popper .el-select-dropdown__item.selected {
+  color: #06b6d4 !important;
+  font-weight: 600;
+}
+
+.agent-project-select-popper .el-select-dropdown__item.is-disabled {
+  color: #64748b !important;
+}
+
+.agent-project-select-popper .el-popper__arrow::before {
+  background-color: #1e293b !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.agent-project-select-popper .el-select-dropdown__empty {
+  color: #94a3b8 !important;
 }
 </style>
