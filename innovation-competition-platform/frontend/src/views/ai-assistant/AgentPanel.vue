@@ -328,6 +328,7 @@ function selectCapability(cap) {
   }
   selectedCapability.value = cap
   result.value = null
+  indexExists.value = false
 }
 
 function goBack() {
@@ -487,6 +488,7 @@ async function execute() {
         break
       case 'competition_recommend':
         res = await competitionRecommend({
+          project_id: form.value.projectId,
           competition_name: form.value.competitionName,
           category: form.value.competitionCategory,
           track: form.value.track,
@@ -533,8 +535,13 @@ async function execute() {
   }
 }
 
+function getResultText() {
+  const raw = result.value?.answer || result.value?.report || result.value?.script || result.value?.analysis || result.value?.recommendation || result.value?.ideas || result.value?.defense || result.value?.feedback || result.value?.draft || ''
+  return typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2)
+}
+
 function copyResult() {
-  const text = result.value?.answer || result.value?.report || result.value?.script || result.value?.analysis || result.value?.recommendation || result.value?.ideas || result.value?.defense || result.value?.feedback || result.value?.draft || ''
+  const text = getResultText()
   if (!text) return
   navigator.clipboard.writeText(text).then(() => {
     ElMessage.success('已复制到剪贴板')
@@ -544,7 +551,7 @@ function copyResult() {
 }
 
 function speakResult() {
-  const text = result.value?.answer || result.value?.report || result.value?.script || result.value?.analysis || result.value?.recommendation || result.value?.ideas || result.value?.defense || result.value?.feedback || result.value?.draft || ''
+  const text = getResultText()
   if (!text) return
   emit('speak', text)
 }
