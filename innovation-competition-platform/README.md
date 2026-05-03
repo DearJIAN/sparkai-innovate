@@ -29,8 +29,8 @@
 | python-dotenv | 1.0.1 | 环境变量管理 |
 | cryptography | 47.0.0 | 加密库 |
 | PyJWT | 2.12.1 | JWT Token 处理 |
-| volcengine-python-sdk | 5.0.24 | 火山方舟 AI SDK |
-| openai | 2.32.0 | OpenAI 兼容接口 |
+| volcengine-python-sdk | 5.0.24 | 火山方舟 AI SDK（备选模型通道） |
+| openai | 2.32.0 | OpenAI 兼容接口（通义千问 qwen-plus 通过此接口接入） |
 | langchain | 1.2.15 | AI 编排框架 |
 | langchain-core | 1.3.0 | LangChain 核心 |
 | langchain-openai | 1.1.15 | LangChain OpenAI 兼容接口 |
@@ -100,9 +100,10 @@
 | Flask | 轻量级 Web 框架（应用工厂模式） |
 | Flask-SQLAlchemy | ORM 数据库工具 |
 | Flask-JWT-Extended | JWT 认证（Access 24h / Refresh 7d） |
-| LangChain | AI 编排框架（RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐） |
+| LangChain | AI 编排框架（RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐 / 统一对话路由 / 智能导航） |
 | FAISS + BM25 | 混合检索方案（向量索引 + 稀疏检索 + 关键词回退） |
-| 火山方舟 SDK | AI 大模型 + Embedding + ASR + TTS |
+| 通义千问 qwen-plus | AI 大模型（通过 LangChain ChatOpenAI 兼容接口接入，支持多轮对话 / 意图识别 / 角色感知） |
+| 火山方舟 SDK | AI 大模型 + Embedding + ASR + TTS（备选模型通道） |
 | python-docx / python-pptx / pypdf | 文档解析（.docx / .pptx / .pdf） |
 | PyMySQL | MySQL 驱动 |
 
@@ -123,13 +124,16 @@
 
 ### AI 智能对话
 
-- 基于火山方舟大模型（doubao-seed-1-6-251015）的真实 AI 对话
+- 基于通义千问 qwen-plus 大模型（通过 LangChain + ChatOpenAI 兼容接口接入），同时保留火山方舟大模型（doubao-seed-1-6-251015）作为备选
+- **统一对话路由**（`unified_chat`）：根据用户消息自动识别意图（导航 / 通用对话 / 智能体能力），分发到对应处理逻辑
+- **智能导航**：用户输入模糊指令（如"我想报名比赛""帮我看看项目"），AI 自动识别意图并返回路由跳转建议，前端自动执行页面跳转
 - 支持 SSE 流式输出，打字机效果（`/api/ai/chat/stream`）
 - 会话管理（6 轮上下文记忆，6 小时 TTL，自动清理过期会话）
-- 智能回答清洗（过滤思考过程、去重、提取最终答案标记后的内容、半文重复检测）
+- 智能回答清洗（过滤思考过程、去重、提取最终答案标记后的内容、半文重复检测、去除 Markdown 特殊符号）
 - 快捷问题按钮（分析项目创新性 / 商业计划书 / 竞赛评审 / 团队组建）
 - AI 助手页面双标签页设计：**AI 分析工具** + **AI 对话**
 - 流式输出重试机制（最大重试 2 次，递增间隔 1s/2s）+ 3 分钟超时控制
+- 角色感知对话：根据当前登录角色（学生/教师/评委/管理员）自动调整 AI 回复风格和可用能力
 
 ### 语音交互
 
@@ -245,8 +249,8 @@ innovation-competition-platform/
 │   │
 │   ├── services/                     # 业务逻辑
 │   │   ├── __init__.py
-│   │   ├── ai_service.py             # AI 核心（火山方舟 SDK + 会话管理 + 流式输出 + 回答清洗）
-│   │   ├── langchain_service.py      # LangChain 编排服务（RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐）
+│   │   ├── ai_service.py             # AI 核心（通义千问 qwen-plus + LangChain + 统一对话路由 + 智能导航 + 意图识别 + 会话管理 + 流式输出 + 回答清洗）
+│   │   ├── langchain_service.py      # LangChain 编排服务（RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐 / 智能导航 / 意图检测）
 │   │   ├── document_parser.py        # 文档解析服务（.docx / .pptx / .pdf 文本提取 + 分块）
 │   │   ├── vector_store.py           # 向量存储服务（FAISS 索引 + BM25 混合检索 + Embedding）
 │   │   ├── tts_service.py            # TTS 语音合成（火山 TTS HTTP API + 文件缓存 + 缓存统计/清理）
@@ -503,6 +507,11 @@ ARK_API_KEY=your-ark-api-key
 ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
 ARK_MODEL=doubao-seed-1-6-251015
 VOICE_TEMPERATURE=0.4
+
+# AI 智能体 - 通义千问 qwen-plus
+GLM_API_KEY=your-glm-api-key
+GLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+GLM_MODEL=qwen-plus
 
 # 实时语音对话 - volc.speech.dialog
 VOICE_REALTIME_APP_ID=your-app-id
@@ -791,10 +800,33 @@ seed.py 会自动创建：
 | 接口 | 方法 | 认证 | 说明 |
 |------|------|------|------|
 | `/api/ai/chat` | POST | JWT | 文本聊天（非流式，返回 reply/sessionId/model/mode） |
-| `/api/ai/chat/stream` | POST | JWT | 文本聊天（SSE 流式，text/event-stream） |
+| `/api/ai/chat/stream` | POST | JWT | 文本聊天（SSE 流式，text/event-stream，支持统一对话路由：自动识别导航/对话/智能体意图） |
 | `/api/ai/voice/chat/stream` | POST | JWT | 语音聊天（SSE 流式，优先火山实时语音，回退文本模型） |
 
-**请求参数**：`message`（必填）/ `question` / `scene`（默认"创新创业平台"）/ `sessionId`
+**请求参数**：`message`（必填）/ `question` / `scene`（默认"创新创业平台"）/ `sessionId` / `role`（当前用户角色，用于角色感知对话）
+
+**统一对话路由机制**：
+
+`/api/ai/chat/stream` 接口内置意图识别，根据用户消息自动分发到不同处理逻辑：
+
+| 意图类型 | 触发条件 | 处理方式 |
+|----------|----------|----------|
+| `navigate` | 用户输入包含导航意图（如"我想报名""帮我看看项目"） | 调用 `smart_navigate` 返回路由跳转建议，前端自动执行页面跳转 |
+| `agent` | 用户请求智能体能力（如"帮我体检商业计划书"） | 调用对应 LangChain 智能体能力 |
+| `chat` | 通用对话 | 调用 qwen-plus 模型进行多轮对话 |
+
+**导航响应示例**：
+```json
+{
+  "type": "navigate",
+  "reply": "好的，我帮你跳转到竞赛广场~",
+  "navigate": {
+    "route": "/competitions",
+    "reply": "好的，我帮你跳转到竞赛广场~"
+  },
+  "sessionId": "xxx"
+}
+```
 
 **SSE 流式响应协议**：
 
@@ -1357,11 +1389,14 @@ def create_competition():
 
 ### 2. AI 对话失败
 
-1. 检查 `.env` 中的 `ARK_API_KEY` 是否正确
-2. 确认火山方舟 API 可访问
-3. 检查网络连接
-4. 访问 `/api/ai/health` 查看配置状态（chat_configured / voice_realtime_configured / model）
-5. AI 对话超时已设为 3 分钟（CHUNK_TIMEOUT = 180000ms），含重试机制（最多 2 次）
+1. 检查 `.env` 中的 `GLM_API_KEY` 是否正确（通义千问 qwen-plus 为主要对话模型）
+2. 确认通义千问 DashScope API 可访问（`https://dashscope.aliyuncs.com`）
+3. 检查 `GLM_BASE_URL` 是否配置为 `https://dashscope.aliyuncs.com/compatible-mode/v1`
+4. 检查 `GLM_MODEL` 是否为 `qwen-plus`
+5. 如使用火山方舟模型，检查 `ARK_API_KEY` 和 `ARK_BASE_URL` 是否正确
+6. 检查网络连接
+7. 访问 `/api/ai/health` 查看配置状态（chat_configured / voice_realtime_configured / model）
+8. AI 对话超时已设为 3 分钟（CHUNK_TIMEOUT = 180000ms），含重试机制（最多 2 次）
 
 ### 3. Live2D 模型加载失败
 
@@ -1433,12 +1468,14 @@ def create_competition():
 1. LLM 密集型接口（BP 体检、路演稿、评审辅助）耗时较长，Vite 代理超时已设为 120 秒
 2. 偶发 502 可重试，通常第二次请求会成功
 3. 前端 API 客户端超时已设为 120 秒（`agentTimeout`）
-4. 检查 `.env` 中 `ARK_API_KEY` 和 `ARK_BASE_URL` 是否正确
+4. 检查 `.env` 中 `GLM_API_KEY` 和 `GLM_BASE_URL` 是否正确（通义千问为主要模型）
+5. 如使用火山方舟模型，检查 `ARK_API_KEY` 和 `ARK_BASE_URL`
 
 ### 13. FAISS 向量索引不可用
 
-1. 检查 `.env` 中 `ARK_API_KEY` 和 `ARK_BASE_URL` 是否正确配置
-2. FAISS Embedding 依赖火山方舟 API，不可用时自动降级为 BM25 + 关键词检索
+1. 检查 `.env` 中 `GLM_API_KEY` 和 `GLM_BASE_URL` 是否正确配置（通义千问 Embedding）
+2. FAISS Embedding 优先使用通义千问 API，不可用时回退检查 `ARK_API_KEY` 和 `ARK_BASE_URL`
+3. 不可用时自动降级为 BM25 + 关键词检索
 3. 检查 `backend/vector_stores/` 目录下是否有索引文件
 4. BM25 中文分词依赖 jieba 库，确认已安装
 
@@ -1464,8 +1501,8 @@ def create_competition():
 | 在线课程 | ✅ 完成 | 列表/详情/海报/章节视频/进度跟踪 |
 | 产业命题 | ✅ 完成 | 命题列表/承接填写页/跳转创建项目 |
 | 项目管理 | ✅ 完成 | 创建/编辑/详情/成员/文件/任务/提交评审/删除 |
-| AI 智能对话 | ✅ 完成 | 流式输出/重试机制/3分钟超时/会话管理/回答清洗 |
-| AI 分析工具 | ✅ 完成 | 项目简介/商业计划书/风险分析 |
+| AI 智能对话 | ✅ 完成 | 流式输出/重试机制/3分钟超时/会话管理/回答清洗/统一对话路由/智能导航/角色感知 |
+| AI 分析工具 | ✅ 完成 | 项目简介/商业计划书/风险分析/深色主题适配 |
 | 语音交互 | ✅ 完成 | ASR/TTS/实时语音对话/可拖拽面板 |
 | Live2D 虚拟形象 | ✅ 完成 | 全屏拖拽/表情联动/口型驱动/位置持久化/拖拽按钮跟随 |
 | 证书成果 | ✅ 完成 | 证书列表/获奖记录/查看详情弹窗/证书图片 |
@@ -1621,6 +1658,9 @@ cd backend && flask db upgrade && python seed.py
 | `ARK_API_KEY` | ❌ | AI 对话（不配置则 AI 功能不可用） |
 | `ARK_BASE_URL` | ❌ | 火山方舟 API 地址 |
 | `ARK_MODEL` | ❌ | AI 模型名称 |
+| `GLM_API_KEY` | ❌ | AI 智能体对话（通义千问 qwen-plus，不配置则智能体对话不可用） |
+| `GLM_BASE_URL` | ❌ | 通义千问 API 地址（默认 https://dashscope.aliyuncs.com/compatible-mode/v1） |
+| `GLM_MODEL` | ❌ | AI 智能体模型名称（默认 qwen-plus） |
 | `VOICE_REALTIME_*` | ❌ | 实时语音对话（不配置则回退文本模式） |
 | `DOUBAO_ASR_*` | ❌ | 语音识别（不配置则仅 Chrome 原生 ASR） |
 | `ARK_API_KEY` | ❌ | AI 智能体向量检索 Embedding（不配置则 FAISS 向量检索不可用，需与 AI 对话共用） |
@@ -1648,7 +1688,42 @@ cd backend && flask db upgrade && python seed.py
 > - 不重复记录同一改动（如已在"新增功能"中写了，不再在"功能修改"中重复）
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
-### v4.0.0 - 2026-05-02（当前版本）
+### v4.1.0 - 2026-05-03（当前版本）
+
+> 集成通义千问 qwen-plus 大模型 + 统一对话路由 + 智能导航 + 深色主题适配 + AgentPanel 交互优化
+
+#### 新增功能
+
+- **通义千问 qwen-plus 大模型集成**：通过 LangChain ChatOpenAI 兼容接口接入通义千问 qwen-plus 模型（`GLM_API_KEY` / `GLM_BASE_URL` / `GLM_MODEL` 配置项），替代火山方舟 SDK 作为主要对话模型，支持多轮对话 / 意图识别 / 角色感知
+- **统一对话路由**（`unified_chat`）：`ai_service.py` 新增统一对话入口，根据用户消息自动识别意图（导航 / 通用对话 / 智能体能力），分发到对应处理逻辑
+- **智能导航功能**（`smart_navigate`）：`langchain_service.py` 新增智能导航能力，用户输入模糊指令（如"我想报名比赛""帮我看看项目"），AI 自动识别意图并返回路由跳转建议，前端自动执行页面跳转
+- **意图检测**（`detect_intent`）：`langchain_service.py` 新增意图检测函数，支持导航意图 / 智能体意图 / 通用对话意图三类识别
+- **角色感知对话**：AI 对话根据当前登录角色（学生/教师/评委/管理员）自动调整回复风格和可用能力介绍
+
+#### 功能修改
+
+- **ai_service.py**：从火山方舟 SDK 直接调用改为 LangChain + ChatOpenAI 兼容接口，新增 `unified_chat` 统一对话入口、`_stream_unified_model` 统一流式输出函数
+- **langchain_service.py**：新增 `smart_navigate` 智能导航函数、`detect_intent` 意图检测函数，扩展 LangChain 编排能力
+- **AgentPanel.vue**：项目选择从下拉框改为文本输入框 + 可选下拉选择组合，解决无项目数据时无法选择的问题；优化表单布局和交互流程
+- **HuahuoAssistant.vue**：新增全局 CSS 样式（非 scoped），修复深色主题下表单标签、输入框、文本域的文字颜色不可见问题；输入框背景改为透明，去除黑框背景
+- **agent.py**：新增 AI 智能体相关 API 端点
+- **.env**：新增 `GLM_API_KEY` / `GLM_BASE_URL` / `GLM_MODEL` 配置项
+
+#### Bug 修复
+
+- **AI 对话不回复**：原火山方舟 SDK 连接不稳定，替换为 LangChain + qwen-plus 模型后对话稳定可用
+- **项目选择框无法选择**：AgentPanel 中 el-select 下拉框在无数据时无法操作，改为 el-input 文本输入 + 可选 el-select 组合
+- **深色背景下字体颜色看不清**：HuahuoAssistant 和 AgentPanel 中表单标签、输入框文字在深色背景下不可见，添加全局 CSS 覆盖样式
+- **输入框黑框背景**：AI 分析工具输入框背景色与深色主题冲突，改为透明背景
+- **AI 回复带 Markdown 特殊符号**：回答清洗逻辑增加去除 `#`、`**`、`*` 等 Markdown 格式符号的处理
+
+#### 文档更新
+
+- **README 更新**：AI 智能对话章节补充 qwen-plus 模型和统一对话路由说明；后端技术栈新增通义千问 qwen-plus；环境变量配置新增 GLM_API_KEY / GLM_BASE_URL / GLM_MODEL；环境变量检查清单新增 3 项；常见问题更新 AI 对话失败排查步骤；版本变更记录新增 v4.1.0
+
+---
+
+### v4.0.0 - 2026-05-02
 
 > AI 项目智能体全量上线：5 大 AI 能力、LangChain + FAISS + BM25 混合检索、文档解析服务、AgentPanel 组件
 
@@ -1689,7 +1764,7 @@ cd backend && flask db upgrade && python seed.py
 
 #### 已知问题
 
-- **FAISS Embedding 需要火山方舟 API 配置**：向量索引依赖火山方舟 Embedding API，需在 `.env` 中正确配置 `ARK_API_KEY` 和 `ARK_BASE_URL`，否则向量检索降级为 BM25/关键词检索
+- **FAISS Embedding 需要通义千问 API 配置**：向量索引优先使用通义千问 Embedding API（`GLM_API_KEY` + `GLM_BASE_URL`），也可使用火山方舟 API（`ARK_API_KEY` + `ARK_BASE_URL`），均未配置时向量检索降级为 BM25/关键词检索
 - **BP 体检 / 路演稿等 LLM 密集型接口偶发 502**：Vite 代理超时 120 秒，LLM 调用耗时较长时可能触发，重试通常可成功
 
 #### Chrome DevTools MCP 调试验证（2026-05-02）
