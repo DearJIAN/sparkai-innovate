@@ -91,7 +91,7 @@
               <el-option
                 v-for="r in registrations"
                 :key="r.id"
-                :label="r.competition_name || `报名 #${r.id}`"
+                :label="r.competitionName || r.team_name || `报名 #${r.id}`"
                 :value="r.id"
               />
             </el-select>
@@ -127,7 +127,7 @@
           </el-form-item>
 
           <el-form-item v-if="selectedCapability.key === 'competition_recommend'" label="竞赛类别">
-            <el-select v-model="form.competitionCategory" placeholder="选择类别" clearable>
+            <el-select v-model="form.competitionCategory" placeholder="选择类别" clearable :teleported="false">
               <el-option label="全部" value="" />
               <el-option label="创新创业" value="创新创业" />
               <el-option label="人工智能" value="人工智能" />
@@ -227,8 +227,10 @@ import {
   reviewDraft,
   scoreCheck,
   getCapabilities,
+  indexMaterials,
 } from '@/api/agent'
 import { getProjects } from '@/api/project'
+import { getMyRegistrations } from '@/api/registration'
 
 const router = useRouter()
 
@@ -405,6 +407,16 @@ async function onProjectChange(projectId) {
     indexExists.value = false
     form.value.registrationId = null
     registrations.value = []
+    if (!projectId) return
+    try {
+      const res = await getMyRegistrations()
+      const list = res.data?.registrations || res.registrations || res.data || []
+      const filtered = list.filter(r => r.project_id === projectId)
+      registrations.value = filtered
+    } catch (e) {
+      console.error('获取报名列表失败:', e)
+      registrations.value = []
+    }
   }
 
   function onProjectSelect(projectId) {
