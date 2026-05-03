@@ -6,6 +6,52 @@
 
 平台集成了 **Live2D 虚拟形象「火花」**、**语音交互**、**AI 智能对话**、**AI 项目智能体**等特色功能，为用户提供沉浸式智能辅助体验。其中 AI 项目智能体提供智能引航、材料问答、商业计划书体检、路演稿生成、评审辅助、竞赛推荐、项目创意生成、模拟答辩、批量审核、智能反馈、评审草稿、评分检查 12 大 AI 能力，基于 LangChain + FAISS + BM25 混合检索技术实现。
 
+---
+
+## 目录
+
+- [项目环境依赖](#项目环境依赖)
+- [技术栈](#技术栈)
+- [特色功能](#特色功能)
+  - [Live2D 虚拟形象「火花」](#live2d-虚拟形象火花)
+  - [AI 智能对话](#ai-智能对话)
+  - [语音交互](#语音交互)
+  - [AI 分析工具](#ai-分析工具)
+  - [AI 项目智能体](#ai-项目智能体)
+  - [火山实时语音对话](#火山实时语音对话)
+  - [全局引导系统](#全局引导系统)
+  - [双模式布局](#双模式布局)
+  - [数字雨背景动画](#数字雨背景动画)
+- [项目结构](#项目结构)
+- [环境要求](#环境要求)
+- [快速开始](#快速开始)
+- [后端配置详情](#后端配置详情)
+- [演示账号](#演示账号)
+- [API 接口文档](#api-接口文档)
+  - [统一响应格式](#统一响应格式)
+  - [认证接口 /api/auth](#认证接口-apiauth)
+  - [用户接口 /api/users](#用户接口-apiusers)
+  - [竞赛接口](#竞赛接口)
+  - [报名接口](#报名接口)
+  - [项目接口 /api/projects](#项目接口-apiprojects)
+  - [AI 分析工具 /api/ai](#ai-分析工具-apiai)
+  - [AI 对话 /api/ai](#ai-对话-apiai)
+  - [语音交互 /api/ai](#语音交互-apiai)
+  - [Live2D / 健康 /api/ai](#live2d--健康-apiai)
+  - [看板接口 /api/dashboard](#看板接口-apidashboard)
+  - [系统接口](#系统接口)
+  - [其他接口](#其他接口)
+  - [AI 智能体 /api/agent](#ai-智能体-apiagent)
+- [路由配置](#路由配置)
+- [数据库模型](#数据库模型)
+- [用户角色与权限](#用户角色与权限)
+- [设计系统](#设计系统)
+- [开发规范](#开发规范)
+- [常见问题](#常见问题)
+- [当前开发状态](#当前开发状态)
+- [调试指南](#调试指南)
+- [版本变更记录](#版本变更记录)
+
 ***
 
 ## 项目环境依赖
@@ -372,7 +418,7 @@ innovation-competition-platform/
 │       └── views/                    # 页面视图（43 个 Vue 文件）
 │           ├── ai-assistant/         # AI 助手（双标签页：分析工具 + 对话）
 │           │   ├── index.vue
-│           │   └── AgentPanel.vue    # AI 智能体面板（材料索引/问答/体检/路演/评审辅助/推荐）
+│   │   └── AgentPanel.vue    # AI 智能体面板（12 大 AI 能力：智能引航/材料问答/体检/路演/评审辅助/竞赛推荐/项目创意/模拟答辩/批量审核/智能反馈/评审草稿/评分检查）
 │           ├── admin/                # 管理员页面（5 个）
 │           │   ├── users.vue         # 用户管理（搜索/角色筛选/状态筛选/CRUD弹窗）
 │           │   ├── projects.vue      # 项目管理（6维统计/搜索/阶段筛选/评分颜色分级）
@@ -1207,8 +1253,8 @@ done:1                     # 流结束标记
 | id              | Integer (PK) | 报名 ID                                           |
 | competition\_id | Integer (FK) | 竞赛 ID                                           |
 | track\_id       | Integer (FK) | 赛道 ID                                           |
-| project\_id     | Integer      | 关联项目 ID                                         |
-| leader\_id      | Integer (FK) | 队长用户 ID                                         |
+| project\_id     | Integer (FK → projects) | 关联项目 ID（可空）                                    |
+| leader\_id      | Integer (FK → users) | 队长用户 ID                                         |
 | team\_name      | String       | 队伍名称                                            |
 | school          | String       | 学校                                              |
 | college         | String       | 学院                                              |
@@ -1321,15 +1367,17 @@ done:1                     # 流结束标记
 | id                  | Integer (PK)         | 评审 ID |
 | project\_id         | Integer (FK)         | 项目 ID |
 | judge\_id           | Integer (FK → users) | 评委 ID |
-| innovation\_score   | Integer              | 创新性评分 |
-| feasibility\_score  | Integer              | 可行性评分 |
-| market\_score       | Integer              | 市场评分  |
-| team\_score         | Integer              | 团队评分  |
-| business\_score     | Integer              | 商业评分  |
-| technology\_score   | Integer              | 技术评分  |
-| presentation\_score | Integer              | 展示评分  |
+| innovation\_score   | Float                | 创新性评分 |
+| feasibility\_score  | Float                | 可行性评分 |
+| market\_score       | Float                | 市场评分  |
+| team\_score         | Float                | 团队评分  |
+| business\_score     | Float                | 商业评分  |
+| technology\_score   | Float                | 技术评分  |
+| presentation\_score | Float                | 展示评分  |
 | total\_score        | Float                | 总分    |
 | comment             | Text                 | 评审意见  |
+| created\_at         | DateTime             | 创建时间  |
+| updated\_at         | DateTime             | 更新时间  |
 
 #### AiRecord（AI 使用记录）
 
@@ -1345,35 +1393,36 @@ done:1                     # 流结束标记
 
 #### AgentTask（AI 智能体任务）
 
-| 字段               | 类型                      | 说明                                                                                                     |
-| ---------------- | ----------------------- | ------------------------------------------------------------------------------------------------------ |
-| id               | Integer (PK)            | 任务 ID                                                                                                  |
-| user\_id         | Integer (FK → users)    | 发起用户 ID                                                                                                |
-| project\_id      | Integer (FK → projects) | 关联项目 ID                                                                                                |
-| registration\_id | Integer                 | 关联报名 ID（可选）                                                                                            |
-| task\_type       | String                  | 任务类型（material\_qa / bp\_check / roadshow / review\_assist / competition\_recommend / index\_materials） |
-| status           | String                  | 任务状态（pending / processing / completed / failed，默认 pending）                                             |
-| input\_params    | Text                    | 输入参数（JSON 格式）                                                                                          |
-| result           | Text                    | AI 输出结果                                                                                                |
-| error\_message   | Text                    | 错误信息（失败时记录）                                                                                            |
-| created\_at      | DateTime                | 创建时间                                                                                                   |
-| updated\_at      | DateTime                | 更新时间                                                                                                   |
+| 字段               | 类型                      | 说明                                                                                       |
+| ---------------- | ----------------------- | ---------------------------------------------------------------------------------------- |
+| id               | Integer (PK)            | 任务 ID                                                                                    |
+| user\_id         | Integer (FK → users)    | 发起用户 ID                                                                                  |
+| project\_id      | Integer (FK → projects) | 关联项目 ID（可空）                                                                              |
+| registration\_id | Integer                 | 关联报名 ID（可空，FK → competition\_registrations）                                               |
+| capability       | String(50)              | 能力类型（material\_qa / bp\_check / roadshow / review\_assist / competition\_recommend / navigate 等） |
+| input\_params    | Text                    | 输入参数（JSON 格式）                                                                            |
+| result           | Text                    | AI 输出结果                                                                                  |
+| status           | String(20)              | 任务状态（pending / processing / completed / failed，默认 pending）                               |
+| error\_message   | Text                    | 错误信息（失败时记录）                                                                              |
+| created\_at      | DateTime                | 创建时间                                                                                     |
+| completed\_at    | DateTime                | 完成时间（可空）                                                                                |
 
 #### AgentMaterialIndex（AI 智能体材料索引）
 
-| 字段               | 类型                            | 说明                                                       |
-| ---------------- | ----------------------------- | -------------------------------------------------------- |
-| id               | Integer (PK)                  | 索引 ID                                                    |
-| project\_id      | Integer (FK → projects)       | 关联项目 ID                                                  |
-| registration\_id | Integer                       | 关联报名 ID（可选）                                              |
-| file\_id         | Integer (FK → project\_files) | 关联文件 ID                                                  |
-| file\_name       | String                        | 文件名                                                      |
-| file\_type       | String                        | 文件类型（docx/pptx/pdf）                                      |
-| chunk\_count     | Integer                       | 文本分块数量                                                   |
-| index\_status    | String                        | 索引状态（pending / indexing / completed / failed，默认 pending） |
-| index\_path      | String                        | FAISS 索引文件路径                                             |
-| created\_at      | DateTime                      | 创建时间                                                     |
-| updated\_at      | DateTime                      | 更新时间                                                     |
+| 字段               | 类型                            | 说明                                                         |
+| ---------------- | ----------------------------- | ---------------------------------------------------------- |
+| id               | Integer (PK)                  | 索引 ID                                                      |
+| source\_type     | String(30)                    | 来源类型（project / registration / file 等）                     |
+| source\_id       | Integer                       | 来源 ID                                                      |
+| project\_id      | Integer (FK → projects)       | 关联项目 ID（可空）                                               |
+| registration\_id | Integer                       | 关联报名 ID（可空，FK → competition\_registrations）                |
+| file\_hash       | String(64)                    | 文件哈希值（用于去重，可空）                                            |
+| index\_path      | String(500)                   | FAISS 索引文件路径                                               |
+| status           | String(20)                    | 索引状态（pending / indexing / completed / failed，默认 pending）   |
+| error\_message   | Text                          | 错误信息（失败时记录）                                               |
+| indexed\_at      | DateTime                      | 索引完成时间（可空）                                                |
+| created\_at      | DateTime                      | 创建时间                                                       |
+| updated\_at      | DateTime                      | 更新时间                                                       |
 
 ***
 
@@ -1806,7 +1855,7 @@ cd backend && flask db upgrade && python seed.py
 #### 文档更新
 
 - **AI 智能体权限矩阵补全**：从 5 行扩展为 12 行，新增项目创意生成/模拟答辩/批量审核/智能反馈/评审草稿/评分检查/智能引航 7 项能力的权限说明
-- **AI 智能体 API 文档补全**：从 8 个端点扩展为 14 个，新增 navigate/project-idea/mock-defense/batch-review/smart-feedback/re-review-draft/score-check/capabilities 端点文档
+- **AI 智能体 API 文档补全**：从 8 个端点扩展为 14 个，新增 navigate/project-idea/mock-defense/batch-review/smart-feedback/review-draft/score-check/capabilities 端点文档
 - **AI 项目智能体特色功能描述更新**：从"5 大 AI 能力"更新为"12 大 AI 能力"
 
 ***
