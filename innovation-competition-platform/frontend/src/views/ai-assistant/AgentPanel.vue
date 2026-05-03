@@ -63,9 +63,9 @@
               placeholder="请选择一个项目"
               clearable
               filterable
+              :teleported="false"
               style="width: 100%"
               :loading="projectsLoading"
-              popper-class="agent-project-select-popper"
               @change="onProjectSelect"
             >
               <el-option
@@ -85,8 +85,8 @@
               v-model="form.registrationId"
               placeholder="可选，优先从报名材料检索"
               clearable
+              :teleported="false"
               style="width: 100%"
-              popper-class="agent-project-select-popper"
             >
               <el-option
                 v-for="r in registrations"
@@ -108,119 +108,99 @@
 
           <el-form-item v-if="selectedCapability.key === 'roadshow'" label="路演时长">
             <el-radio-group v-model="form.duration">
-              <el-radio :value="3">3 分钟</el-radio>
-              <el-radio :value="5">5 分钟</el-radio>
+              <el-radio :label="3">3分钟</el-radio>
+              <el-radio :label="5">5分钟</el-radio>
+              <el-radio :label="8">8分钟</el-radio>
             </el-radio-group>
           </el-form-item>
 
-          <el-form-item v-if="selectedCapability.key === 'roadshow'" label="路演风格">
+          <el-form-item v-if="selectedCapability.key === 'roadshow'" label="风格">
             <el-radio-group v-model="form.style">
-              <el-radio value="formal">正式专业</el-radio>
-              <el-radio value="passionate">激情澎湃</el-radio>
-              <el-radio value="concise">简洁精炼</el-radio>
+              <el-radio label="formal">正式</el-radio>
+              <el-radio label="passionate">激情</el-radio>
+              <el-radio label="story">故事</el-radio>
             </el-radio-group>
           </el-form-item>
 
-          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="竞赛名称（可选）">
-            <el-input v-model="form.competitionName" placeholder="例如：互联网+、挑战杯" />
+          <el-form-item v-if="selectedCapability.key === 'competition_recommend'" label="竞赛名称（可选）">
+            <el-input v-model="form.competitionName" placeholder="输入竞赛名称或方向，留空则推荐所有" />
           </el-form-item>
 
-          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="竞赛类别（可选）">
-            <el-input v-model="form.competitionCategory" placeholder="例如：科技创新、创业实践" />
+          <el-form-item v-if="selectedCapability.key === 'competition_recommend'" label="竞赛类别">
+            <el-select v-model="form.competitionCategory" placeholder="选择类别" clearable>
+              <el-option label="全部" value="" />
+              <el-option label="创新创业" value="创新创业" />
+              <el-option label="人工智能" value="人工智能" />
+              <el-option label="数字经济" value="数字经济" />
+              <el-option label="乡村振兴" value="乡村振兴" />
+              <el-option label="产业命题" value="产业命题" />
+            </el-select>
           </el-form-item>
 
-          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="赛道（可选）">
-            <el-input v-model="form.track" placeholder="例如：人工智能、生物医药" />
+          <el-form-item v-if="selectedCapability.key === 'competition_recommend'" label="赛道方向">
+            <el-input v-model="form.track" placeholder="例如：人工智能、生物医药、新能源" />
           </el-form-item>
 
-          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="你的技能特长（可选）">
-            <el-input v-model="form.skills" type="textarea" :rows="2" placeholder="例如：Python、机器学习、产品设计" />
+          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="技能方向">
+            <el-input v-model="form.skills" placeholder="例如：Python、产品设计、市场营销" />
           </el-form-item>
 
-          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="兴趣方向（可选）">
-            <el-input v-model="form.interests" type="textarea" :rows="2" placeholder="例如：智慧医疗、绿色能源、教育科技" />
+          <el-form-item v-if="selectedCapability.key === 'project_idea'" label="兴趣领域">
+            <el-input v-model="form.interests" placeholder="例如：环保、教育、医疗" />
           </el-form-item>
 
-          <el-form-item v-if="selectedCapability.key === 'mock_defense'" label="提问风格">
+          <el-form-item v-if="selectedCapability.key === 'mock_defense'" label="问题类型">
             <el-radio-group v-model="form.questionType">
-              <el-radio value="general">综合提问</el-radio>
-              <el-radio value="technical">技术深度</el-radio>
-              <el-radio value="business">商业提问</el-radio>
-              <el-radio value="tough">压力提问</el-radio>
+              <el-radio label="general">通用</el-radio>
+              <el-radio label="technical">技术</el-radio>
+              <el-radio label="business">商业</el-radio>
+              <el-radio label="challenge">挑战</el-radio>
             </el-radio-group>
           </el-form-item>
 
           <el-form-item v-if="selectedCapability.key === 'smart_feedback'" label="反馈类型">
             <el-radio-group v-model="form.feedbackType">
-              <el-radio value="modify">建议修改</el-radio>
-              <el-radio value="approve">建议通过</el-radio>
-              <el-radio value="reject">建议驳回</el-radio>
+              <el-radio label="modify">修改建议</el-radio>
+              <el-radio label="encourage">鼓励指导</el-radio>
+              <el-radio label="question">提问引导</el-radio>
             </el-radio-group>
           </el-form-item>
 
-          <el-form-item
-            v-if="needsProject && !indexExists && needsIndex"
-            label=""
-          >
-            <el-button
-              type="warning"
-              size="small"
-              :loading="indexing"
-              @click="doIndex"
-              style="width: 100%"
-            >
-              {{ indexing ? '正在索引材料...' : '建立材料索引' }}
-            </el-button>
+          <el-form-item v-if="needsIndex" label="材料索引">
+            <div class="index-status">
+              <el-button
+                :loading="indexing"
+                size="small"
+                type="warning"
+                @click="doIndex"
+              >
+                {{ indexExists ? '重新建立索引' : '建立材料索引' }}
+              </el-button>
+              <span v-if="indexExists" class="index-ok">✅ 索引已建立</span>
+              <span v-else class="index-tip">请先建立索引，再执行分析</span>
+            </div>
           </el-form-item>
+
+          <div class="capability-actions">
+            <el-button
+              type="primary"
+              :loading="loading"
+              :disabled="!canExecute"
+              @click="execute"
+            >
+              执行分析
+            </el-button>
+          </div>
         </el-form>
 
-        <el-button
-          type="primary"
-          size="small"
-          :loading="loading"
-          :disabled="!canExecute"
-          @click="execute"
-          style="width: 100%; margin-top: 8px"
-        >
-          {{ loading ? 'AI 分析中...' : '执行分析' }}
-        </el-button>
-      </div>
-
-      <div v-if="result" class="capability-result">
-        <div v-if="result.is_fallback" class="capability-result__fallback">
-          ⚠️ AI 服务不可用，已使用模板分析
-        </div>
-
-        <div v-if="result.disclaimer" class="capability-result__disclaimer">
-          {{ result.disclaimer }}
-        </div>
-
-        <div
-          v-if="resultHtml"
-          class="capability-result__content markdown-body"
-          v-html="resultHtml"
-        />
-
-        <div v-if="result.sources && result.sources.length" class="capability-result__sources">
-          <div class="capability-result__sources-title">参考来源：</div>
-          <el-tag
-            v-for="src in result.sources"
-            :key="src.file_name"
-            size="small"
-            type="info"
-            style="margin: 2px 4px"
-          >
-            {{ src.file_name }}
-          </el-tag>
-        </div>
-
-        <div class="capability-result__actions">
-          <el-button size="small" @click="copyResult">
-            <el-icon><DocumentCopy /></el-icon> 复制
-          </el-button>
-          <el-button size="small" @click="speakResult">
-            <el-icon><Microphone /></el-icon> 朗读
-          </el-button>
+        <div v-if="result" class="capability-result">
+          <div class="capability-result__title">📊 分析结果</div>
+          <div class="capability-result__content" v-html="resultHtml" />
+          <div class="capability-result__actions">
+            <el-button size="small" @click="copyResult">复制</el-button>
+            <el-button size="small" @click="speakResult">朗读</el-button>
+            <el-button size="small" @click="saveResult">保存</el-button>
+          </div>
         </div>
       </div>
     </div>
@@ -231,11 +211,9 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { DocumentCopy, Microphone } from '@element-plus/icons-vue'
-import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { marked } from 'marked'
 import {
-  indexMaterials,
   materialQa,
   bpCheck,
   generateRoadshow,
@@ -289,7 +267,6 @@ const loading = ref(false)
 const indexing = ref(false)
 const indexExists = ref(false)
 const result = ref(null)
-
 const navigateInput = ref('')
 const navigateLoading = ref(false)
 const navigateResult = ref(null)
@@ -329,7 +306,8 @@ const needsIndex = computed(() => {
 
 const resultHtml = computed(() => {
   if (!result.value) return ''
-  const text = result.value.answer || result.value.report || result.value.script || result.value.analysis || result.value.recommendation || result.value.ideas || result.value.defense || result.value.feedback || result.value.draft || ''
+  const raw = result.value.answer || result.value.report || result.value.script || result.value.analysis || result.value.recommendation || result.value.ideas || result.value.defense || result.value.feedback || result.value.draft || ''
+  const text = typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2)
   if (!text) return ''
   return DOMPurify.sanitize(marked.parse(text))
 })
@@ -377,7 +355,7 @@ async function doNavigate() {
       emit('navigate', d.route)
     }
   } catch (e) {
-    ElMessage.error('智能引航失败：' + (e.response?.data?.message || e.message))
+    ElMessage.error('导航失败：' + (e.response?.data?.message || e.message))
   } finally {
     navigateLoading.value = false
   }
@@ -454,7 +432,12 @@ async function doIndex() {
     const d = res.data || res
     ElMessage.success(`索引完成：${d.indexed_files || 0} 个文件已索引，${d.skipped_files || 0} 个跳过`)
   } catch (e) {
-    ElMessage.error('索引失败：' + (e.response?.data?.message || e.message))
+    const msg = e.response?.data?.message || e.message || '未知错误'
+    if (msg.includes('暂无上传文件') || msg.includes('暂无上传材料')) {
+      ElMessage.warning('该项目暂无上传文件，请先在"材料中心"上传项目文件后再建立索引')
+    } else {
+      ElMessage.error('索引失败：' + msg)
+    }
   } finally {
     indexing.value = false
   }
@@ -467,48 +450,45 @@ async function execute() {
 
   try {
     let res
-    const capKey = selectedCapability.value.key
-    const baseData = { project_id: form.value.projectId }
+    const key = selectedCapability.value.key
 
-    switch (capKey) {
+    switch (key) {
       case 'material_qa':
         res = await materialQa({
-          ...baseData,
+          project_id: form.value.projectId,
+          registration_id: form.value.registrationId,
           question: form.value.question,
-          registration_id: form.value.registrationId || undefined,
         })
         break
       case 'bp_check':
-        res = await bpCheck({
-          ...baseData,
-          registration_id: form.value.registrationId || undefined,
-        })
+        res = await bpCheck({ project_id: form.value.projectId })
         break
       case 'roadshow':
         res = await generateRoadshow({
-          ...baseData,
+          project_id: form.value.projectId,
           duration: form.value.duration,
           style: form.value.style,
         })
         break
       case 'review_assist':
-        res = await reviewAssist(baseData)
+        res = await reviewAssist({ project_id: form.value.projectId })
         break
       case 'competition_recommend':
-        res = await competitionRecommend(baseData)
+        res = await competitionRecommend({
+          competition_name: form.value.competitionName,
+          category: form.value.competitionCategory,
+          track: form.value.track,
+        })
         break
       case 'project_idea':
         res = await projectIdea({
-          competition_name: form.value.competitionName,
-          competition_category: form.value.competitionCategory,
-          track: form.value.track,
           skills: form.value.skills,
           interests: form.value.interests,
         })
         break
       case 'mock_defense':
         res = await mockDefense({
-          ...baseData,
+          project_id: form.value.projectId,
           question_type: form.value.questionType,
         })
         break
@@ -517,37 +497,32 @@ async function execute() {
         break
       case 'smart_feedback':
         res = await smartFeedback({
-          ...baseData,
+          project_id: form.value.projectId,
           feedback_type: form.value.feedbackType,
         })
         break
       case 'review_draft':
-        res = await reviewDraft(baseData)
+        res = await reviewDraft({ project_id: form.value.projectId })
         break
       case 'score_check':
-        res = await scoreCheck({
-          review_data: form.value.reviewData || {},
-        })
+        res = await scoreCheck({})
         break
+      default:
+        ElMessage.warning('未知能力')
+        return
     }
 
-    const d = res.data || res
-    result.value = d
-    emit('result', getResultText(d))
+    result.value = res.data || res
+    emit('result', result.value)
   } catch (e) {
-    const msg = e.response?.data?.message || e.message || '执行失败'
-    ElMessage.error(msg)
+    ElMessage.error('执行失败：' + (e.response?.data?.message || e.message))
   } finally {
     loading.value = false
   }
 }
 
-function getResultText(d) {
-  return d.answer || d.report || d.script || d.analysis || d.recommendation || d.ideas || d.defense || d.feedback || d.draft || ''
-}
-
 function copyResult() {
-  const text = getResultText(result.value)
+  const text = result.value?.answer || result.value?.report || result.value?.script || result.value?.analysis || result.value?.recommendation || result.value?.ideas || result.value?.defense || result.value?.feedback || result.value?.draft || ''
   if (!text) return
   navigator.clipboard.writeText(text).then(() => {
     ElMessage.success('已复制到剪贴板')
@@ -557,21 +532,22 @@ function copyResult() {
 }
 
 function speakResult() {
-  const text = getResultText(result.value)
+  const text = result.value?.answer || result.value?.report || result.value?.script || result.value?.analysis || result.value?.recommendation || result.value?.ideas || result.value?.defense || result.value?.feedback || result.value?.draft || ''
   if (!text) return
   emit('speak', text)
 }
 
+function saveResult() {
+  ElMessage.info('保存功能开发中')
+}
+
 watch(() => props.initialContext, (ctx) => {
   if (!ctx) return
-  if (ctx.capability) {
-    const cap = ALL_CAPABILITIES.find(c => c.key === ctx.capability)
-    if (cap && cap.roles.includes(props.userRole)) {
-      selectedCapability.value = cap
-    }
-  }
   if (ctx.projectId) {
     form.value.projectId = ctx.projectId
+  }
+  if (ctx.projectName) {
+    form.value.projectName = ctx.projectName
   }
   if (ctx.registrationId) {
     form.value.registrationId = ctx.registrationId
@@ -631,11 +607,11 @@ onMounted(() => {
 }
 
 .agent-panel :deep(.el-select-dropdown__item) {
-  color: #e2e8f0 !important;
+  color: #1e293b !important;
 }
 
 .agent-panel :deep(.el-select-dropdown) {
-  background-color: rgba(15, 23, 42, 0.95) !important;
+  background-color: #ffffff !important;
   border: 1px solid rgba(6, 182, 212, 0.3) !important;
 }
 
@@ -650,13 +626,17 @@ onMounted(() => {
 }
 
 .agent-panel :deep(.el-popper.is-light) {
-  background-color: rgba(15, 23, 42, 0.95) !important;
+  background-color: #ffffff !important;
   border: 1px solid rgba(6, 182, 212, 0.3) !important;
 }
 
 .agent-panel :deep(.el-popper.is-light .el-popper__arrow::before) {
-  background-color: rgba(15, 23, 42, 0.95) !important;
+  background-color: #ffffff !important;
   border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+.agent-panel :deep(.el-select-dropdown__empty) {
+  color: #94a3b8 !important;
 }
 
 .smart-navigate-section :deep(.el-input-group__append) {
@@ -697,75 +677,74 @@ onMounted(() => {
 }
 
 .capability-card {
-  padding: 10px 6px;
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.15);
   border-radius: 8px;
+  padding: 8px 4px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
-  background: rgba(15, 23, 42, 0.6);
 }
 
 .capability-card:hover {
-  border-color: #06b6d4;
   background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.3);
   transform: translateY(-1px);
 }
 
 .capability-card__icon {
-  font-size: 22px;
-  margin-bottom: 4px;
+  font-size: 20px;
+  margin-bottom: 2px;
 }
 
 .capability-card__name {
-  font-size: 11px;
+  font-size: 12px;
   color: #e2e8f0;
   font-weight: 500;
 }
 
 .capability-card__desc {
-  font-size: 11px;
+  font-size: 10px;
   color: #94a3b8;
   margin-top: 2px;
 }
 
 .smart-navigate-section {
   margin-top: 12px;
-  padding: 10px;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-  border-radius: 10px;
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  padding-top: 12px;
+  border-top: 1px solid rgba(6, 182, 212, 0.1);
 }
 
 .smart-navigate-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #06b6d4;
+  color: #e2e8f0;
   margin-bottom: 2px;
 }
 
 .smart-navigate-desc {
   font-size: 11px;
   color: #94a3b8;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .smart-navigate-input {
-  width: 100%;
+  margin-bottom: 8px;
 }
 
 .navigate-result {
-  margin-top: 8px;
-  padding: 8px;
-  background: rgba(15, 23, 42, 0.6);
-  border-radius: 6px;
+  background: rgba(6, 182, 212, 0.08);
   border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 6px;
 }
 
 .navigate-reply {
-  font-size: 13px;
+  font-size: 12px;
   color: #e2e8f0;
   margin-bottom: 6px;
+  line-height: 1.5;
 }
 
 .capability-form__header {
@@ -773,8 +752,6 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .capability-form__title {
@@ -784,58 +761,46 @@ onMounted(() => {
 }
 
 .capability-form__body {
-  flex: 0 0 auto;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.capability-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
 }
 
 .capability-result {
-  margin-top: 10px;
-  flex: 1;
-  overflow-y: auto;
-  max-height: 300px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 8px;
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 8px;
 }
 
-.agent-panel--compact .capability-result {
-  max-height: 200px;
-}
-
-.capability-result__fallback {
-  background: rgba(230, 162, 60, 0.15);
-  color: #f59e0b;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-.capability-result__disclaimer {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  margin-bottom: 8px;
-  font-weight: 500;
+.capability-result__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #06b6d4;
+  margin-bottom: 6px;
 }
 
 .capability-result__content {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.6;
   color: #e2e8f0;
-  word-break: break-word;
 }
 
 .capability-result__content :deep(h1),
 .capability-result__content :deep(h2),
-.capability-result__content :deep(h3),
-.capability-result__content :deep(h4),
-.capability-result__content :deep(h5),
-.capability-result__content :deep(h6) {
-  margin: 6px 0 2px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #e2e8f0;
+.capability-result__content :deep(h3) {
+  color: #06b6d4;
+  margin: 8px 0 4px;
+}
+
+.capability-result__content :deep(p) {
+  margin: 4px 0;
 }
 
 .capability-result__content :deep(ul),
@@ -845,85 +810,42 @@ onMounted(() => {
 }
 
 .capability-result__content :deep(li) {
-  color: #e2e8f0;
-}
-
-.capability-result__content :deep(p) {
-  margin: 4px 0;
-  color: #e2e8f0;
-}
-
-.capability-result__content :deep(strong) {
-  color: #22d3ee;
-}
-
-.capability-result__content :deep(table) {
-  color: #e2e8f0;
-}
-
-.capability-result__content :deep(th) {
-  color: #06b6d4;
-  background: rgba(6, 182, 212, 0.15);
-}
-
-.capability-result__content :deep(td) {
-  color: #e2e8f0;
+  margin: 2px 0;
 }
 
 .capability-result__content :deep(code) {
-  color: #22d3ee;
   background: rgba(6, 182, 212, 0.1);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
 }
 
-.capability-result__sources {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+.capability-result__content :deep(pre) {
+  background: rgba(6, 182, 212, 0.05);
+  padding: 6px;
+  border-radius: 4px;
+  overflow-x: auto;
 }
 
-.capability-result__sources-title {
+.index-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.index-ok {
+  color: #10b981;
   font-size: 12px;
-  color: #94a3b8;
-  margin-bottom: 4px;
+}
+
+.index-tip {
+  color: #f59e0b;
+  font-size: 12px;
 }
 
 .capability-result__actions {
   margin-top: 8px;
   display: flex;
   gap: 6px;
-}
-</style>
-
-<style>
-.agent-project-select-popper {
-  background-color: #1e293b !important;
-  border: 1px solid rgba(6, 182, 212, 0.3) !important;
-}
-
-.agent-project-select-popper .el-select-dropdown__item {
-  color: #e2e8f0 !important;
-}
-
-.agent-project-select-popper .el-select-dropdown__item:hover,
-.agent-project-select-popper .el-select-dropdown__item.hover {
-  background-color: rgba(6, 182, 212, 0.15) !important;
-}
-
-.agent-project-select-popper .el-select-dropdown__item.selected {
-  color: #06b6d4 !important;
-  font-weight: 600;
-}
-
-.agent-project-select-popper .el-select-dropdown__item.is-disabled {
-  color: #64748b !important;
-}
-
-.agent-project-select-popper .el-popper__arrow::before {
-  background-color: #1e293b !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
-}
-
-.agent-project-select-popper .el-select-dropdown__empty {
-  color: #94a3b8 !important;
 }
 </style>
