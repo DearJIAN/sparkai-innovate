@@ -11,17 +11,6 @@
         <span>加载失败，点击重试</span>
       </div>
 
-      <div
-        v-if="loaded"
-        id="live2d-drag-handle"
-        class="live2d-drag-handle"
-        :class="{ 'panel-open': panelOpen }"
-        @mousedown="startModelDrag"
-        @touchstart="startModelDragTouch"
-      >
-        <el-icon size="14"><Rank /></el-icon>
-      </div>
-
       <!-- 对话面板（整合版） -->
       <transition name="panel-slide">
         <div v-if="panelOpen" ref="panelRef" class="chat-panel" :style="panelStyle">
@@ -43,7 +32,11 @@
               </el-button>
             </div>
           </div>
-          <div class="panel-resize-handle" @mousedown.stop="startResize"></div>
+          <div class="panel-resize-handle" @mousedown.stop="startResize" title="拖拽调整大小">
+            <svg class="resize-icon" viewBox="0 0 16 16" width="16" height="16">
+              <path d="M2 14 L14 2 M6 14 L14 6 M10 14 L14 10" stroke="rgba(6, 182, 212, 0.6)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
 
           <div class="panel-body">
             <!-- 表情控制面板 -->
@@ -297,7 +290,6 @@ function renderMarkdown(text) {
 
 function openPanel() {
   panelOpen.value = true
-  notifyLive2dHook('onStreamEnd')
 }
 
 function closePanel() {
@@ -887,16 +879,84 @@ async function initLive2D() {
 
     loaded.value = true
 
-    // 绑定点击事件到 waifu 元素
     const waifuEl = document.getElementById('waifu')
-    if (waifuEl) {
-      waifuEl.addEventListener('click', () => { switchExpression(); openPanel() })
-      waifuEl.style.cursor = 'pointer'
-      const hint = document.createElement('div')
-      hint.className = 'waifu-click-hint'
-      hint.textContent = '点击对话'
-      waifuEl.appendChild(hint)
-    }
+    if (!waifuEl) return
+
+    // 等待 widget 完全初始化（waifu-active class 已添加）
+    await new Promise((resolve) => {
+      if (waifuEl.classList.contains('waifu-active')) {
+        resolve()
+        return
+      }
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (m.type === 'attributes' && m.attributeName === 'class') {
+            if (waifuEl.classList.contains('waifu-active')) {
+              observer.disconnect()
+              resolve()
+              return
+            }
+          }
+        }
+      })
+      observer.observe(waifuEl, { attributes: true, attributeFilter: ['class'] })
+      setTimeout(() => { observer.disconnect(); resolve() }, 5000)
+    })
+
+    // 绑定点击事件到 waifu 元素 + 创建拖拽按钮 + 滑入动画
+    try {
+      const modelPos = localStorage.getItem('huahuoModelPos')
+      if (modelPos) {
+        const pos = JSON.parse(modelPos)
+        waifuEl.style.left = pos.left + 'px'
+        waifuEl.style.right = 'auto'
+        waifuEl.style.bottom = 'auto'
+        waifuEl.style.top = pos.top + 'px'
+      }
+    } catch (_e) {}
+
+    // 滑入动画：用 JS 设置 inline style
+    waifuEl.style.opacity = '0'
+    waifuEl.style.transform = 'translateY(320px)'
+    waifuEl.style.pointerEvents = 'none'
+    waifuEl.style.transition = 'opacity 0.5s ease-out, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)'
+
+    waifuEl.addEventListener('click', () => { switchExpression(); openPanel() })
+    waifuEl.style.cursor = 'pointer'
+    const hint = document.createElement('div')
+    hint.className = 'waifu-click-hint'
+    hint.textContent = '点击对话'
+    waifuEl.appendChild(hint)
+
+    // 动态创建拖拽按钮，挂载到 #waifu 内部（修复 Firefox 不显示问题）
+    const handleEl = document.createElement('div')
+    handleEl.id = 'live2d-drag-handle'
+    handleEl.className = 'live2d-drag-handle'
+    handleEl.title = '拖拽移动'
+    handleEl.innerHTML = `<svg class="drag-icon" viewBox="0 0 24 24" width="16" height="16"><path d="M8 6h8M8 12h8M8 18h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`
+    handleEl.addEventListener('mousedown', (e) => startModelDrag(e))
+    handleEl.addEventListener('touchstart', (e) => startModelDragTouch(e))
+    handleEl.addEventListener('click', (e) => e.stopPropagation())
+    waifuEl.appendChild(handleEl)
+
+    // 触发滑入动画
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        waifuEl.style.opacity = '1'
+        waifuEl.style.transform = 'translateY(0)'
+        waifuEl.style.pointerEvents = 'auto'
+        if (waifuEl.style.bottom !== 'auto') {
+          waifuEl.style.bottom = '0'
+        }
+
+        const onTransitionEnd = () => {
+          waifuEl.style.transition = 'left 0.3s ease-out, top 0.3s ease-out'
+          waifuEl.style.transform = ''
+          waifuEl.removeEventListener('transitionend', onTransitionEnd)
+        }
+        waifuEl.addEventListener('transitionend', onTransitionEnd)
+      })
+    })
 
     // 隐藏 waifu-toggle 按钮（我们有自己的 UI）
     const toggleEl = document.getElementById('waifu-toggle')
@@ -942,6 +1002,16 @@ function scrollToBottom() {
 
 watch(messages, () => scrollToBottom(), { deep: true })
 watch(streamingText, () => scrollToBottom())
+watch(panelOpen, (val) => {
+  const handleEl = document.getElementById('live2d-drag-handle')
+  if (handleEl) {
+    if (val) {
+      handleEl.classList.add('panel-open')
+    } else {
+      handleEl.classList.remove('panel-open')
+    }
+  }
+})
 
 async function sendMessage() {
   const text = inputText.value.trim()
@@ -1260,14 +1330,6 @@ function applyModelPosition(left, top) {
   waifuEl.style.bottom = 'auto'
   waifuEl.style.top = clampedTop + 'px'
 
-  // 同步更新拖拽按钮位置到形象右侧
-  const handleEl = document.getElementById('live2d-drag-handle')
-  if (handleEl) {
-    handleEl.style.left = (clampedLeft + waifuEl.offsetWidth - 4) + 'px'
-    handleEl.style.top = (clampedTop + waifuEl.offsetHeight / 2 - 16) + 'px'
-    handleEl.style.bottom = 'auto'
-  }
-
   try {
     localStorage.setItem('huahuoModelPos', JSON.stringify({ left: clampedLeft, top: clampedTop }))
   } catch (_e) {}
@@ -1291,7 +1353,7 @@ function updatePanelStyle() {
   panelStyle.value = {
     transform: `translate(${panelPos.value.x}px, ${panelPos.value.y}px)`,
     width: panelSize.value.width + 'px',
-    maxHeight: panelSize.value.height + 'px'
+    height: panelSize.value.height + 'px'
   }
 }
 
@@ -1329,29 +1391,6 @@ onMounted(() => {
   window.addEventListener('open-huahuo-agent', handleOpenHuahuoAgent)
   try { const saved = localStorage.getItem('huahuoPanelPos'); if (saved) { panelPos.value = JSON.parse(saved); updatePanelStyle() } } catch (_e) {}
   try { const savedSize = localStorage.getItem('huahuoPanelSize'); if (savedSize) { panelSize.value = JSON.parse(savedSize); updatePanelStyle() } } catch (_e) {}
-  try {
-    const modelPos = localStorage.getItem('huahuoModelPos')
-    if (modelPos) {
-      const pos = JSON.parse(modelPos)
-      const restorePos = () => {
-        const waifuEl = document.getElementById('waifu')
-        if (waifuEl) {
-          waifuEl.style.left = pos.left + 'px'
-          waifuEl.style.right = 'auto'
-          waifuEl.style.bottom = 'auto'
-          waifuEl.style.top = pos.top + 'px'
-          // 同步恢复拖拽按钮位置
-          const handleEl = document.getElementById('live2d-drag-handle')
-          if (handleEl) {
-            handleEl.style.left = (pos.left + waifuEl.offsetWidth - 4) + 'px'
-            handleEl.style.top = (pos.top + waifuEl.offsetHeight / 2 - 16) + 'px'
-            handleEl.style.bottom = 'auto'
-          }
-        }
-      }
-      setTimeout(restorePos, 2000)
-    }
-  } catch (_e) {}
   if (window.speechSynthesis) { window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices() }
 })
 
@@ -1419,7 +1458,7 @@ onBeforeUnmount(() => {
   position: fixed !important;
   left: 20px;
   right: auto;
-  bottom: auto;
+  bottom: 0;
   top: auto;
   width: 300px;
   height: 300px;
@@ -1455,17 +1494,16 @@ onBeforeUnmount(() => {
 }
 
 .live2d-drag-handle {
-  position: fixed;
-  left: 316px;
-  bottom: auto;
-  top: auto;
+  position: absolute;
+  right: -16px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.95);
   border-radius: 50%;
   color: #94a3b8;
   font-size: 11px;
@@ -1473,23 +1511,35 @@ onBeforeUnmount(() => {
   user-select: none;
   white-space: nowrap;
   z-index: 10001;
-  border: 1px solid rgba(6, 182, 212, 0.3);
-  transition: color 0.2s, background 0.2s, opacity 0.3s;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  transition: color 0.2s, background 0.2s, opacity 0.3s, visibility 0.3s;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.2), 0 2px 12px rgba(0, 0, 0, 0.25);
+  visibility: visible;
+  opacity: 1;
 }
 
 .live2d-drag-handle.panel-open {
+  visibility: hidden;
   opacity: 0;
   pointer-events: none;
 }
 
 .live2d-drag-handle:hover {
   color: #e2e8f0;
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(30, 41, 59, 0.98);
+  border-color: rgba(6, 182, 212, 0.6);
 }
 
 .live2d-drag-handle:active {
   cursor: grabbing;
+}
+
+.drag-icon {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  opacity: 0.9;
+  stroke: currentColor;
 }
 
 .live2d-loading {
@@ -1624,25 +1674,29 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 0;
   left: 0;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   cursor: nwse-resize;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.panel-resize-handle::before {
-  content: '';
-  position: absolute;
-  left: 4px;
-  bottom: 4px;
-  width: 8px;
-  height: 8px;
-  border-left: 2px solid rgba(6, 182, 212, 0.4);
-  border-bottom: 2px solid rgba(6, 182, 212, 0.4);
+.resize-icon {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
-.panel-resize-handle:hover::before {
-  border-color: rgba(6, 182, 212, 0.8);
+.panel-resize-handle:hover .resize-icon {
+  opacity: 1;
+}
+
+.panel-resize-handle:hover .resize-icon path {
+  stroke: rgba(6, 182, 212, 1);
 }
 
 .panel-header {

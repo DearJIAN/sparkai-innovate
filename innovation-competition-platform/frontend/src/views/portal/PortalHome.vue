@@ -285,7 +285,7 @@ onMounted(() => {
 const flowAnimFrames = []
 
 function handleResize() {
-  flowAnimFrames.forEach(f => f())
+  flowAnimFrames.forEach(f => { if (typeof f === 'function') f() })
 }
 
 // 全局数字雨背景 - 铺满整个页面宽度

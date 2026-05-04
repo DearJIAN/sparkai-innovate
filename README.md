@@ -1854,7 +1854,7 @@ cd backend && flask db upgrade && python seed.py
 > - 不重复记录同一改动（如已在"新增功能"中写了，不再在"功能修改"中重复）
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
-### v4.3.0 - 2026-05-04（当前版本）
+### v4.3.0 - 2026-05-04
 
 > 品牌升级：项目全面更名为「火花智创 SparkAI Innovate」+ 动态 Logo 组件 + Live2D 加载修复 + 项目名称统一替换
 
@@ -1874,6 +1874,14 @@ cd backend && flask db upgrade && python seed.py
 - **Live2D 加载失败**：`Live2dWidget.vue` 中 index.js 和 index2.js 脚本缺少 `onload` 回调，导致初始化时序错误。修复：为两个脚本添加 `onload = checkAndResolve`，确保库加载完成后再调用 `initWidget`（[Live2dWidget.vue](frontend/src/components/Live2dWidget.vue)）
 - **SparkLogo 悬停文字消失**：原逐字动画与悬停动画冲突，导致鼠标悬停时文字消失。修复：移除逐字浮现动画，改为整体渐变 + 粒子效果，悬停仅增强发光强度（[SparkLogo.vue](frontend/src/components/SparkLogo.vue)）
 - **侧边栏 Logo 文字截断**：原 Logo 文字宽度超出侧边栏导致显示不全。修复：SparkLogo 组件添加 `white-space: nowrap` 和 `flex-shrink: 0`，确保文字完整显示
+- **Live2D 拖拽按钮 Firefox 不显示**：`panel-resize-handle` 使用 CSS 伪元素 `::before` + `border` 画 L 形图标，Firefox 对伪元素渲染有兼容性问题。修复：改用内联 SVG 图标（三条斜线），所有浏览器兼容（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Live2D 形象拖拽按钮 Firefox 不显示**：拖拽按钮用 `position: fixed` 独立定位在 `<teleport>` 内，Firefox 中 `backdrop-filter` + `fixed` + `teleport` 堆叠上下文冲突导致不渲染。修复：改为 JS 动态创建 `createElement` 并 `appendChild` 到 `#waifu` 内部，CSS 改为 `position: absolute; right: -16px; top: 50%` 相对于 waifu 定位，移除 `backdrop-filter`（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Live2D 拖拽按钮点击后消失**：按钮改为动态创建后，Vue 模板的 `:class="{ 'panel-open': panelOpen }"` 绑定失效。修复：添加 `watch(panelOpen)` 手动切换动态元素的 `panel-open` class（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Chrome Live2D 滑入后跳动**：`waifu.css` 设置了 `#waifu { bottom: -500px; transition: bottom 3s; }`，`initWidget` 模型加载后添加 `waifu-active` → `bottom: 0` 触发 3 秒过渡，与我们的 `transform` 动画竞争导致跳动。修复：JS 显式设置 inline `bottom: 0`；在 `transitionend` 后清除我们的过渡并重置 `transform`，确保后续只有 `left`/`top` 过渡生效（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Live2D 点击形象切换表情无效**：`openPanel()` 中 `notifyLive2dHook('onStreamEnd')` 触发 `setBaseExpression('06 0.0')` 覆盖随机表情。修复：从 `openPanel()` 移除该调用（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **PortalHome handleResize TypeError**：`flowAnimFrames` 混存函数和 `requestAnimationFrame` 返回的数字 ID，`handleResize()` 遍历时调用数字为函数导致 `f is not a function`。修复：添加 `typeof f === 'function'` 类型检查（[PortalHome.vue](frontend/src/views/portal/PortalHome.vue)）
+- **Live2D lappmodel.js `_modelSetting is null`**：模型未加载完时鼠标移动触发 `hitTest`。修复：初始 `pointer-events: none`，动画结束后恢复（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **AI 助手窗口只能改变宽度不能改变高度**：`updatePanelStyle()` 中设置的是 `maxHeight` 而非 `height`，导致高度无法调整。修复：改为设置 `height` 属性，宽度和高度均可自由调整（320-800px 宽，400-900px 高）（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
 
 #### 文档更新
 
@@ -1881,6 +1889,24 @@ cd backend && flask db upgrade && python seed.py
 - **AI-Agent功能分析报告.md**：标题更新为「火花智创 SparkAI Innovate — AI 智能与 Agent 功能分析报告」；新增文档定位说明（README.md 的技术补充文档）；图片路径更新为 `innovation-competition-platform/docs_and_images/`
 
 ***
+
+### v4.3.1 - 2026-05-04（当前版本）
+
+> Live2D 拖拽按钮彻底修复（坐标系统 + 事件冒泡）+ Chrome 跳动根因修复（残留 CSS + 异步时序）+ MCP 浏览器自动化回归验证
+
+#### Bug 修复
+
+- **Live2D 拖拽按钮点击后消失（第二轮彻底修复）**：三重根因——① `applyModelPosition()` 和 `restorePos()` 将视口坐标的 `left`/`top` 写入拖拽按钮（`#waifu` 子元素，`position: absolute`），导致按钮定位到视口外；② 按钮 click 事件冒泡到 `#waifu` 触发 `openPanel()` → 添加 `panel-open` class → 按钮被隐藏；③ 第 ① 点导致按钮仅在 CSS 默认位置短暂可见，一点击就被冒泡隐藏。修复：完全移除 JS 对拖拽按钮的手动定位（按钮作为 `#waifu` 子元素自动跟随）；为按钮添加 `stopPropagation()` 阻止事件冒泡（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Chrome Live2D 滑入后跳动（第二轮根因修复）**：三重根因——① `onMounted()` 中 `setTimeout(restorePos, 2000)` 在入场动画结束后 2 秒强制将 waifu 跳回保存位置；② 残留 CSS 规则 `#wafu, #waifu { transform: translateY(320px); opacity: 0; transition: ... }` 永久生效——JS 设 `transform: ''` 后 CSS cascade 的 `translateY(320px)` 重新接管，导致 waifu 瞬间偏移；③ `initWidget` 内部的 `r()` 函数异步添加 `waifu-active` class，重新触发 CSS `bottom: 0` 3 秒过渡，与 JS 动画竞争。修复：移除 `setTimeout`，将位置恢复到入场动画之前执行；移除 `#wafu, #waifu` 规则中残留的 `opacity` / `transform` / `transition` 声明；添加 `MutationObserver` 监听 `waifu-active` class，确保 JS inline 样式在所有 CSS 过渡之后作为最终样式生效（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Chrome 跳动辅助修复**：`applyModelPosition()` 中 `bottom: 0` 设置增加条件判断——当保存位置使用 `top` 定位时跳过 `bottom: 0`，避免 `top`/`bottom` 同时生效导致布局冲突（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+
+#### 安全与稳定性
+
+- **MCP 浏览器自动化回归验证**：使用 chrome-devtools MCP 工具在真实浏览器环境中完成 6 项验证——初始加载位置正确 ✓ / 拖拽按钮可见 ✓ / 拖拽保存位置成功 ✓ / 刷新后位置恢复无跳动 ✓ / 面板开关按钮显隐正确 ✓ / 按钮点击不触发面板打开 ✓
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.3.1；v4.3.0 移除"当前版本"标记
 
 ### v4.2.0 - 2026-05-04
 
