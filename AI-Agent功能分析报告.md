@@ -203,7 +203,7 @@ AI 项目智能体提供 12 大专项 AI 能力，基于 LangChain + FAISS/BM25 
 
 #### 项目真实架构图
 
-![项目真实架构图](docs_and_images/项目真实架构图-修订版.png)
+![项目真实架构图](innovation-competition-platform/docs_and_images/项目真实架构图-修订版.png)
 
 **一句话总结**：你的项目是"前后端分离的高校竞赛服务平台"，其中前端负责交互，Flask 后端负责业务调度，`ai_service.py` 负责 AI 对话，`ai_prompt_service.py` 负责固定能力型 Agent，`vector_store.py` + `document_parser.py` 负责 RAG 检索，LangChain 负责模型调用编排，大模型负责生成最终结果。
 
@@ -237,7 +237,7 @@ AI 项目智能体提供 12 大专项 AI 能力，基于 LangChain + FAISS/BM25 
 
 #### Agent 层简化架构图
 
-![Agent 层简化架构图](docs_and_images/agent层简化架构图-修订版.png)
+![Agent 层简化架构图](innovation-competition-platform/docs_and_images/agent层简化架构图-修订版.png)
 
 **你只要这样记**：
 - **前端**：让用户选择 Agent 能力
@@ -1761,7 +1761,7 @@ ai_prompt_service.py：负责拼 Prompt，并通过 LangChain 的 ChatOpenAI 调
 
 #### Agent 层详细架构图
 
-![Agent 层详细架构图](docs_and_images/Agent层详细架构图-修订版.png)
+![Agent 层详细架构图](innovation-competition-platform/docs_and_images/Agent层详细架构图-修订版.png)
 
 **一句话总结**：你的 Agent 层本质上是固定能力型 Agent：前端选择能力，`routes/agent.py` 做认证、权限与任务调度，`vector_store.py` 负责 RAG 检索，`ai_prompt_service.py` 负责 Prompt 构建与 LLM 调用，大模型负责生成结果。
 
