@@ -16,10 +16,7 @@
         class="mobile-sidebar"
       >
         <div class="mobile-sidebar-header">
-          <div class="logo">
-            <el-icon size="28" color="var(--primary-400)"><Trophy /></el-icon>
-            <span class="logo-text">创新创业平台</span>
-          </div>
+          <SparkLogo size="small" />
           <button class="mobile-close-btn" @click="closeMobileMenu">
             <el-icon size="20"><Close /></el-icon>
           </button>
@@ -53,10 +50,7 @@
       :class="{ collapsed: isCollapsed }"
     >
       <div class="sidebar-header">
-        <div class="logo">
-          <el-icon size="28" color="var(--primary-400)"><Trophy /></el-icon>
-          <span v-show="!isCollapsed" class="logo-text">创新创业平台</span>
-        </div>
+        <SparkLogo :size="isCollapsed ? 'small' : 'normal'" />
       </div>
 
       <nav class="sidebar-nav">
@@ -98,8 +92,7 @@
           </button>
 
           <div class="header-logo" @click="router.push('/portal')">
-            <el-icon size="28" color="var(--primary-500)"><Trophy /></el-icon>
-            <span class="header-logo-text">双创竞赛服务平台</span>
+            <SparkLogo size="small" />
           </div>
 
           <nav class="top-nav">
@@ -157,6 +150,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import HuahuoAssistant from '@/components/HuahuoAssistant.vue'
+import SparkLogo from '@/components/SparkLogo.vue'
 import {
   Trophy, User, UserFilled, HomeFilled, SwitchButton, ArrowDown,
   FolderOpened, CirclePlusFilled, MagicStick, StarFilled, DocumentChecked,

@@ -87,7 +87,7 @@ router.beforeEach((to, from, next) => {
 
   // 设置页面标题
   if (to.meta.title) {
-    document.title = `${to.meta.title} - 创新创业平台`
+    document.title = `${to.meta.title} - 火花智创`
   }
 
   // 公共页面直接放行

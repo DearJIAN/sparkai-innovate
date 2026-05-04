@@ -203,7 +203,7 @@ async def _send_json_event(ws, event_id, payload, session_id=None, message_type=
     await ws.send(request)
 
 
-async def run_text_dialog(question, scene_name="创新创业平台", session_id=""):
+async def run_text_dialog(question, scene_name="火花智创", session_id=""):
     parts = []
 
     async def collect_delta(text):
@@ -220,7 +220,7 @@ async def run_text_dialog(question, scene_name="创新创业平台", session_id=
     return result
 
 
-async def stream_text_dialog(question, scene_name="创新创业平台", session_id="", on_delta=None):
+async def stream_text_dialog(question, scene_name="火花智创", session_id="", on_delta=None):
     try:
         import websockets
     except ImportError as error:

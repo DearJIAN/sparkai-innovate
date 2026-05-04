@@ -15,7 +15,7 @@
           <el-icon><MagicStick /></el-icon>
           AI 项目助手
         </h2>
-        <p class="page-subtitle">基于 AI 技术，为创新创业项目提供智能化辅助分析</p>
+        <p class="page-subtitle">基于 AI 技术，为竞赛项目提供智能化辅助分析</p>
       </div>
       <div class="header-actions">
         <el-button type="primary" :icon="ChatDotRound" @click="showVoiceChat = !showVoiceChat">

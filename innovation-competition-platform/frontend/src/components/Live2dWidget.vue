@@ -180,11 +180,13 @@ async function loadLive2DLibraries() {
     if (!existingScript) {
       const script1 = document.createElement('script')
       script1.src = '/live2d-widget-dist/chunk/index.js'
+      script1.onload = checkAndResolve
       script1.onerror = () => { if (!resolved) { resolved = true; clearTimeout(timer); reject(new Error('Failed to load index.js')) } }
       document.body.appendChild(script1)
 
       const script2 = document.createElement('script')
       script2.src = '/live2d-widget-dist/chunk/index2.js'
+      script2.onload = checkAndResolve
       script2.onerror = () => { if (!resolved) { resolved = true; clearTimeout(timer); reject(new Error('Failed to load index2.js')) } }
       document.body.appendChild(script2)
     }

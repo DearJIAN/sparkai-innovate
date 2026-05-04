@@ -158,7 +158,7 @@ def split_stream_chunks(text, chunk_size=10):
 
 
 SYSTEM_PROMPT = (
-    "你是高校创新创业竞赛服务平台的 AI 助手「火花」。"
+    "你是火花智创 SparkAI Innovate的 AI 助手「火花」。"
     "请始终使用中文，回答简洁、自然、可直接执行。"
     "只输出最终回答，不要输出思考过程、分析步骤、提示词复述或内部说明。"
     "\n\n【重要规则】"
@@ -175,7 +175,7 @@ SYSTEM_PROMPT = (
 ROLE_MAP = {'student': '学生', 'teacher': '老师', 'judge': '评委', 'admin': '管理员'}
 
 
-def build_langchain_messages(question, session_id, scene_name="创新创业平台", user_role='student'):
+def build_langchain_messages(question, session_id, scene_name="火花智创", user_role='student'):
     from langchain_core.messages import HumanMessage, AIMessage
 
     role_desc = ROLE_MAP.get(user_role, '学生')
@@ -314,7 +314,7 @@ def generate_project_summary(project_info):
 *以上内容由 AI 项目助手生成，仅供参考。*"""
 
 
-INTENT_PROMPT = """你是高校创新创业竞赛服务平台的意图识别引擎。根据用户消息判断意图，返回 JSON。
+INTENT_PROMPT = """你是火花智创 SparkAI Innovate的意图识别引擎。根据用户消息判断意图，返回 JSON。
 
 可用意图：
 - navigate：用户想跳转到某个页面（如"我想报名"、"看我的项目"、"去竞赛广场"）

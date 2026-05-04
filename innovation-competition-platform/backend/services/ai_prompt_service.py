@@ -114,7 +114,7 @@ def smart_navigate(user_message, user_role='student'):
         'admin': '管理员',
     }.get(user_role, '学生')
 
-    prompt = f"""你是高校创新创业竞赛服务平台的智能引航助手，当前用户角色是{role_desc}。
+    prompt = f"""你是火花智创 SparkAI Innovate的智能引航助手，当前用户角色是{role_desc}。
 
 {nav_context}
 
@@ -205,7 +205,7 @@ def _keyword_match_navigate(user_message):
 
 
 def project_idea_generate(competition_name='', competition_category='', track='', skills='', interests=''):
-    prompt = f"""你是高校创新创业竞赛服务平台的 AI 创意助手，专门帮助学生生成项目创意。
+    prompt = f"""你是火花智创 SparkAI Innovate的 AI 创意助手，专门帮助学生生成项目创意。
 
 竞赛信息：
 - 竞赛名称：{competition_name or '未指定'}
@@ -345,7 +345,7 @@ def batch_review_assist(projects_info=None):
         if p.get('teacher_feedback'):
             projects_text += f'- 之前反馈：{p["teacher_feedback"]}\n'
 
-    prompt = f"""你是高校创新创业竞赛服务平台的 AI 审核助手，帮助指导老师快速了解待审核项目的情况。
+    prompt = f"""你是火花智创 SparkAI Innovate的 AI 审核助手，帮助指导老师快速了解待审核项目的情况。
 
 以下是待审核项目列表：
 {projects_text}
@@ -391,7 +391,7 @@ def smart_feedback_generate(project=None, search_result=None, feedback_type='mod
         'reject': '建议驳回（项目存在严重问题）',
     }.get(feedback_type, '建议修改')
 
-    prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，帮助指导老师生成项目审核反馈意见。
+    prompt = f"""你是火花智创 SparkAI Innovate的 AI 助手，帮助指导老师生成项目审核反馈意见。
 
 项目基本信息：
 {project_info}
@@ -444,7 +444,7 @@ def review_draft_generate(project=None, search_result=None, scoring_dimensions=N
 
     dims_text = '\n'.join([f'- {d["name"]}（权重{d["weight"]}%）' for d in dimensions])
 
-    prompt = f"""你是高校创新创业竞赛服务平台的 AI 评审助手，帮助评委快速生成评审意见草稿。
+    prompt = f"""你是火花智创 SparkAI Innovate的 AI 评审助手，帮助评委快速生成评审意见草稿。
 
 项目基本信息：
 {project_info}
@@ -502,7 +502,7 @@ def score_consistency_check(review_data=None):
 
     comment = review_data.get('comment', '无')
 
-    prompt = f"""你是高校创新创业竞赛服务平台的 AI 评审质量检查助手，帮助评委检查评分与文字评价的一致性。
+    prompt = f"""你是火花智创 SparkAI Innovate的 AI 评审质量检查助手，帮助评委检查评分与文字评价的一致性。
 
 评委评分：
 {scores_text}
@@ -547,7 +547,7 @@ def material_qa(question, project=None, search_result=None, project_info_text=No
     project_info = project_info_text or _build_project_info_text(project)
 
     if not context.strip():
-        prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手。用户提出了关于项目材料的问题，但目前没有检索到相关材料文档。
+        prompt = f"""你是火花智创 SparkAI Innovate的 AI 助手。用户提出了关于项目材料的问题，但目前没有检索到相关材料文档。
 
 项目基本信息：
 {project_info}
@@ -558,7 +558,7 @@ def material_qa(question, project=None, search_result=None, project_info_text=No
 
 如果项目基本信息也不足以回答，请建议用户先上传项目材料并建立索引。"""
     else:
-        prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，专门帮助用户理解项目材料内容。
+        prompt = f"""你是火花智创 SparkAI Innovate的 AI 助手，专门帮助用户理解项目材料内容。
 
 以下是检索到的相关项目材料片段：
 {context}
@@ -601,7 +601,7 @@ def bp_check(project=None, search_result=None, project_info_text=None):
     project_info = project_info_text or _build_project_info_text(project)
 
     if not context.strip():
-        prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，专门帮助检查商业计划书完整性。
+        prompt = f"""你是火花智创 SparkAI Innovate的 AI 助手，专门帮助检查商业计划书完整性。
 
 项目基本信息：
 {project_info}
@@ -615,7 +615,7 @@ def bp_check(project=None, search_result=None, project_info_text=None):
 4. 优化建议：如何改进
 5. 风险提示：可能面临的风险"""
     else:
-        prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，专门帮助检查商业计划书完整性。
+        prompt = f"""你是火花智创 SparkAI Innovate的 AI 助手，专门帮助检查商业计划书完整性。
 
 以下是检索到的项目材料片段：
 {context}
@@ -667,7 +667,7 @@ def roadshow_generate(project=None, search_result=None, duration=3, style='forma
     word_target = 850 if duration == 3 else (1400 if duration == 5 else 2200)
 
     if not context.strip():
-        prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，专门帮助生成路演稿。
+        prompt = f"""你是火花智创 SparkAI Innovate的 AI 助手，专门帮助生成路演稿。
 
 项目基本信息：
 {project_info}
@@ -686,7 +686,7 @@ def roadshow_generate(project=None, search_result=None, duration=3, style='forma
 ## 团队
 ## 结尾"""
     else:
-        prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，专门帮助生成路演稿。
+        prompt = f"""你是火花智创 SparkAI Innovate的 AI 助手，专门帮助生成路演稿。
 
 以下是检索到的项目材料片段：
 {context}
@@ -742,7 +742,7 @@ def review_assist(project=None, search_result=None, project_info_text=None):
     project_info = project_info_text or _build_project_info_text(project)
 
     if not context.strip():
-        prompt = f"""你是高校创新创业竞赛服务平台的 AI 评审辅助助手，帮助评委更好地理解项目。
+        prompt = f"""你是火花智创 SparkAI Innovate的 AI 评审辅助助手，帮助评委更好地理解项目。
 
 项目基本信息：
 {project_info}
@@ -761,7 +761,7 @@ def review_assist(project=None, search_result=None, project_info_text=None):
 
 注意：你不应给出任何具体分数或评分建议，只提供定性分析。"""
     else:
-        prompt = f"""你是高校创新创业竞赛服务平台的 AI 评审辅助助手，帮助评委更好地理解项目。
+        prompt = f"""你是火花智创 SparkAI Innovate的 AI 评审辅助助手，帮助评委更好地理解项目。
 
 以下是检索到的项目材料片段：
 {context}
@@ -837,7 +837,7 @@ def competition_recommend(project=None, competitions=None, project_info_text=Non
         competitions_text = '\n\n---\n\n'.join(comp_parts)
 
     if not competitions_text.strip():
-        prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，专门帮助学生推荐合适的竞赛。
+        prompt = f"""你是火花智创 SparkAI Innovate的 AI 助手，专门帮助学生推荐合适的竞赛。
 
 项目基本信息：
 {project_info}
@@ -847,7 +847,7 @@ def competition_recommend(project=None, competitions=None, project_info_text=Non
 2. 建议关注的竞赛方向
 3. 准备建议"""
     else:
-        prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，专门帮助学生推荐合适的竞赛。
+        prompt = f"""你是火花智创 SparkAI Innovate的 AI 助手，专门帮助学生推荐合适的竞赛。
 
 项目基本信息：
 {project_info}

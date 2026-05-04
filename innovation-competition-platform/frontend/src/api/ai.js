@@ -11,7 +11,7 @@ export const synthesizeTts = (data) => request.post('/ai/tts/synthesize', data)
 export const getExpressions = () => request.get('/ai/expressions')
 export const getModelInfo = () => request.get('/ai/model-info')
 
-export function chatStream(message, sessionId, scene = '创新创业平台') {
+export function chatStream(message, sessionId, scene = '火花智创') {
   return fetch('/api/ai/chat/stream', {
     method: 'POST',
     headers: {
@@ -22,7 +22,7 @@ export function chatStream(message, sessionId, scene = '创新创业平台') {
   })
 }
 
-export function voiceChatStream(message, sessionId, scene = '创新创业平台') {
+export function voiceChatStream(message, sessionId, scene = '火花智创') {
   return fetch('/api/ai/voice/chat/stream', {
     method: 'POST',
     headers: {

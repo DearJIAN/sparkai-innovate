@@ -133,7 +133,7 @@ def get_records():
 def chat():
     payload = request.get_json(silent=True) or {}
     question = str(payload.get('message') or payload.get('question') or '').strip()
-    scene_name = str(payload.get('scene') or '创新创业平台').strip() or '创新创业平台'
+    scene_name = str(payload.get('scene') or '火花智创').strip() or '火花智创'
     session_id = normalize_session_id(payload.get('sessionId'))
 
     if not question:
@@ -168,7 +168,7 @@ def chat():
 def chat_stream():
     payload = request.get_json(silent=True) or {}
     question = str(payload.get('message') or payload.get('question') or '').strip()
-    scene_name = str(payload.get('scene') or '创新创业平台').strip() or '创新创业平台'
+    scene_name = str(payload.get('scene') or '火花智创').strip() or '火花智创'
     session_id = normalize_session_id(payload.get('sessionId'))
 
     if not question:
@@ -185,7 +185,7 @@ def chat_stream():
 def voice_chat_stream():
     payload = request.get_json(silent=True) or {}
     question = str(payload.get('message') or payload.get('question') or '').strip()
-    scene_name = str(payload.get('scene') or '创新创业平台').strip() or '创新创业平台'
+    scene_name = str(payload.get('scene') or '火花智创').strip() or '火花智创'
     session_id = normalize_session_id(payload.get('sessionId'))
 
     if not question:

@@ -187,7 +187,7 @@
     <!-- 首次登录询问弹窗 -->
     <el-dialog
       v-model="showWelcomeDialog"
-      title="欢迎使用创新创业平台"
+      title="欢迎使用火花智创"
       width="420px"
       :show-close="false"
       :close-on-click-modal="false"

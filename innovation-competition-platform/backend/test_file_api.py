@@ -64,7 +64,7 @@ print("=" * 50)
 test_file_path = os.path.join(os.path.dirname(__file__), "test_upload.txt")
 with open(test_file_path, "w", encoding="utf-8") as f:
     f.write("这是一个测试文件，用于测试项目材料上传功能。\n")
-    f.write("项目名称: 创新创业比赛全流程管理系统\n")
+    f.write("项目名称: 火花智创 SparkAI Innovate\n")
     f.write("测试时间: 2026-04-29\n")
 
 print(f"创建测试文件: {test_file_path}")

@@ -5,7 +5,7 @@
         <div class="form-header">
           <el-icon size="40" color="var(--primary-600)"><Trophy /></el-icon>
           <h2 class="form-title">创建账号</h2>
-          <p class="form-subtitle">加入创新创业比赛全流程管理系统</p>
+          <p class="form-subtitle">加入火花智创 SparkAI Innovate</p>
         </div>
 
         <el-form

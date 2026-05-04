@@ -22,7 +22,7 @@
           <span>2026 创新创业季</span>
         </div>
         <h1 class="banner-title">
-          <span class="title-highlight">双创竞赛</span>服务平台
+          <span class="title-highlight">火花智创</span> SparkAI
         </h1>
         <p class="banner-subtitle">聚合竞赛资源，助力项目成长</p>
         <p class="banner-desc">覆盖创新创业、人工智能、数字经济、乡村振兴、产业命题等方向</p>
@@ -827,10 +827,29 @@ const recommendedCompetitions = ref([
 }
 
 .title-highlight {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 20%, #f59e0b 40%, #ec4899 60%, #8b5cf6 80%, #3b82f6 100%);
+  background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: fireworkGradient 4s ease infinite, textFireGlow 2s ease-in-out infinite alternate;
+  display: inline-block;
+}
+
+@keyframes fireworkGradient {
+  0%, 100% { background-position: 0% 50%; }
+  25% { background-position: 100% 0%; }
+  50% { background-position: 100% 100%; }
+  75% { background-position: 0% 100%; }
+}
+
+@keyframes textFireGlow {
+  from {
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5)) drop-shadow(0 0 16px rgba(239, 68, 68, 0.3));
+  }
+  to {
+    filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.8)) drop-shadow(0 0 32px rgba(239, 68, 68, 0.5)) drop-shadow(0 0 48px rgba(236, 72, 153, 0.3));
+  }
 }
 
 /* Banner Stats */

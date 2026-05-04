@@ -4,11 +4,8 @@
       <!-- 左侧品牌区 -->
       <div class="brand-section">
         <div class="brand-content">
-          <div class="brand-logo">
-            <el-icon size="48" color="var(--primary-400)"><Trophy /></el-icon>
-          </div>
-          <h1 class="brand-title">创新创业比赛全流程管理系统</h1>
-          <p class="brand-subtitle">Innovation Competition Management Platform</p>
+          <SparkLogo size="large" />
+          <p class="brand-subtitle">Innovate with AI, Spark Your Future</p>
           <div class="brand-features">
             <div class="feature-item">
               <el-icon size="20" color="var(--primary-400)"><CircleCheck /></el-icon>
@@ -109,6 +106,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import { User as UserIcon, Lock as LockIcon } from '@element-plus/icons-vue'
+import SparkLogo from '@/components/SparkLogo.vue'
 
 const router = useRouter()
 const userStore = useUserStore()

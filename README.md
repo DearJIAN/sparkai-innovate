@@ -8,6 +8,8 @@
 
 平台集成了 **Live2D 虚拟形象「火花」**、**语音交互**、**AI 智能对话**、**AI 项目智能体**等特色功能，为用户提供沉浸式智能辅助体验。其中 AI 项目智能体提供智能引航、材料问答、商业计划书体检、路演稿生成、评审辅助、竞赛推荐、项目创意生成、模拟答辩、批量审核、智能反馈、评审草稿、评分检查 12 大 AI 能力，基于 LangChain + FAISS + BM25 混合检索技术实现。
 
+**品牌视觉**：「火花智创 SparkAI」品牌 Logo 采用动态渐变色彩（红-橙-黄-粉-紫-蓝六色流动渐变）+ 底部粒子浮动效果 + 奖杯呼吸光晕，悬停时加速闪烁，呈现烟花般的视觉氛围。
+
 ---
 
 ## 目录
@@ -339,7 +341,7 @@ innovation-competition-platform/
 ├── frontend/                         # Vue 3 前端
 │   ├── package.json                  # 依赖配置
 │   ├── vite.config.js                # Vite 配置（代理 /api + /uploads → localhost:5000，CSP header）
-│   ├── index.html                    # HTML 入口（标题：创新创业竞赛服务平台）
+│   ├── index.html                    # HTML 入口（标题：火花智创 SparkAI Innovate）
 │   ├── README.md                     # 前端说明
 │   │
 │   ├── public/
@@ -389,6 +391,7 @@ innovation-competition-platform/
 │       │   └── agent.js              # AI 智能体 API（材料索引/问答/体检/路演/评审辅助/推荐/任务）
 │       │
 │       ├── components/               # 公共组件
+│       │   ├── SparkLogo.vue         # 品牌 Logo 组件（彩色渐变文字+粒子浮动+奖杯光晕，烟花视觉效果）
 │       │   ├── GuideSystem.vue       # 全局引导系统（首次登录引导/高亮/拖拽弹窗/路由跳转）
 │       │   ├── HuahuoAssistant.vue   # Live2D 虚拟形象「火花」（全屏拖拽/AI对话/语音/表情联动/3分钟超时/完整清理）
 │       │   ├── VoiceChat.vue         # 语音交互面板（流式对话/语音识别/TTS/可拖拽/深色毛玻璃）
@@ -1851,7 +1854,35 @@ cd backend && flask db upgrade && python seed.py
 > - 不重复记录同一改动（如已在"新增功能"中写了，不再在"功能修改"中重复）
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
-### v4.2.0 - 2026-05-04（当前版本）
+### v4.3.0 - 2026-05-04（当前版本）
+
+> 品牌升级：项目全面更名为「火花智创 SparkAI Innovate」+ 动态 Logo 组件 + Live2D 加载修复 + 项目名称统一替换
+
+#### 新增功能
+
+- **动态品牌 Logo 组件**（`SparkLogo.vue`）：全新品牌视觉组件，采用彩色渐变文字（红-橙-黄-粉-紫-蓝六色流动渐变）+ 底部粒子浮动效果 + 奖杯呼吸光晕，悬停时加速闪烁，呈现烟花般的视觉氛围。支持 small / normal / large 三种尺寸，应用于顶部导航、侧边栏、登录页（[SparkLogo.vue](frontend/src/components/SparkLogo.vue)）
+- **品牌升级**：项目中文名从「高校创新创业竞赛服务平台」更名为「火花智创」，英文名从「University Innovation and Entrepreneurship Competition Service Platform」更名为「SparkAI Innovate」，GitHub 仓库同步更名为 `sparkai-innovate`
+
+#### 功能修改
+
+- **首页标题动态效果**：PortalHome.vue Banner 标题「火花智创 SparkAI」采用彩色渐变 + 发光动画，与品牌 Logo 视觉统一（[PortalHome.vue](frontend/src/views/portal/PortalHome.vue)）
+- **项目名全量替换**：前端所有页面（login / register / MainLayout / PortalHome / guide.js / router / ai-assistant 等）和后端所有 AI Prompt（ai_service.py / ai_prompt_service.py / ai.py / volc_realtime_bridge.py）中的旧项目名称全部替换为「火花智创 SparkAI Innovate」
+- **README.md & AI-Agent功能分析报告.md 迁移**：两份文档从 `innovation-competition-platform/` 子目录移至项目根目录 `my-keshe/`，并相互添加引用链接
+
+#### Bug 修复
+
+- **Live2D 加载失败**：`Live2dWidget.vue` 中 index.js 和 index2.js 脚本缺少 `onload` 回调，导致初始化时序错误。修复：为两个脚本添加 `onload = checkAndResolve`，确保库加载完成后再调用 `initWidget`（[Live2dWidget.vue](frontend/src/components/Live2dWidget.vue)）
+- **SparkLogo 悬停文字消失**：原逐字动画与悬停动画冲突，导致鼠标悬停时文字消失。修复：移除逐字浮现动画，改为整体渐变 + 粒子效果，悬停仅增强发光强度（[SparkLogo.vue](frontend/src/components/SparkLogo.vue)）
+- **侧边栏 Logo 文字截断**：原 Logo 文字宽度超出侧边栏导致显示不全。修复：SparkLogo 组件添加 `white-space: nowrap` 和 `flex-shrink: 0`，确保文字完整显示
+
+#### 文档更新
+
+- **README.md**：项目标题更新为「火花智创 SparkAI Innovate」；新增 GitHub 仓库链接；新增品牌视觉描述；AI-Agent功能分析报告.md 引用链接更新；版本变更记录新增 v4.3.0
+- **AI-Agent功能分析报告.md**：标题更新为「火花智创 SparkAI Innovate — AI 智能与 Agent 功能分析报告」；新增文档定位说明（README.md 的技术补充文档）；图片路径更新为 `innovation-competition-platform/docs_and_images/`
+
+***
+
+### v4.2.0 - 2026-05-04
 
 > 评委评审记录实现 + Live2D 重登录修复 + 口型动画修复 + AI 助手窗口可调整大小 + 管理员页面 API 对接 + 引导系统更新
 
@@ -2288,7 +2319,7 @@ cd backend && flask db upgrade && python seed.py
 - `MainLayout.vue`：集成 Live2D 看板娘（全局浮动）、双模式布局（平台页 / 工作台）
 - `ai.js` API：新增 chatStream / voiceChatStream / uploadAsrAudio / synthesizeTts / getVoiceConfig / getAiHealth / getExpressions / getModelInfo
 - `useLive2d.js`：新增共享 composable（detectEmotionByText / getExpressionByEmotion / updateExpressionByText / notifyLive2dHook）
-- `index.html`：页面标题从 "frontend" 改为 "创新创业竞赛服务平台"
+- `index.html`：页面标题从 "frontend" 改为 "火花智创 SparkAI Innovate"
 - `package.json`：新增 marked 依赖、@element-plus/icons-vue
 - `vite.config.js`：新增 `/uploads` 代理配置
 - `public/live2d/`：新增 Live2D 模型资源（huahuo + huahuo-clean + packages.json）
@@ -2315,7 +2346,7 @@ cd backend && flask db upgrade && python seed.py
 
 ### v1.0.0 - 初始版本
 
-> 基础创新创业竞赛服务平台，AI 功能为 Mock 实现
+> 基础高校创新创业竞赛服务平台，AI 功能为 Mock 实现
 
 - 竞赛发现、报名、项目创建、团队管理、材料上传、任务进度、评审打分
 - 四种角色（学生 / 指导老师 / 评委 / 管理员）

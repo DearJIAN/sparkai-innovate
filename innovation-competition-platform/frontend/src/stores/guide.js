@@ -57,8 +57,8 @@ export const useGuideStore = defineStore('guide', () => {
     const steps = {
       student: [
         {
-          title: '欢迎使用创新创业平台',
-          content: '欢迎来到双创竞赛服务平台！本平台集竞赛报名、项目管理、AI 智能体、AI 对话助手、语音交互、训练营、在线课程、产业命题、证书成果于一体。让我带你快速了解所有功能。',
+          title: '欢迎使用火花智创',
+          content: '欢迎来到火花智创 SparkAI Innovate！本平台集竞赛报名、项目管理、AI 智能体、AI 对话助手、语音交互、训练营、在线课程、产业命题、证书成果于一体。让我带你快速了解所有功能。',
           target: null,
           position: 'center'
         },
@@ -140,7 +140,7 @@ export const useGuideStore = defineStore('guide', () => {
       ],
       teacher: [
         {
-          title: '欢迎使用创新创业平台',
+          title: '欢迎使用火花智创',
           content: '欢迎老师！平台集竞赛管理、项目指导、AI 智能体、AI 对话助手、语音交互、训练营、在线课程等功能于一体。让我带你快速了解指导老师视角的全部功能。',
           target: null,
           position: 'center'
@@ -201,7 +201,7 @@ export const useGuideStore = defineStore('guide', () => {
       ],
       judge: [
         {
-          title: '欢迎使用创新创业平台',
+          title: '欢迎使用火花智创',
           content: '欢迎评委老师！平台集项目评审、AI 智能体辅助、AI 对话助手、语音交互、训练营、在线课程等功能于一体。让我带你快速了解评委视角的核心操作。',
           target: null,
           position: 'center'
@@ -255,7 +255,7 @@ export const useGuideStore = defineStore('guide', () => {
       ],
       admin: [
         {
-          title: '欢迎使用创新创业平台',
+          title: '欢迎使用火花智创',
           content: '欢迎管理员！平台集用户管理、竞赛管理、报名管理、项目管理、评审管理、AI 智能体、AI 对话助手、语音交互、训练营、课程等功能于一体。让我带你了解管理员后台的全部功能。',
           target: null,
           position: 'center'
