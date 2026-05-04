@@ -58,7 +58,7 @@ export const useGuideStore = defineStore('guide', () => {
       student: [
         {
           title: '欢迎使用创新创业平台',
-          content: '欢迎来到双创竞赛服务平台！本平台集竞赛报名、项目管理、AI 智能体、AI 对话助手、训练营、在线课程、产业命题、证书成果于一体。让我带你快速了解所有功能。',
+          content: '欢迎来到双创竞赛服务平台！本平台集竞赛报名、项目管理、AI 智能体、AI 对话助手、语音交互、训练营、在线课程、产业命题、证书成果于一体。让我带你快速了解所有功能。',
           target: null,
           position: 'center'
         },
@@ -113,7 +113,7 @@ export const useGuideStore = defineStore('guide', () => {
         },
         {
           title: 'AI 项目智能体（核心能力）',
-          content: '点击左下角「火花」→ 切换到"智能体"标签页，可解锁 5 大 AI 能力：🎯 智能竞赛推荐（根据项目自动匹配赛事）、📄 AI 材料问答（上传材料后随时提问）、📋 AI 商业计划书体检（自动检查完整性）、🎤 AI 路演稿生成（一键生成路演答辩稿）、📝 AI 评审辅助（评委给出 AI 辅助分析）。',
+          content: '点击左下角「火花」→ 切换到"智能体"标签页，可解锁专属 AI 能力：🎯 智能引航（语音/文字导航）、📄 AI 材料问答（上传材料后随时提问）、📋 AI 商业计划书体检（自动检查完整性）、🎤 AI 路演稿生成（一键生成路演答辩稿）、🎬 AI 模拟路演答辩（AI 扮演评委提问）、💡 AI 项目创意生成（帮你头脑风暴）、🎯 AI 智能竞赛推荐（根据项目自动匹配赛事）。',
           target: '#waifu',
           position: 'right',
           tip: '提示：首页"竞赛推荐"卡片可直接唤起智能体，无需手动切换。'
@@ -127,7 +127,7 @@ export const useGuideStore = defineStore('guide', () => {
         },
         {
           title: 'AI 助手「火花」',
-          content: '左下角的 Live2D 看板娘「火花」是你的 AI 伙伴！支持文字/语音对话、AI 流式回复、语音朗读。在 AI 分析模式下可为项目生成简介、商业建议和风险分析报告。',
+          content: '左下角的 Live2D 看板娘「火花」是你的 AI 伙伴！支持文字/语音对话、AI 流式回复、语音朗读，火花会根据对话内容自动切换表情。在 AI 分析模式下可为项目生成简介、商业建议和风险分析报告。支持拖拽调整窗口大小。',
           target: '#waifu',
           position: 'right'
         },
@@ -141,7 +141,7 @@ export const useGuideStore = defineStore('guide', () => {
       teacher: [
         {
           title: '欢迎使用创新创业平台',
-          content: '欢迎老师！平台集竞赛管理、项目指导、AI 智能体、AI 对话助手、训练营、在线课程等功能于一体。让我带你快速了解指导老师视角的全部功能。',
+          content: '欢迎老师！平台集竞赛管理、项目指导、AI 智能体、AI 对话助手、语音交互、训练营、在线课程等功能于一体。让我带你快速了解指导老师视角的全部功能。',
           target: null,
           position: 'center'
         },
@@ -168,7 +168,7 @@ export const useGuideStore = defineStore('guide', () => {
         },
         {
           title: 'AI 项目智能体',
-          content: '点击左下角「火花」→ 切换到"智能体"标签页，可使用：📄 AI 材料问答（快速查阅学生材料）、📋 AI 商业计划书体检（帮学生检查 BP 完整性）、📝 AI 评审辅助（AI 辅助分析项目质量），极大提升指导效率。',
+          content: '点击左下角「火花」→ 切换到"智能体"标签页，可使用：📄 AI 材料问答（快速查阅学生材料）、📋 AI 商业计划书体检（帮学生检查 BP 完整性）、📝 AI 评审辅助（AI 辅助分析项目质量）、✅ AI 批量审核助手（批量生成审核意见）、💬 AI 智能反馈生成（自动生成专业反馈），极大提升指导效率。',
           target: '#waifu',
           position: 'right',
           tip: '提示：指导项目详情页可直接上传材料建立智能体索引。'
@@ -188,7 +188,7 @@ export const useGuideStore = defineStore('guide', () => {
         },
         {
           title: 'AI 助手「火花」',
-          content: '左下角的 Live2D 看板娘「火花」是你的 AI 助手入口！支持智能对话和 AI 分析功能，可为学生项目生成商业计划书建议和风险分析报告。',
+          content: '左下角的 Live2D 看板娘「火花」是你的 AI 助手入口！支持文字/语音对话、AI 流式回复、语音朗读，火花会根据对话内容自动切换表情。在 AI 分析模式下可为学生项目生成商业计划书建议和风险分析报告。支持拖拽调整窗口大小。',
           target: '#waifu',
           position: 'right'
         },
@@ -202,7 +202,7 @@ export const useGuideStore = defineStore('guide', () => {
       judge: [
         {
           title: '欢迎使用创新创业平台',
-          content: '欢迎评委老师！平台集项目评审、AI 智能体辅助、AI 对话助手、训练营、在线课程等功能于一体。让我带你快速了解评委视角的核心操作。',
+          content: '欢迎评委老师！平台集项目评审、AI 智能体辅助、AI 对话助手、语音交互、训练营、在线课程等功能于一体。让我带你快速了解评委视角的核心操作。',
           target: null,
           position: 'center'
         },
@@ -228,21 +228,21 @@ export const useGuideStore = defineStore('guide', () => {
         },
         {
           title: '评审记录查询',
-          content: '在"评审记录"页面查看所有历史评审记录和评分详情，支持按时间、状态筛选，导出评分汇总。',
-          target: null,
-          position: 'center',
+          content: '在"评审记录"页面查看所有历史评审记录和评分详情，包括各维度评分、总分、评审意见和评审时间，支持查看项目详情。',
+          target: '.top-nav-item[href="/review-history"]',
+          position: 'right',
           routePath: '/review-history'
         },
         {
           title: 'AI 项目智能体',
-          content: '点击左下角「火花」→ 切换到"智能体"标签页，可使用：📄 AI 材料问答（快速查阅项目材料）、📋 AI 商业计划书体检（AI 辅助分析 BP 质量）、📝 AI 评审辅助（AI 生成辅助分析报告作为评审参考），让评审更有依据。',
+          content: '点击左下角「火花」→ 切换到"智能体"标签页，可使用：📄 AI 材料问答（快速查阅项目材料）、📋 AI 商业计划书体检（AI 辅助分析 BP 质量）、📝 AI 评审辅助（AI 生成辅助分析报告作为评审参考）、📝 AI 评审意见草稿（AI 生成评审意见草稿）、📊 AI 评分一致性检查（检查评分合理性），让评审更有依据。',
           target: '#waifu',
           position: 'right',
           tip: '注意：AI 评审辅助仅返回定性分析，不输出具体评分。'
         },
         {
           title: 'AI 助手「火花」',
-          content: '左下角的 Live2D 看板娘「火花」是你的 AI 助手入口！支持智能对话，可为项目生成风险分析和建议报告，作为评审参考依据。',
+          content: '左下角的 Live2D 看板娘「火花」是你的 AI 助手入口！支持文字/语音对话、AI 流式回复、语音朗读，火花会根据对话内容自动切换表情。可为项目生成风险分析和建议报告，作为评审参考依据。支持拖拽调整窗口大小。',
           target: '#waifu',
           position: 'right'
         },
@@ -256,7 +256,7 @@ export const useGuideStore = defineStore('guide', () => {
       admin: [
         {
           title: '欢迎使用创新创业平台',
-          content: '欢迎管理员！平台集用户管理、竞赛管理、报名管理、项目管理、评审管理、AI 智能体、AI 对话助手、训练营、课程等功能于一体。让我带你了解管理员后台的全部功能。',
+          content: '欢迎管理员！平台集用户管理、竞赛管理、报名管理、项目管理、评审管理、AI 智能体、AI 对话助手、语音交互、训练营、课程等功能于一体。让我带你了解管理员后台的全部功能。',
           target: null,
           position: 'center'
         },
@@ -276,14 +276,14 @@ export const useGuideStore = defineStore('guide', () => {
         },
         {
           title: '比赛批次管理',
-          content: '创建和管理比赛批次，设置比赛名称、时间范围、状态描述等信息，控制比赛的报名起止和评审流程节点。',
+          content: '创建和管理比赛批次，设置比赛名称、时间范围、状态描述等信息，控制比赛的报名起止和评审流程节点。支持赛道管理。',
           target: '.nav-item[href="/competition-management"]',
           position: 'right',
           routePath: '/competition-management'
         },
         {
           title: '报名管理与审核',
-          content: '查看所有参赛报名信息，审核报名材料的完整性和合规性，管理报名状态（待审核/已通过/已驳回）。',
+          content: '查看所有参赛报名信息，审核报名材料的完整性和合规性，管理报名状态（待审核/已通过/已驳回）。支持统计分析和批量操作。',
           target: '.nav-item[href="/registration-management"]',
           position: 'right',
           routePath: '/registration-management'
@@ -311,13 +311,13 @@ export const useGuideStore = defineStore('guide', () => {
         },
         {
           title: 'AI 项目智能体',
-          content: '点击左下角「火花」→ 切换到"智能体"标签页，管理员可使用全部 5 大 AI 能力：智能竞赛推荐、AI 材料问答、AI BP体检、AI 路演稿生成、AI 评审辅助。可帮助测试和审核平台的 AI 服务质量。',
+          content: '点击左下角「火花」→ 切换到"智能体"标签页，管理员可使用全部 12 大 AI 能力：智能引航、AI 材料问答、AI BP体检、AI 路演稿生成、AI 模拟路演答辩、AI 评审辅助、AI 智能竞赛推荐、AI 项目创意生成、AI 批量审核助手、AI 智能反馈生成、AI 评审意见草稿、AI 评分一致性检查。可帮助测试和审核平台的 AI 服务质量。',
           target: '#waifu',
           position: 'right'
         },
         {
           title: 'AI 助手「火花」',
-          content: '左下角的 Live2D 看板娘「火花」是平台的 AI 助手入口！支持智能对话和 AI 分析功能（项目简介/商业建议/风险分析）。',
+          content: '左下角的 Live2D 看板娘「火花」是平台的 AI 助手入口！支持文字/语音对话、AI 流式回复、语音朗读，火花会根据对话内容自动切换表情。在 AI 分析模式下可生成项目简介、商业建议和风险分析报告。支持拖拽调整窗口大小。',
           target: '#waifu',
           position: 'right'
         },

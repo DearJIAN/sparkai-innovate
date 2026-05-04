@@ -287,7 +287,7 @@ innovation-competition-platform/
 │   ├── routes/                       # API 路由（14 个蓝图）
 │   │   ├── __init__.py               # 蓝图包初始化
 │   │   ├── auth.py                   # /api/auth    认证接口（注册/登录/当前用户/登出）
-│   │   ├── user.py                   # /api/users   用户接口（列表/详情）
+│   │   ├── user.py                   # /api/users   用户接口（列表/详情/创建/更新/删除/状态切换）
 │   │   ├── project.py                # /api/projects 项目接口（CRUD/提交）
 │   │   ├── member.py                 # /api         成员接口
 │   │   ├── file.py                   # /api         文件接口
@@ -295,7 +295,7 @@ innovation-competition-platform/
 │   │   ├── team.py                   # /api/teams   团队接口
 │   │   ├── task.py                   # /api         任务接口
 │   │   ├── review.py                 # /api         评审接口
-│   │   ├── dashboard.py              # /api/dashboard 看板接口（统计/最近数据）
+│   │   ├── dashboard.py              # /api/dashboard 看板接口（统计/最近数据/公开统计）
 │   │   ├── ai.py                     # /api/ai      AI 接口（聊天/语音/ASR/TTS/分析/表情/健康）
 │   │   ├── competition.py            # /api         竞赛接口（公开+管理+赛道）
 │   │   ├── registration.py           # /api         报名接口（学生+管理员）
@@ -782,10 +782,14 @@ seed.py 会自动创建：
 
 ### 用户接口 `/api/users`
 
-| 接口                | 方法  | 认证  | 权限       | 说明       |
-| ----------------- | --- | --- | -------- | -------- |
-| `/api/users/`     | GET | JWT | admin    | 获取所有用户列表 |
-| `/api/users/<id>` | GET | JWT | 本人或admin | 获取用户详情   |
+| 接口                            | 方法   | 认证  | 权限       | 说明         |
+| ----------------------------- | ---- | --- | -------- | ---------- |
+| `/api/users/`                 | GET  | JWT | admin    | 获取所有用户列表   |
+| `/api/users/`                 | POST | JWT | admin    | 创建用户       |
+| `/api/users/<id>`             | GET  | JWT | 本人或admin | 获取用户详情     |
+| `/api/users/<id>`             | PUT  | JWT | admin    | 更新用户信息     |
+| `/api/users/<id>`             | DELETE | JWT | admin    | 删除用户       |
+| `/api/users/<id>/toggle-status` | POST | JWT | admin    | 切换用户启用/禁用状态 |
 
 ### 竞赛接口
 
@@ -919,10 +923,11 @@ done:1                     # 流结束标记
 
 ### 看板接口 `/api/dashboard`
 
-| 接口                      | 方法  | 权限    | 说明                                            |
-| ----------------------- | --- | ----- | --------------------------------------------- |
-| `/api/dashboard/stats`  | GET | admin | 管理员统计数据（用户/项目/文件/评审/竞赛/AI 使用，含角色分布/阶段分布/赛道分布） |
-| `/api/dashboard/recent` | GET | admin | 最近数据（最近 5 个项目/文件/评审）                          |
+| 接口                            | 方法  | 权限      | 说明                                            |
+| ----------------------------- | --- | ------- | --------------------------------------------- |
+| `/api/dashboard/stats`        | GET | admin   | 管理员统计数据（用户/项目/文件/评审/竞赛/AI 使用，含角色分布/阶段分布/赛道分布） |
+| `/api/dashboard/recent`       | GET | admin   | 最近数据（最近 5 个项目/文件/评审）                          |
+| `/api/dashboard/public-stats` | GET | JWT     | 公开统计数据（竞赛数/用户数/项目数/报名数/赛道数），不限角色              |
 
 ### 系统接口
 
@@ -1837,7 +1842,32 @@ cd backend && flask db upgrade && python seed.py
 > - 不重复记录同一改动（如已在"新增功能"中写了，不再在"功能修改"中重复）
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
-### v4.1.1 - 2026-05-03（当前版本）
+### v4.2.0 - 2026-05-04（当前版本）
+
+> 评委评审记录实现 + Live2D 重登录修复 + 口型动画修复 + AI 助手窗口可调整大小 + 管理员页面 API 对接 + 引导系统更新
+
+#### 新增功能
+
+- **评委评审记录页面**：实现 `history.vue` 完整功能，调用 `getMyReviews` API 展示评审记录列表，包含各维度评分条形图、总分标签、评审意见、评审时间，支持跳转项目详情（[history.vue](frontend/src/views/reviews/history.vue)）
+- **AI 助手窗口拖拽调整大小**：HuahuoAssistant 面板左上角新增 resize 手柄，支持拖拽调整宽度（320-800px）和高度（400-900px），尺寸持久化到 localStorage（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **管理员用户管理 API 对接**：后端新增 `POST /users/`（创建用户）、`PUT /users/<id>`（更新用户）、`POST /users/<id>/toggle-status`（切换状态）、`DELETE /users/<id>`（删除用户）4 个端点；前端 `users.vue` 从硬编码数据改为调用真实 API（[user.py](backend/routes/user.py)、[users.vue](frontend/src/views/admin/users.vue)、[user.js](frontend/src/api/user.js)）
+- **管理员项目管理 API 对接**：前端 `projects.vue` 从硬编码数据改为调用 `getProjects` / `deleteProject` 真实 API（[projects.vue](frontend/src/views/admin/projects.vue)）
+- **管理员评审管理页面**：后端新增 `GET /reviews/all` 端点；前端 `reviews.vue` 从空页面改为完整评审管理页面，展示评审统计、评审列表、评委筛选（[review.py](backend/routes/review.py)、[reviews.vue](frontend/src/views/admin/reviews.vue)）
+- **公开统计 API**：后端新增 `GET /dashboard/public-stats` 端点，仅需 JWT 认证不限角色，返回平台首页所需统计数据（[dashboard.py](backend/routes/dashboard.py)）
+
+#### Bug 修复
+
+- **登录演示账号弹窗"权限不足，需要角色: admin"**：PortalHome.vue 调用 `getDashboardStats()`（需 admin 权限）导致非 admin 用户登录时 403 弹窗。修复：新增 `/dashboard/public-stats` 公开端点，PortalHome 改用 `getPublicStats()`（[dashboard.py](backend/routes/dashboard.py)、[PortalHome.vue](frontend/src/views/portal/PortalHome.vue)）
+- **退出后切换角色再登录 Live2D 不加载**：`onBeforeUnmount` 仅隐藏 `#waifu` DOM（display:none），未移除 DOM 和清理全局状态，导致重新挂载时 `initWidget` 创建重复 `#waifu` 元素。修复：`onBeforeUnmount` 彻底移除 DOM 元素、清理所有全局变量（`__live2dWidgetModelManager`、`initWidget` 等）、清理 localStorage；`initLive2D` 启动前先清理残留 DOM（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Live2D 口型动画无法触发**：三重问题叠加——① `火花.model3.json` 中 LipSync 组 Ids 为空（SDK 标准 LipSync 不工作）；② `onDelta` 口型计算值过小（textLen/20 对 1-3 字符 delta 仅 0.05-0.15）；③ 流式输出时无持续口型脉冲。修复：① model3.json LipSync Ids 加入 `ParamMouthOpenY`；② 新增 `startStreamMouthPulse` / `stopStreamMouthPulse` 函数，流式输出时以 60ms 间隔正弦波驱动口型（幅度 0.3-0.8）；③ onDelta 仅负责情绪检测和表情切换（[火花.model3.json](frontend/public/live2d/huahuo/火花.model3.json)、[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+
+#### 功能修改
+
+- **引导系统更新**：4 种角色引导步骤全面更新——学生步骤新增 AI 模拟答辩/项目创意生成/智能引航描述，教师步骤新增批量审核/智能反馈描述，评委步骤新增评审意见草稿/评分一致性检查描述，管理员步骤从"5 大 AI 能力"更新为"12 大 AI 能力"；所有角色新增语音交互、表情联动、窗口拖拽调整大小等新功能描述（[guide.js](frontend/src/stores/guide.js)）
+
+***
+
+### v4.1.1 - 2026-05-03
 
 > AI 智能体前后端参数校验一致性修复 + Live2D 表情自动切换 + 权限矩阵/API 文档补全
 

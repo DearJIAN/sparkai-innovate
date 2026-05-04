@@ -258,3 +258,27 @@ def get_my_reviews():
         'reviews': result,
         'total': len(result)
     })
+
+
+@review_bp.route('/reviews/all', methods=['GET'])
+@jwt_required()
+def get_all_reviews():
+    from utils.decorators import require_roles
+    user = _get_current_user()
+    if not user or not user.is_admin():
+        return error('权限不足', code=403, status_code=403)
+
+    reviews = Review.query.order_by(Review.created_at.desc()).all()
+    result = []
+    for review in reviews:
+        review_dict = review.to_dict()
+        project = Project.query.get(review.project_id)
+        review_dict['project'] = project.to_dict() if project else None
+        judge = User.query.get(review.judge_id)
+        review_dict['judge_name'] = judge.real_name or judge.username if judge else '未知'
+        result.append(review_dict)
+
+    return success({
+        'reviews': result,
+        'total': len(result)
+    })

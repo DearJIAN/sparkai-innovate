@@ -6,12 +6,32 @@ from models.project_file import ProjectFile
 from models.review import Review
 from models.ai_record import AiRecord
 from models.competition import Competition
+from models.competition_registration import CompetitionRegistration
 from extensions import db
 from flask_jwt_extended import jwt_required
 from utils.decorators import require_roles
 from utils.response import success, error
 
 dashboard_bp = Blueprint('dashboard', __name__)
+
+
+@dashboard_bp.route('/public-stats', methods=['GET'])
+@jwt_required()
+def get_public_stats():
+    total_competitions = Competition.query.count()
+    active_competitions = Competition.query.filter_by(status='active').count()
+    total_users = User.query.count()
+    total_projects = Project.query.count()
+    total_registrations = CompetitionRegistration.query.count()
+    tracks = db.session.query(Project.track).filter(Project.track.isnot(None), Project.track != '').distinct().count()
+    return success({
+        'competition_count': total_competitions,
+        'active_competitions': active_competitions,
+        'team_count': total_users,
+        'project_count': total_projects,
+        'registration_count': total_registrations,
+        'track_count': tracks
+    })
 
 
 @dashboard_bp.route('/stats', methods=['GET'])

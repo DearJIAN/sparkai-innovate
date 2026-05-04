@@ -9,7 +9,7 @@
 
     <el-card shadow="never">
       <div class="toolbar">
-        <el-input v-model="searchQuery" placeholder="搜索姓名/学号/邮箱..." clearable style="width:260px" prefix-icon="Search" />
+        <el-input v-model="searchQuery" placeholder="搜索姓名/用户名/邮箱..." clearable style="width:260px" prefix-icon="Search" />
         <el-select v-model="filterRole" placeholder="角色筛选" clearable style="width:140px">
           <el-option label="学生" value="student" />
           <el-option label="教师" value="teacher" />
@@ -24,18 +24,20 @@
 
       <el-table :data="filteredUsers" stripe style="width:100%" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" align="center" />
-        <el-table-column prop="real_name" label="姓名" width="100" />
-        <el-table-column prop="student_id" label="学号/工号" width="120" />
+        <el-table-column prop="real_name" label="姓名" width="100">
+          <template #default="{ row }">{{ row.real_name || row.username }}</template>
+        </el-table-column>
+        <el-table-column prop="username" label="用户名" width="110" />
         <el-table-column prop="email" label="邮箱" min-width="180" show-overflow-tooltip />
         <el-table-column prop="role" label="角色" width="100">
           <template #default="{ row }">
             <el-tag :type="roleType(row.role)" size="small">{{ roleText(row.role) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="80" align="center">
+        <el-table-column prop="is_active" label="状态" width="80" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small" effect="plain">
-              {{ row.status === 'active' ? '正常' : '禁用' }}
+            <el-tag :type="row.is_active ? 'success' : 'danger'" size="small" effect="plain">
+              {{ row.is_active ? '正常' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -45,10 +47,10 @@
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="editUser(row)">编辑</el-button>
-            <el-button type="warning" link size="small" @click="toggleStatus(row)">
-              {{ row.status === 'active' ? '禁用' : '启用' }}
+            <el-button type="warning" link size="small" @click="handleToggleStatus(row)">
+              {{ row.is_active ? '禁用' : '启用' }}
             </el-button>
-            <el-button type="danger" link size="small" @click="deleteUser(row)" class="delete-btn">删除</el-button>
+            <el-button type="danger" link size="small" @click="handleDeleteUser(row)" class="delete-btn">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -64,14 +66,16 @@
       </div>
     </el-card>
 
-    <!-- 编辑/添加弹窗 -->
     <el-dialog v-model="dialogVisible" :title="editingUser ? '编辑用户' : '添加用户'" width="500px" destroy-on-close>
       <el-form :model="userForm" label-width="90px">
+        <el-form-item label="用户名" v-if="!editingUser">
+          <el-input v-model="userForm.username" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item :label="editingUser ? '新密码' : '密码'">
+          <el-input v-model="userForm.password" type="password" :placeholder="editingUser ? '留空则不修改' : '请输入密码'" show-password />
+        </el-form-item>
         <el-form-item label="真实姓名">
           <el-input v-model="userForm.real_name" placeholder="请输入真实姓名" />
-        </el-form-item>
-        <el-form-item label="学号/工号">
-          <el-input v-model="userForm.student_id" placeholder="请输入学号或工号" />
         </el-form-item>
         <el-form-item label="邮箱">
           <el-input v-model="userForm.email" type="email" placeholder="请输入邮箱地址" />
@@ -84,24 +88,29 @@
             <el-radio value="admin">管理员</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="状态">
-          <el-switch v-model="userForm.active" active-text="正常" inactive-text="禁用" />
+        <el-form-item label="学院">
+          <el-input v-model="userForm.college" placeholder="请输入学院" />
+        </el-form-item>
+        <el-form-item label="专业">
+          <el-input v-model="userForm.major" placeholder="请输入专业" />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveUser">保存</el-button>
+        <el-button type="primary" @click="saveUser" :loading="saving">保存</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getUsers, createUser, updateUser, toggleUserStatus, deleteUser } from '@/api/user'
 
 const loading = ref(false)
+const saving = ref(false)
 const searchQuery = ref('')
 const filterRole = ref('')
 const filterStatus = ref('')
@@ -111,33 +120,29 @@ const dialogVisible = ref(false)
 const editingUser = ref(null)
 
 const userForm = reactive({
+  username: '',
+  password: '',
   real_name: '',
-  student_id: '',
   email: '',
   role: 'student',
-  active: true
+  college: '',
+  major: ''
 })
 
-const users = ref([
-  { id: 1, real_name: '张三', student_id: '2024001', email: 'zhangsan@example.com', role: 'student', status: 'active', created_at: '2025-03-01' },
-  { id: 2, real_name: '李四', student_id: '2024002', email: 'lisi@example.com', role: 'student', status: 'active', created_at: '2025-03-02' },
-  { id: 3, real_name: '王教授', student_id: 'T001', email: 'wang@example.edu.cn', role: 'teacher', status: 'active', created_at: '2025-02-15' },
-  { id: 4, real_name: '赵评委', student_id: 'J001', email: 'zhao@example.org', role: 'judge', status: 'active', created_at: '2025-01-20' },
-  { id: 5, real_name: '钱七', student_id: '2024010', email: 'qianqi@example.com', role: 'student', status: 'disabled', created_at: '2025-04-10' },
-  { id: 6, real_name: '孙八', student_id: '2024011', email: 'sunba@example.com', role: 'student', status: 'active', created_at: '2025-04-12' },
-  { id: 7, real_name: '周九', student_id: 'T002', email: 'zhou@example.edu.cn', role: 'teacher', status: 'active', created_at: '2025-03-20' },
-  { id: 10, real_name: 'admin', student_id: '-', email: 'admin@platform.com', role: 'admin', status: 'active', created_at: '2024-12-01' }
-])
+const users = ref([])
 
 const filteredUsers = computed(() => {
   let list = users.value
   if (filterRole.value) list = list.filter(u => u.role === filterRole.value)
-  if (filterStatus.value) list = list.filter(u => u.status === filterStatus.value)
+  if (filterStatus.value) {
+    const isActive = filterStatus.value === 'active'
+    list = list.filter(u => u.is_active === isActive)
+  }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase()
     list = list.filter(u =>
       (u.real_name || '').toLowerCase().includes(q) ||
-      (u.student_id || '').toLowerCase().includes(q) ||
+      (u.username || '').toLowerCase().includes(q) ||
       (u.email || '').toLowerCase().includes(q)
     )
   }
@@ -150,48 +155,110 @@ const roleType = (r) => roleMap[r]?.type || 'info'
 
 function formatDate(d) { return d ? new Date(d).toLocaleDateString('zh-CN') : '-' }
 
+async function fetchUsers() {
+  loading.value = true
+  try {
+    const res = await getUsers()
+    if (res.code === 200) {
+      users.value = res.data?.users || []
+    }
+  } catch (e) {
+    ElMessage.error('获取用户列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 function showAddDialog() {
   editingUser.value = null
-  Object.assign(userForm, { real_name: '', student_id: '', email: '', role: 'student', active: true })
+  Object.assign(userForm, { username: '', password: '', real_name: '', email: '', role: 'student', college: '', major: '' })
   dialogVisible.value = true
 }
 
 function editUser(user) {
   editingUser.value = user
   Object.assign(userForm, {
-    real_name: user.real_name,
-    student_id: user.student_id,
-    email: user.email,
-    role: user.role,
-    active: user.status === 'active'
+    username: user.username || '',
+    password: '',
+    real_name: user.real_name || '',
+    email: user.email || '',
+    role: user.role || 'student',
+    college: user.college || '',
+    major: user.major || ''
   })
   dialogVisible.value = true
 }
 
-function saveUser() {
-  if (!userForm.real_name || !userForm.email) { ElMessage.warning('请填写必填项'); return }
-  if (editingUser.value) {
-    Object.assign(editingUser.value, { ...userForm, status: userForm.active ? 'active' : 'disabled' })
-    ElMessage.success(`已更新用户「${userForm.real_name}」的信息`)
-  } else {
-    users.value.push({ id: users.value.length + 1, ...userForm, status: userForm.active ? 'active' : 'disabled', created_at: new Date().toISOString().split('T')[0] })
-    ElMessage.success(`已添加用户「${userForm.real_name}」`)
+async function saveUser() {
+  if (!editingUser.value && (!userForm.username || !userForm.password)) {
+    ElMessage.warning('请填写用户名和密码')
+    return
   }
-  dialogVisible.value = false
+  saving.value = true
+  try {
+    if (editingUser.value) {
+      const data = { ...userForm }
+      if (!data.password) delete data.password
+      delete data.username
+      const res = await updateUser(editingUser.value.id, data)
+      if (res.code === 200) {
+        ElMessage.success('用户信息已更新')
+        dialogVisible.value = false
+        fetchUsers()
+      } else {
+        ElMessage.error(res.message || '更新失败')
+      }
+    } else {
+      const res = await createUser(userForm)
+      if (res.code === 200 || res.code === 201) {
+        ElMessage.success('用户已添加')
+        dialogVisible.value = false
+        fetchUsers()
+      } else {
+        ElMessage.error(res.message || '添加失败')
+      }
+    }
+  } catch (e) {
+    ElMessage.error('操作失败')
+  } finally {
+    saving.value = false
+  }
 }
 
-async function toggleStatus(user) {
-  const action = user.status === 'active' ? '禁用' : '启用'
-  await ElMessageBox.confirm(`确定要${action}用户「${user.real_name}」吗？`, '确认操作')
-  user.status = user.status === 'active' ? 'disabled' : 'active'
-  ElMessage.success(`已${action}用户「${user.real_name}」`)
+async function handleToggleStatus(user) {
+  const action = user.is_active ? '禁用' : '启用'
+  await ElMessageBox.confirm(`确定要${action}用户「${user.real_name || user.username}」吗？`, '确认操作')
+  try {
+    const res = await toggleUserStatus(user.id)
+    if (res.code === 200) {
+      ElMessage.success(`已${action}用户「${user.real_name || user.username}」`)
+      fetchUsers()
+    } else {
+      ElMessage.error(res.message || '操作失败')
+    }
+  } catch (e) {
+    ElMessage.error('操作失败')
+  }
 }
 
-async function deleteUser(user) {
-  await ElMessageBox.confirm(`确定要删除用户「${user.real_name}」吗？此操作不可恢复！`, '危险操作', { type: 'warning' })
-  const idx = users.value.findIndex(u => u.id === user.id)
-  if (idx > -1) { users.value.splice(idx, 1); ElMessage.success(`已删除用户「${user.real_name}」`) }
+async function handleDeleteUser(user) {
+  await ElMessageBox.confirm(`确定要删除用户「${user.real_name || user.username}」吗？此操作不可恢复！`, '危险操作', { type: 'warning' })
+  try {
+    const res = await deleteUser(user.id)
+    if (res.code === 200) {
+      ElMessage.success('用户已删除')
+      fetchUsers()
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch (e) {
+    ElMessage.error('删除失败')
+  }
 }
+
+onMounted(() => {
+  fetchUsers()
+})
 </script>
 
 <style scoped>

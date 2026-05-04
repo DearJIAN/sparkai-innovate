@@ -26,7 +26,7 @@
       <el-col :span="4"><div class="mini-stat info"><span class="mini-value">{{ avgScore }}</span><span class="mini-label">平均分</span></div></el-col>
     </el-row>
 
-    <el-card shadow="never">
+    <el-card shadow="never" v-loading="loading">
       <el-table :data="paginatedProjects" stripe style="width:100%">
         <el-table-column prop="id" label="ID" width="55" align="center" />
         <el-table-column prop="name" label="项目名称" min-width="180">
@@ -34,7 +34,9 @@
             <span class="project-link" @click="$router.push(`/projects/${row.id}`)">{{ row.name }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="leader" label="负责人" width="90" />
+        <el-table-column label="负责人" width="90">
+          <template #default="{ row }">{{ row.leader_name || row.leader?.real_name || '-' }}</template>
+        </el-table-column>
         <el-table-column prop="category" label="类别" width="110" />
         <el-table-column prop="track" label="赛道" width="100" />
         <el-table-column prop="stage" label="阶段" width="95">
@@ -43,19 +45,10 @@
         <el-table-column prop="status" label="状态" width="105">
           <template #default="{ row }"><el-tag :type="statusType(row.status)" size="small">{{ statusText(row.status) }}</el-tag></template>
         </el-table-column>
-        <el-table-column prop="avg_score" label="平均分" width="80" align="center">
-          <template #default="{ row }">
-            <span v-if="row.avg_score" :class="{ 'score-high': row.avg_score >= 85, 'score-mid': row.avg_score >= 70 && row.avg_score < 85, 'score-low': row.avg_score < 70 }">
-              {{ row.avg_score }}分
-            </span>
-            <span v-else class="no-score">-</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="members_count" label="成员" width="60" align="center" />
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="$router.push(`/projects/${row.id}`)">详情</el-button>
-            <el-button type="warning" link size="small" @click="viewReview(row)">评审记录</el-button>
+            <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -68,29 +61,18 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getProjects, deleteProject } from '@/api/project'
 
+const loading = ref(false)
 const searchQuery = ref('')
 const filterStage = ref('')
 const filterStatus = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-const projects = ref([
-  { id: 1, name: '智慧校园服务平台', leader: '张三', category: '信息技术', track: '主赛道', stage: 'development', status: 'judging', members_count: 4, avg_score: 82, updated_at: '2025-05-01' },
-  { id: 2, name: 'AI 辅助学习系统', leader: '李四', category: '人工智能', track: '人工智能赛道', stage: 'proof', status: 'teacher_review', members_count: 3, avg_score: null, updated_at: '2025-04-30' },
-  { id: 3, name: '绿色物流配送平台', leader: '王五', category: '绿色科技', track: '主赛道', stage: 'market', status: 'passed', members_count: 5, avg_score: 91, updated_at: '2025-04-28' },
-  { id: 4, name: '乡村振兴电商助农', leader: '赵六', category: '乡村振兴', track: '红旅专项', stage: 'resource', status: 'submitted', members_count: 4, avg_score: null, updated_at: '2025-04-27' },
-  { id: 5, name: '智能健康监测手环', leader: '钱七', category: '医疗健康', track: '主赛道', stage: 'idea', status: 'need_modify', members_count: 3, avg_score: 58, updated_at: '2025-04-25' },
-  { id: 6, name: '校园二手交易平台', leader: '孙八', category: '校园服务', track: '主赛道', stage: 'roadshow', status: 'judging', members_count: 2, avg_score: 76, updated_at: '2025-04-24' },
-  { id: 7, name: '非遗文化数字化传播', leader: '周九', category: '文化创意', track: '文创专项', stage: 'development', status: 'submitted', members_count: 6, avg_score: null, updated_at: '2025-04-22' },
-  { id: 8, name: '社区养老服务平台', leader: '吴十', category: '社会公益', track: '红旅专项', stage: 'proof', status: 'submitted', members_count: 4, avg_score: null, updated_at: '2025-04-20' },
-  { id: 9, name: '基于区块链的溯源系统', leader: '郑十一', category: '信息技术', track: '主赛道', stage: 'development', status: 'passed', members_count: 5, avg_score: 88, updated_at: '2025-04-18' },
-  { id: 10, name: 'VR 虚拟实验室平台', leader: '冯十二', category: '教育科技', track: '人工智能赛道', stage: 'market', status: 'rejected', members_count: 3, avg_score: 45, updated_at: '2025-04-15' },
-  { id: 11, name: '无人配送机器人', leader: '陈十三', category: '人工智能', track: '人工智能赛道', stage: 'development', status: 'submitted', members_count: 7, avg_score: null, updated_at: '2025-04-12' },
-  { id: 12, name: '碳足迹追踪小程序', leader: '褚十四', category: '绿色科技', track: '绿色专项', stage: 'idea', status: 'draft', members_count: 2, avg_score: null, updated_at: '2025-04-10' }
-])
+const projects = ref([])
 
 const filteredProjects = computed(() => {
   let list = projects.value
@@ -98,7 +80,7 @@ const filteredProjects = computed(() => {
   if (filterStatus.value) list = list.filter(p => p.status === filterStatus.value)
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase()
-    list = list.filter(p => p.name.toLowerCase().includes(q))
+    list = list.filter(p => (p.name || '').toLowerCase().includes(q))
   }
   return list
 })
@@ -111,7 +93,7 @@ const paginatedProjects = computed(() => {
 const submittedCount = computed(() => filteredProjects.value.filter(p => ['submitted', 'teacher_review'].includes(p.status)).length)
 const judgingCount = computed(() => filteredProjects.value.filter(p => p.status === 'judging').length)
 const passedCount = computed(() => filteredProjects.value.filter(p => p.status === 'passed').length)
-const rejectedCount = computed(() => filteredProjects.value.filter(p => p.status === 'rejected').length)
+const rejectedCount = computed(() => filteredProjects.value.filter(p => ['rejected', 'need_modify'].includes(p.status)).length)
 const avgScore = computed(() => {
   const scored = filteredProjects.value.filter(p => p.avg_score != null)
   if (!scored.length) return '-'
@@ -124,9 +106,38 @@ const statusText = (s) => statusMap[s]?.text || s
 const statusType = (s) => statusMap[s]?.type || 'info'
 const stageText = (s) => stageMap[s] || s
 
-function viewReview(project) {
-  ElMessage.info(`查看「${project.name}」的评审记录（共 ${Math.floor(Math.random() * 5) + 1} 条）`)
+async function fetchProjects() {
+  loading.value = true
+  try {
+    const res = await getProjects()
+    if (res.code === 200) {
+      projects.value = res.data?.projects || []
+    }
+  } catch (e) {
+    ElMessage.error('获取项目列表失败')
+  } finally {
+    loading.value = false
+  }
 }
+
+async function handleDelete(project) {
+  await ElMessageBox.confirm(`确定要删除项目「${project.name}」吗？此操作不可恢复！`, '危险操作', { type: 'warning' })
+  try {
+    const res = await deleteProject(project.id)
+    if (res.code === 200) {
+      ElMessage.success('项目已删除')
+      fetchProjects()
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch (e) {
+    ElMessage.error('删除失败')
+  }
+}
+
+onMounted(() => {
+  fetchProjects()
+})
 </script>
 
 <style scoped>
@@ -183,11 +194,6 @@ function viewReview(project) {
   transition: color 0.2s;
 }
 .project-link:hover { color: var(--primary-400); text-decoration: underline; }
-
-.score-high { color: #67C23A; font-weight: 700; }
-.score-mid { color: #E6A23C; font-weight: 600; }
-.score-low { color: #F56C6C; font-weight: 600; }
-.no-score { color: #c0c4cc; }
 
 .pagination-wrap { display: flex; justify-content: flex-end; margin-top: 16px; }
 </style>

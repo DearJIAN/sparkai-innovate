@@ -150,7 +150,7 @@ import {
   MagicStick, TrendCharts, ArrowRight, Medal, School,
   Briefcase, Collection, Calendar
 } from '@element-plus/icons-vue'
-import { getDashboardStats } from '@/api/dashboard'
+import { getPublicStats } from '@/api/dashboard'
 
 // 导入本地竞赛图片
 import imgAI from '@/assets/images/competitions/2026 AI 应用创新设计大赛.png'
@@ -241,7 +241,7 @@ let observer = null
 
 const loadHomeStats = async () => {
   try {
-    const res = await getDashboardStats()
+    const res = await getPublicStats()
     if (res.code === 200 && res.data) {
       homeStats.value = {
         competitions: res.data.competition_count || 0,
@@ -250,7 +250,6 @@ const loadHomeStats = async () => {
       }
     }
   } catch (e) {
-    // 使用默认值
     homeStats.value = { competitions: 50, teams: 1000, tracks: 10 }
   }
 }

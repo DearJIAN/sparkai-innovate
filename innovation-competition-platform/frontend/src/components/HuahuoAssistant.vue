@@ -43,6 +43,7 @@
               </el-button>
             </div>
           </div>
+          <div class="panel-resize-handle" @mousedown.stop="startResize"></div>
 
           <div class="panel-body">
             <!-- 表情控制面板 -->
@@ -257,6 +258,8 @@ const messagesRef = ref(null)
 const panelRef = ref(null)
 const panelStyle = ref({})
 const panelPos = ref({ x: 0, y: 0 })
+const panelSize = ref({ width: 400, height: 580 })
+let resizeState = { resizing: false, startX: 0, startY: 0, startW: 0, startH: 0 }
 let recognition = null
 let speechUtterance = null
 let speechPulseInterval = null
@@ -264,6 +267,7 @@ let dragState = { dragging: false, startX: 0, startY: 0 }
 let modelDragState = { dragging: false, startX: 0, startY: 0, origLeft: 0, origBottom: 0 }
 let modelPatchLoopId = null
 let autoExpressionTimer = null
+let streamMouthPulseId = null
 
 const analysisForm = reactive({ project_name: '', description: '', category: '', track: '', ai_type: 'summary' })
 const analysisLoading = ref(false)
@@ -719,11 +723,11 @@ function switchExpression() {
 
 function setupVoiceHooks() {
   window.__voiceLive2dHooks = {
-    onStreamStart: () => { window.__syncExpressionState && setBaseExpression('07 星星眼') },
+    onStreamStart: () => {
+      window.__syncExpressionState && setBaseExpression('07 星星眼')
+      startStreamMouthPulse()
+    },
     onDelta: (payload) => {
-      const textLen = (payload?.text || payload || '').length
-      const openY = Math.min(1, textLen / 20)
-      window.__speechMouthOpenY = openY
       const emotion = detectEmotionByText(payload?.text || '')
       if (emotion) {
         const expr = getExpressionByEmotion(emotion)
@@ -732,17 +736,37 @@ function setupVoiceHooks() {
     },
     onStreamEnd: () => {
       setBaseExpression('06 0.0')
+      stopStreamMouthPulse()
       window.__speechMouthOpenY = 0
     },
-    onSpeechStart: () => { setBaseExpression('07 星星眼') },
+    onSpeechStart: () => { setBaseExpression('07 星星眼'); startSpeechMouthPulse() },
     onSpeechPulse: (payload) => {
       window.__speechMouthOpenY = payload?.intensity || 0.5
     },
     onSpeechEnd: () => {
       setBaseExpression('06 0.0')
+      stopSpeechMouthPulse()
       window.__speechMouthOpenY = 0
     },
   }
+}
+
+function startStreamMouthPulse() {
+  stopStreamMouthPulse()
+  const startTime = Date.now()
+  streamMouthPulseId = setInterval(() => {
+    const elapsed = (Date.now() - startTime) / 1000
+    const intensity = 0.3 + 0.5 * Math.abs(Math.sin(elapsed * 8))
+    window.__speechMouthOpenY = intensity
+  }, 60)
+}
+
+function stopStreamMouthPulse() {
+  if (streamMouthPulseId) {
+    clearInterval(streamMouthPulseId)
+    streamMouthPulseId = null
+  }
+  window.__speechMouthOpenY = 0
 }
 
 // ============================================================
@@ -797,7 +821,13 @@ async function initLive2D() {
   try {
     loadError.value = false
 
-    // 清理可能阻碍加载的 localStorage 项
+    const oldWaifu = document.getElementById('waifu')
+    if (oldWaifu) oldWaifu.remove()
+    const oldToggle = document.getElementById('waifu-toggle')
+    if (oldToggle) oldToggle.remove()
+    const oldTool = document.getElementById('waifu-tool')
+    if (oldTool) oldTool.remove()
+
     window.localStorage.removeItem('waifu-display')
     window.localStorage.removeItem('modelId')
     window.localStorage.removeItem('modelTexturesId')
@@ -1257,17 +1287,48 @@ function stopModelDragTouch() {
 
 function startDrag(e) { dragState.dragging = true; dragState.startX = e.clientX - (panelPos.value.x || 0); dragState.startY = e.clientY - (panelPos.value.y || 0); document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', stopDrag) }
 function startDragTouch(e) { const t = e.touches[0]; dragState.dragging = true; dragState.startX = t.clientX - (panelPos.value.x || 0); dragState.startY = t.clientY - (panelPos.value.y || 0); document.addEventListener('touchmove', onDragTouch, { passive: false }); document.addEventListener('touchend', stopDragTouch) }
-function onDrag(e) { if (!dragState.dragging) return; panelPos.value = { x: e.clientX - dragState.startX, y: e.clientY - dragState.startY }; panelStyle.value = { transform: `translate(${panelPos.value.x}px, ${panelPos.value.y}px)` } }
-function onDragTouch(e) { if (!dragState.dragging) return; e.preventDefault(); const t = e.touches[0]; panelPos.value = { x: t.clientX - dragState.startX, y: t.clientY - dragState.startY }; panelStyle.value = { transform: `translate(${panelPos.value.x}px, ${panelPos.value.y}px)` } }
+function updatePanelStyle() {
+  panelStyle.value = {
+    transform: `translate(${panelPos.value.x}px, ${panelPos.value.y}px)`,
+    width: panelSize.value.width + 'px',
+    maxHeight: panelSize.value.height + 'px'
+  }
+}
+
+function onDrag(e) { if (!dragState.dragging) return; panelPos.value = { x: e.clientX - dragState.startX, y: e.clientY - dragState.startY }; updatePanelStyle() }
+function onDragTouch(e) { if (!dragState.dragging) return; e.preventDefault(); const t = e.touches[0]; panelPos.value = { x: t.clientX - dragState.startX, y: t.clientY - dragState.startY }; updatePanelStyle() }
 function stopDrag() { dragState.dragging = false; document.removeEventListener('mousemove', onDrag); document.removeEventListener('mouseup', stopDrag); try { localStorage.setItem('huahuoPanelPos', JSON.stringify(panelPos.value)) } catch (_e) {} }
 function stopDragTouch() { dragState.dragging = false; document.removeEventListener('touchmove', onDragTouch); document.removeEventListener('touchend', stopDragTouch); try { localStorage.setItem('huahuoPanelPos', JSON.stringify(panelPos.value)) } catch (_e) {} }
+
+function startResize(e) {
+  e.preventDefault()
+  resizeState = { resizing: true, startX: e.clientX, startY: e.clientY, startW: panelSize.value.width, startH: panelSize.value.height }
+  document.addEventListener('mousemove', onResize)
+  document.addEventListener('mouseup', stopResize)
+}
+function onResize(e) {
+  if (!resizeState.resizing) return
+  const dx = resizeState.startX - e.clientX
+  const dy = e.clientY - resizeState.startY
+  const newW = Math.max(320, Math.min(800, resizeState.startW + dx))
+  const newH = Math.max(400, Math.min(900, resizeState.startH + dy))
+  panelSize.value = { width: newW, height: newH }
+  updatePanelStyle()
+}
+function stopResize() {
+  resizeState.resizing = false
+  document.removeEventListener('mousemove', onResize)
+  document.removeEventListener('mouseup', stopResize)
+  try { localStorage.setItem('huahuoPanelSize', JSON.stringify(panelSize.value)) } catch (_e) {}
+}
 
 onMounted(() => {
   setupExpressionControls()
   setupVoiceHooks()
   initLive2D()
   window.addEventListener('open-huahuo-agent', handleOpenHuahuoAgent)
-  try { const saved = localStorage.getItem('huahuoPanelPos'); if (saved) { panelPos.value = JSON.parse(saved); panelStyle.value = { transform: `translate(${panelPos.value.x}px, ${panelPos.value.y}px)` } } } catch (_e) {}
+  try { const saved = localStorage.getItem('huahuoPanelPos'); if (saved) { panelPos.value = JSON.parse(saved); updatePanelStyle() } } catch (_e) {}
+  try { const savedSize = localStorage.getItem('huahuoPanelSize'); if (savedSize) { panelSize.value = JSON.parse(savedSize); updatePanelStyle() } } catch (_e) {}
   try {
     const modelPos = localStorage.getItem('huahuoModelPos')
     if (modelPos) {
@@ -1298,13 +1359,47 @@ onBeforeUnmount(() => {
   window.removeEventListener('open-huahuo-agent', handleOpenHuahuoAgent)
   stopVoiceRecognition()
   stopSpeechMouthPulse()
+  stopStreamMouthPulse()
   stopModelPatchLoop()
   stopAutoExpression()
   if (window.speechSynthesis) window.speechSynthesis.cancel()
+
+  try {
+    const manager = window.__live2dWidgetModelManager
+    if (manager?.cubism5model) {
+      if (typeof manager.cubism5model.release === 'function') {
+        manager.cubism5model.release()
+      }
+    }
+  } catch (_e) {}
+
   const waifuEl = document.getElementById('waifu')
-  if (waifuEl) {
-    waifuEl.style.display = 'none'
-  }
+  if (waifuEl) waifuEl.remove()
+  const waifuToggle = document.getElementById('waifu-toggle')
+  if (waifuToggle) waifuToggle.remove()
+  const waifuTool = document.getElementById('waifu-tool')
+  if (waifuTool) waifuTool.remove()
+
+  try {
+    delete window.__live2dWidgetModelManager
+    delete window.__expressionControlsState
+    delete window.__expressionOverlayRules
+    delete window.__applyOverlayStateToCore
+    delete window.__applyOverlayState
+    delete window.__syncExpressionState
+    delete window.__applySpeechStateToCore
+    delete window.__voiceLive2dHooks
+    delete window.__speechMouthOpenY
+    delete window.__huahuoModelPatchLoopStarted
+    delete window.initWidget
+    delete window.loadlive2d
+  } catch (_e) {}
+
+  try {
+    window.localStorage.removeItem('waifu-display')
+    window.localStorage.removeItem('modelId')
+    window.localStorage.removeItem('modelTexturesId')
+  } catch (_e) {}
 })
 </script>
 
@@ -1523,6 +1618,31 @@ onBeforeUnmount(() => {
   flex-direction: column;
   z-index: 10000;
   overflow: hidden;
+}
+
+.panel-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  z-index: 10;
+}
+
+.panel-resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  width: 8px;
+  height: 8px;
+  border-left: 2px solid rgba(6, 182, 212, 0.4);
+  border-bottom: 2px solid rgba(6, 182, 212, 0.4);
+}
+
+.panel-resize-handle:hover::before {
+  border-color: rgba(6, 182, 212, 0.8);
 }
 
 .panel-header {
