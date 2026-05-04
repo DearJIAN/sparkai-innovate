@@ -166,9 +166,8 @@
 - 全局浮动 Live2D 看板娘，支持全屏拖拽（通过 `HuahuoAssistant.vue` 组件 + `MainLayout.vue` 集成）
 - 拖拽位置持久化到 localStorage，刷新页面后自动恢复
 - 10 种基础表情（黑脸 / 脸红爱心 / 生气 / 晕 / ＞＜ / 0.0 / 星星眼 / 流泪 / 捧心 / 要饭）+ 2 种叠加效果（月卡 / 水印）
-- AI 对话时自动切换表情（基于关键词的情绪检测：开心 / 害羞 / 生气 / 难过 / 晕 / 惊讶）
+- AI 对话时基于文本关键词自动切换表情（开心 / 害羞 / 生气 / 难过 / 晕 / 惊讶），不在开始/结束时强制设置表情
 - 每 10 秒自动随机切换表情（AI 流式输出或朗读期间跳过），点击形象时也会随机切换
-- 语音朗读时口型驱动动画（正弦波模拟 + 文本长度驱动）
 - 可拖拽、可隐藏、可切换表情
 - 表情 / 情绪联动逻辑抽取为共享 composable（`useLive2d.js`）
 - 组件卸载时完整清理（CSS link / DOM 元素 / 全局变量），避免内存泄漏
@@ -393,7 +392,7 @@ innovation-competition-platform/
 │       ├── components/               # 公共组件
 │       │   ├── SparkLogo.vue         # 品牌 Logo 组件（彩色渐变文字+粒子浮动+奖杯光晕，烟花视觉效果）
 │       │   ├── GuideSystem.vue       # 全局引导系统（首次登录引导/高亮/拖拽弹窗/路由跳转）
-│       │   ├── HuahuoAssistant.vue   # Live2D 虚拟形象「火花」（全屏拖拽/AI对话/语音/表情联动/3分钟超时/完整清理）
+│       │   ├── HuahuoAssistant.vue   # Live2D 虚拟形象「火花」（全屏拖拽/AI对话/语音/关键字表情联动/完整清理）
 │       │   ├── VoiceChat.vue         # 语音交互面板（流式对话/语音识别/TTS/可拖拽/深色毛玻璃）
 │       │   ├── Live2dWidget.vue      # Live2D 看板娘组件（旧版，已被 HuahuoAssistant 替代）
 │       │   ├── TestButton.vue        # 测试按钮组件
@@ -1669,7 +1668,7 @@ def create_competition():
 | AI 智能对话     | ✅ 完成 | 流式输出/重试机制/3分钟超时/会话管理/回答清洗/统一对话路由/智能导航/角色感知                    |
 | AI 分析工具     | ✅ 完成 | 项目简介/商业计划书/风险分析/深色主题适配                                        |
 | 语音交互        | ✅ 完成 | ASR/TTS/实时语音对话/可拖拽面板                                          |
-| Live2D 虚拟形象 | ✅ 完成 | 全屏拖拽/表情联动/口型驱动/位置持久化/拖拽按钮跟随                                   |
+| Live2D 虚拟形象 | ✅ 完成 | 全屏拖拽/关键字表情联动/位置持久化/拖拽按钮跟随/面板开关联动 |
 | 证书成果        | ✅ 完成 | 证书列表/获奖记录/查看详情弹窗/证书图片                                         |
 | 我的赛事        | ✅ 完成 | 报名列表/海报封面/状态跟踪                                                |
 | 全局引导系统      | ✅ 完成 | 首次登录引导/步骤导航/路由跳转/状态持久化                                        |
@@ -1890,7 +1889,7 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
-### v4.3.1 - 2026-05-04（当前版本）
+### v4.3.1 - 2026-05-04
 
 > Live2D 拖拽按钮彻底修复（坐标系统 + 事件冒泡）+ Chrome 跳动根因修复（残留 CSS + 异步时序）+ MCP 浏览器自动化回归验证
 
@@ -1907,6 +1906,25 @@ cd backend && flask db upgrade && python seed.py
 #### 文档更新
 
 - **README.md**：版本变更记录新增 v4.3.1；v4.3.0 移除"当前版本"标记
+
+***
+
+### v4.3.2 - 2026-05-04（当前版本）
+
+> 浏览器兼容性统一（Firefox 滚动条）+ 口型动画系统全量禁用（移除诡异眼部动画）+ 关键字表情切换恢复（仅 onDelta 关键词驱动）
+
+#### Bug 修复
+
+- **Firefox 浏览器兼容性修复**：`-webkit-scrollbar` 伪元素在 Firefox 中无效，导致 `.expression-panel` 和 `.chat-messages` 滚动条样式丢失。修复：新增 Firefox 标准属性 `scrollbar-width: thin` 和 `scrollbar-color: rgba(6, 182, 212, 0.3) transparent`，与 Chrome 保持视觉一致（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Live2D 朗读时眼部异常一开一合**：三重根因叠加——① `onStreamStart` 和 `onSpeechStart` 强制设置 `setBaseExpression('07 星星眼')`，每次流式对话/语音朗读开始时将眼睛切换为星星眼；② `startStreamMouthPulse` / `startSpeechMouthPulse` 以正弦波驱动 `ParamMouthOpenY`（幅度 0.3-0.8，60-80ms 间隔），但模型不具备口型素材，参数值泄漏到眼部参数导致眼睛不自然开合；③ `onStreamEnd` 和 `onSpeechEnd` 强制重置为 `setBaseExpression('06 0.0')`，与入场时的星星眼形成反复切换。修复：全量禁用口型脉冲函数（改为空函数）；移除 monkey-patch `core.update` 中 `__applySpeechStateToCore` 调用；移除流式/语音开始结束的强制表情设置（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+
+#### 功能修改
+
+- **关键字驱动表情切换恢复**：`onDelta` 钩子恢复情绪关键词检测逻辑，AI 流式输出时根据文本内容自动匹配表情——开心/高兴/棒 →「02 脸红爱心」、生气/愤怒 →「03 生气」、难过/伤心 →「08 流泪」、晕/困惑 →「04 晕」、惊讶/震惊 →「07 星星眼」。不再在流式开始/结束时强制切换表情，仅通过文本关键词自然触发（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)、[useLive2d.js](frontend/src/composables/useLive2d.js)）
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.3.2；v4.3.1 移除"当前版本"标记
 
 ### v4.2.0 - 2026-05-04
 

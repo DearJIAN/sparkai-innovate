@@ -530,18 +530,6 @@ function setupExpressionControls() {
       console.error('[Expression Controls] Error syncing expression state:', err)
     }
   }
-
-  // 应用语音口型状态到 core model
-  window.__applySpeechStateToCore = function(core) {
-    if (!core) return
-    const paramId = resolveParamIdObject(core, 'ParamMouthOpenY')
-    if (paramId && typeof core.getParameterIndex === 'function' && typeof core.setParameterValueByIndex === 'function') {
-      const idx = core.getParameterIndex(paramId)
-      if (idx >= 0) {
-        core.setParameterValueByIndex(idx, window.__speechMouthOpenY || 0, 1)
-      }
-    }
-  }
 }
 
 // ============================================================
@@ -567,18 +555,10 @@ function setupExpressionWithOverlay() {
     const oldCoreUpdate = core.update.bind(core)
     core.update = function(...args) {
       try {
-        // 每帧更新前：应用 overlay 参数
         window.__applyOverlayStateToCore?.(core)
       } catch (error) {
-        // 静默处理
       }
       const result = oldCoreUpdate(...args)
-      try {
-        // 每帧更新后：应用 speech 参数（口型）
-        window.__applySpeechStateToCore?.(core)
-      } catch (error) {
-        // 静默处理
-      }
       return result
     }
     core.__overlayUpdatePatched = true
@@ -715,10 +695,7 @@ function switchExpression() {
 
 function setupVoiceHooks() {
   window.__voiceLive2dHooks = {
-    onStreamStart: () => {
-      window.__syncExpressionState && setBaseExpression('07 星星眼')
-      startStreamMouthPulse()
-    },
+    onStreamStart: () => {},
     onDelta: (payload) => {
       const emotion = detectEmotionByText(payload?.text || '')
       if (emotion) {
@@ -726,40 +703,15 @@ function setupVoiceHooks() {
         if (expr) setBaseExpression(expr)
       }
     },
-    onStreamEnd: () => {
-      setBaseExpression('06 0.0')
-      stopStreamMouthPulse()
-      window.__speechMouthOpenY = 0
-    },
-    onSpeechStart: () => { setBaseExpression('07 星星眼'); startSpeechMouthPulse() },
-    onSpeechPulse: (payload) => {
-      window.__speechMouthOpenY = payload?.intensity || 0.5
-    },
-    onSpeechEnd: () => {
-      setBaseExpression('06 0.0')
-      stopSpeechMouthPulse()
-      window.__speechMouthOpenY = 0
-    },
+    onStreamEnd: () => {},
+    onSpeechStart: () => {},
+    onSpeechPulse: () => {},
+    onSpeechEnd: () => {},
   }
 }
 
-function startStreamMouthPulse() {
-  stopStreamMouthPulse()
-  const startTime = Date.now()
-  streamMouthPulseId = setInterval(() => {
-    const elapsed = (Date.now() - startTime) / 1000
-    const intensity = 0.3 + 0.5 * Math.abs(Math.sin(elapsed * 8))
-    window.__speechMouthOpenY = intensity
-  }, 60)
-}
-
-function stopStreamMouthPulse() {
-  if (streamMouthPulseId) {
-    clearInterval(streamMouthPulseId)
-    streamMouthPulseId = null
-  }
-  window.__speechMouthOpenY = 0
-}
+function startStreamMouthPulse() {}
+function stopStreamMouthPulse() {}
 
 // ============================================================
 // Live2D 加载流程（参考 my_huahuo 的 autoload.js 方式）
@@ -1220,17 +1172,8 @@ function toggleSpeech() {
   window.speechSynthesis.speak(u)
 }
 
-function startSpeechMouthPulse() {
-  stopSpeechMouthPulse()
-  const startTime = Date.now()
-  speechPulseInterval = setInterval(() => {
-    const elapsed = (Date.now() - startTime) / 1000
-    const intensity = 0.3 + 0.5 * Math.abs(Math.sin(elapsed * 6))
-    notifyLive2dHook('onSpeechPulse', { intensity })
-  }, 80)
-}
-
-function stopSpeechMouthPulse() { if (speechPulseInterval) { clearInterval(speechPulseInterval); speechPulseInterval = null } }
+function startSpeechMouthPulse() {}
+function stopSpeechMouthPulse() {}
 
 function clearMessages() {
   messages.value = []
@@ -1575,6 +1518,8 @@ onBeforeUnmount(() => {
   background: rgba(15, 23, 42, 0.6);
   max-height: 280px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.3) transparent;
 }
 
 .expression-panel::-webkit-scrollbar { width: 4px; }
@@ -1904,6 +1849,8 @@ onBeforeUnmount(() => {
   padding: 12px 16px;
   max-height: 400px;
   min-height: 200px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.3) transparent;
 }
 
 .chat-messages::-webkit-scrollbar { width: 4px; }
