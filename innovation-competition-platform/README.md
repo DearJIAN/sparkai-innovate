@@ -1,6 +1,8 @@
-# 高校创新创业竞赛服务平台
+# 火花智创 SparkAI Innovate
 
-> University Innovation and Entrepreneurship Competition Service Platform
+> 🔥 高校创新创业竞赛智能服务平台 / University Innovation and Entrepreneurship Competition AI Service Platform
+>
+> GitHub: https://github.com/DearJIAN/sparkai-innovate
 
 一个面向高校的**创新创业竞赛全流程服务平台**，覆盖竞赛发现、报名、项目创建、团队管理、材料上传、任务进度、评审打分、AI 辅助的完整流程。平台采用**前后端分离架构**，支持学生、指导老师、评委、管理员四种角色，提供竞赛广场、项目工作室、训练营、在线课程、产业命题等多元化功能。
 
