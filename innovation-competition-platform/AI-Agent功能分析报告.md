@@ -1,5 +1,7 @@
 # 高校创新创业竞赛服务平台 — AI 智能与 Agent 功能分析报告
 
+> **📌 文档定位**：本文档是 [README.md](./README.md) 的技术补充文档，专注于详细解析平台中 **AI 项目智能体** 的技术架构、实现原理和代码细节。如果你想了解项目整体概况，请先阅读 README.md；如果你想深入了解 AI Agent 是如何工作的、LangChain 在本项目中扮演什么角色、RAG 检索流程是怎样的，那么本文档就是为你准备的。
+>
 > 分析日期：2026-05-04  
 > 分析范围：项目中所有涉及 AI、LangChain、智能体（Agent）、语音交互、Live2D 联动等功能模块
 
@@ -27,15 +29,15 @@
 
 本项目的 AI/Agent 功能可归纳为以下 **7 大子系统**：
 
-| 序号 | 子系统 | 核心技术 | 入口 |
-|------|--------|----------|------|
-| 1 | AI 智能对话 | LangChain + 通义千问 qwen-plus / GLM-5 | HuahuoAssistant.vue、/api/ai/chat/stream |
-| 2 | 统一对话路由与意图识别 | LLM 意图分类 + 关键词快速匹配 | /api/ai/chat/stream (unified_chat) |
-| 3 | LangChain Agent 智能体 | LangChain + FAISS/BM25 混合检索 + Prompt 工程 | AgentPanel.vue、/api/agent/* |
-| 4 | RAG 检索增强生成 | FAISS 向量索引 + BM25 稀疏检索 + 关键词回退 | vector_store.py |
-| 5 | 语音交互 | Web Speech API / 豆包 ASR / 火山 TTS / 火山实时语音 | VoiceChat.vue、/api/ai/asr、/api/ai/tts |
-| 6 | Live2D 虚拟形象联动 | Cubism5 SDK + 表情/口型驱动 + 情绪检测 | HuahuoAssistant.vue、useLive2d.js |
-| 7 | AI 分析工具 | LLM Prompt 工程 + 模板回退 | /api/ai/project-summary 等 |
+| 序号 | 子系统                 | 核心技术                                            | 入口                                     |
+| ---- | ---------------------- | --------------------------------------------------- | ---------------------------------------- |
+| 1    | AI 智能对话            | LangChain + 通义千问 qwen-plus / GLM-5              | HuahuoAssistant.vue、/api/ai/chat/stream |
+| 2    | 统一对话路由与意图识别 | LLM 意图分类 + 关键词快速匹配                       | /api/ai/chat/stream (unified_chat)       |
+| 3    | LangChain Agent 智能体 | LangChain + FAISS/BM25 混合检索 + Prompt 工程       | AgentPanel.vue、/api/agent/*             |
+| 4    | RAG 检索增强生成       | FAISS 向量索引 + BM25 稀疏检索 + 关键词回退         | vector_store.py                          |
+| 5    | 语音交互               | Web Speech API / 豆包 ASR / 火山 TTS / 火山实时语音 | VoiceChat.vue、/api/ai/asr、/api/ai/tts  |
+| 6    | Live2D 虚拟形象联动    | Cubism5 SDK + 表情/口型驱动 + 情绪检测              | HuahuoAssistant.vue、useLive2d.js        |
+| 7    | AI 分析工具            | LLM Prompt 工程 + 模板回退                          | /api/ai/project-summary 等               |
 
 ---
 
@@ -47,13 +49,13 @@
 
 ### 2.2 涉及文件
 
-| 层级 | 文件 | 职责 |
-|------|------|------|
-| 后端服务 | `services/ai_service.py` | LLM 调用、会话管理、流式输出、意图识别、回答清洗 |
-| 后端路由 | `routes/ai.py` | 对话接口、流式接口、语音接口、TTS 接口 |
-| 前端组件 | `components/HuahuoAssistant.vue` | 全局浮动 AI 助手面板 |
-| 前端页面 | `views/ai-assistant/index.vue` | 备用 AI 助手页面 |
-| 前端 API | `api/ai.js` | 前端 AI 接口封装 |
+| 层级     | 文件                               | 职责                                             |
+| -------- | ---------------------------------- | ------------------------------------------------ |
+| 后端服务 | `services/ai_service.py`         | LLM 调用、会话管理、流式输出、意图识别、回答清洗 |
+| 后端路由 | `routes/ai.py`                   | 对话接口、流式接口、语音接口、TTS 接口           |
+| 前端组件 | `components/HuahuoAssistant.vue` | 全局浮动 AI 助手面板                             |
+| 前端页面 | `views/ai-assistant/index.vue`   | 备用 AI 助手页面                                 |
+| 前端 API | `api/ai.js`                      | 前端 AI 接口封装                                 |
 
 ### 2.3 执行逻辑
 
@@ -90,7 +92,7 @@ SSE 流式返回给前端（delta:xxx\n 格式）
 
 - **主通道**：通义千问 qwen-plus（通过 `GLM_API_KEY` / `GLM_BASE_URL` 配置，兼容 OpenAI 接口格式）
 - **备选通道**：火山方舟 doubao-seed（通过 `ARK_API_KEY` / `ARK_BASE_URL` 配置）
-- **LangChain Agent 通道**：GLM-5（通过 `langchain_service.py` 单独初始化）
+- **LangChain Agent 通道**：GLM-5（通过 `ai_prompt_service.py` 单独初始化）
 
 ```python
 # ai_service.py 中的 LLM 初始化
@@ -149,15 +151,15 @@ user_prompt = f"{SYSTEM_PROMPT}\n\n当前用户角色：{role_desc}\n当前场�
 
 ### 3.2 意图分类
 
-| 意图 | 说明 | 处理方式 |
-|------|------|----------|
-| `navigate` | 用户想跳转页面 | 调用 `smart_navigate()` 返回路由信息 |
-| `mock_defense` | 模拟路演答辩 | 调用 `langchain_service.mock_defense()` |
-| `batch_review` | 批量审核 | 调用 `langchain_service.batch_review_assist()` |
-| `smart_feedback` | 智能反馈 | 调用 `langchain_service.smart_feedback_generate()` |
-| `review_draft` | 评审草稿 | 调用 `langchain_service.review_draft_generate()` |
-| `score_check` | 评分一致性检查 | 调用 `langchain_service.score_consistency_check()` |
-| `chat` | 普通对话 | 调用 `call_llm_chat()` |
+| 意图               | 说明           | 处理方式                                             |
+| ------------------ | -------------- | ---------------------------------------------------- |
+| `navigate`       | 用户想跳转页面 | 调用 `smart_navigate()` 返回路由信息               |
+| `mock_defense`   | 模拟路演答辩   | 调用 `ai_prompt_service.mock_defense()`            |
+| `batch_review`   | 批量审核       | 调用 `ai_prompt_service.batch_review_assist()`     |
+| `smart_feedback` | 智能反馈       | 调用 `ai_prompt_service.smart_feedback_generate()` |
+| `review_draft`   | 评审草稿       | 调用 `ai_prompt_service.review_draft_generate()`   |
+| `score_check`    | 评分一致性检查 | 调用 `ai_prompt_service.score_consistency_check()` |
+| `chat`           | 普通对话       | 调用 `call_llm_chat()`                             |
 
 ### 3.3 意图识别执行逻辑
 
@@ -199,33 +201,51 @@ user_prompt = f"{SYSTEM_PROMPT}\n\n当前用户角色：{role_desc}\n当前场�
 
 AI 项目智能体提供 12 大专项 AI 能力，基于 LangChain + FAISS/BM25 混合检索技术实现，为不同角色用户提供差异化的智能辅助。
 
+#### 项目真实架构图
+
+![项目真实架构图](docs_and_images/项目真实架构图-修订版.png)
+
+**一句话总结**：你的项目是"前后端分离的高校竞赛服务平台"，其中前端负责交互，Flask 后端负责业务调度，`ai_service.py` 负责 AI 对话，`ai_prompt_service.py` 负责固定能力型 Agent，`vector_store.py` + `document_parser.py` 负责 RAG 检索，LangChain 负责模型调用编排，大模型负责生成最终结果。
+
 ### 4.2 12 大 AI 能力清单
 
-| 序号 | 能力 | API 端点 | 可用角色 | 是否需要项目 | 是否需要索引 |
-|------|------|----------|----------|-------------|-------------|
-| 1 | 智能引航 | `/agent/navigate` | 全部 | 否 | 否 |
-| 2 | AI 材料问答 | `/agent/material-qa` | 全部 | 是 | 是 |
-| 3 | 商业计划书体检 | `/agent/bp-check` | 全部 | 是 | 是 |
-| 4 | 路演稿生成 | `/agent/roadshow` | 学生/教师/管理员 | 是 | 可选 |
-| 5 | 评审辅助 | `/agent/review-assist` | 教师/评委/管理员 | 是 | 是 |
-| 6 | 智能竞赛推荐 | `/agent/competition-recommend` | 学生/管理员 | 是 | 否 |
-| 7 | 项目创意生成 | `/agent/project-idea` | 学生/管理员 | 否 | 否 |
-| 8 | 模拟路演答辩 | `/agent/mock-defense` | 学生/教师/管理员 | 可选 | 可选 |
-| 9 | 批量审核助手 | `/agent/batch-review` | 教师/管理员 | 否 | 否 |
-| 10 | 智能反馈生成 | `/agent/smart-feedback` | 教师/管理员 | 是 | 是 |
-| 11 | 评审意见草稿 | `/agent/review-draft` | 评委/管理员 | 是 | 是 |
-| 12 | 评分一致性检查 | `/agent/score-check` | 评委/管理员 | 否 | 否 |
+| 序号 | 能力           | API 端点                         | 可用角色         | 是否需要项目 | 是否需要索引 |
+| ---- | -------------- | -------------------------------- | ---------------- | ------------ | ------------ |
+| 1    | 智能引航       | `/agent/navigate`              | 全部             | 否           | 否           |
+| 2    | AI 材料问答    | `/agent/material-qa`           | 全部             | 是           | 是           |
+| 3    | 商业计划书体检 | `/agent/bp-check`              | 全部             | 是           | 是           |
+| 4    | 路演稿生成     | `/agent/roadshow`              | 学生/教师/管理员 | 是           | 可选         |
+| 5    | 评审辅助       | `/agent/review-assist`         | 教师/评委/管理员 | 是           | 是           |
+| 6    | 智能竞赛推荐   | `/agent/competition-recommend` | 学生/管理员      | 是           | 否           |
+| 7    | 项目创意生成   | `/agent/project-idea`          | 学生/管理员      | 否           | 否           |
+| 8    | 模拟路演答辩   | `/agent/mock-defense`          | 学生/教师/管理员 | 可选         | 可选         |
+| 9    | 批量审核助手   | `/agent/batch-review`          | 教师/管理员      | 否           | 否           |
+| 10   | 智能反馈生成   | `/agent/smart-feedback`        | 教师/管理员      | 是           | 是           |
+| 11   | 评审意见草稿   | `/agent/review-draft`          | 评委/管理员      | 是           | 是           |
+| 12   | 评分一致性检查 | `/agent/score-check`           | 评委/管理员      | 否           | 否           |
 
 ### 4.3 涉及文件
 
-| 层级 | 文件 | 职责 |
-|------|------|------|
-| 后端服务 | `services/langchain_service.py` | 12 大能力的 Prompt 构建与 LLM 调用 |
-| 后端路由 | `routes/agent.py` | Agent API 端点、权限校验、任务记录 |
-| 后端服务 | `services/vector_store.py` | FAISS/BM25/关键词三级检索引擎 |
-| 后端服务 | `services/document_parser.py` | 文档解析（.txt/.pdf/.docx/.pptx） |
-| 前端组件 | `views/ai-assistant/AgentPanel.vue` | 智能体能力选择与参数表单 |
-| 前端 API | `api/agent.js` | Agent 接口封装 |
+| 层级     | 文件                                  | 职责                               |
+| -------- | ------------------------------------- | ---------------------------------- |
+| 后端服务 | `services/ai_prompt_service.py`     | 12 大能力的 Prompt 构建与 LLM 调用 |
+| 后端路由 | `routes/agent.py`                   | Agent API 端点、权限校验、任务记录 |
+| 后端服务 | `services/vector_store.py`          | FAISS/BM25/关键词三级检索引擎      |
+| 后端服务 | `services/document_parser.py`       | 文档解析（.txt/.pdf/.docx/.pptx）  |
+| 前端组件 | `views/ai-assistant/AgentPanel.vue` | 智能体能力选择与参数表单           |
+| 前端 API | `api/agent.js`                      | Agent 接口封装                     |
+
+#### Agent 层简化架构图
+
+![Agent 层简化架构图](docs_and_images/agent层简化架构图-修订版.png)
+
+**你只要这样记**：
+- **前端**：让用户选择 Agent 能力
+- **routes/agent.py**：做认证、权限和调度
+- **vector_store.py**：负责 RAG 检索
+- **ai_prompt_service.py**：负责 Prompt 构建与 LLM 调用
+
+**一句话**：你的 Agent 是固定能力型，不是完全自主型；用户先选能力，后端按固定流程执行，RAG 负责找材料，`ai_prompt_service` 负责 AI 编排。
 
 ### 4.4 执行逻辑（以"AI 材料问答"为例）
 
@@ -245,7 +265,7 @@ POST /api/agent/material-qa
     ├── 检查索引是否存在 → index_exists()
     ├── 检索相关材料 → search_documents('project', project_id, question, top_k=4)
     ├── 构建项目信息文本 → _get_project_info_text()
-    ├── 调用 langchain_service.material_qa()
+    ├── 调用 ai_prompt_service.material_qa()
     │   ├── 构建检索上下文 → _build_context_from_search()
     │   ├── 构建 Prompt（含检索结果 + 项目信息 + 用户问题）
     │   ├── 调用 LLM → _call_llm_with_fallback()
@@ -343,10 +363,10 @@ RAG（Retrieval-Augmented Generation）系统是 Agent 智能体的基础设施�
 
 ### 5.2 涉及文件
 
-| 文件 | 职责 |
-|------|------|
-| `services/vector_store.py` | 三级检索引擎（FAISS / BM25 / 关键词） |
-| `services/document_parser.py` | 文档解析（.txt/.pdf/.docx/.pptx） |
+| 文件                            | 职责                                  |
+| ------------------------------- | ------------------------------------- |
+| `services/vector_store.py`    | 三级检索引擎（FAISS / BM25 / 关键词） |
+| `services/document_parser.py` | 文档解析（.txt/.pdf/.docx/.pptx）     |
 
 ### 5.3 三级检索引擎架构
 
@@ -438,6 +458,7 @@ vector_store.py 文本分块
 ```
 
 **分块原理**：滑动窗口分块（chunk_size=500, overlap=50）确保：
+
 1. 每个文本块不超过 Embedding 模型的有效处理长度
 2. 相邻块有 50 字符重叠，避免语义断裂
 3. 检索时能获取到完整的上下文片段
@@ -452,13 +473,13 @@ vector_store.py 文本分块
 
 ### 6.2 涉及文件
 
-| 文件 | 职责 |
-|------|------|
-| `services/tts_service.py` | 火山 TTS HTTP API 语音合成 |
-| `services/volc_realtime_bridge.py` | 火山实时语音对话 WebSocket 桥接 |
-| `services/volc_realtime_protocol.py` | 火山实时语音二进制协议解析 |
-| `routes/ai.py` | ASR/TTS/语音配置 API 端点 |
-| `components/VoiceChat.vue` | 语音对话面板组件 |
+| 文件                                   | 职责                            |
+| -------------------------------------- | ------------------------------- |
+| `services/tts_service.py`            | 火山 TTS HTTP API 语音合成      |
+| `services/volc_realtime_bridge.py`   | 火山实时语音对话 WebSocket 桥接 |
+| `services/volc_realtime_protocol.py` | 火山实时语音二进制协议解析      |
+| `routes/ai.py`                       | ASR/TTS/语音配置 API 端点       |
+| `components/VoiceChat.vue`           | 语音对话面板组件                |
 
 ### 6.3 语音识别（ASR）执行逻辑
 
@@ -553,12 +574,12 @@ Live2D 虚拟形象「火花」作为平台的 AI 交互入口，实现表情联
 
 ### 7.2 涉及文件
 
-| 文件 | 职责 |
-|------|------|
+| 文件                               | 职责                                      |
+| ---------------------------------- | ----------------------------------------- |
 | `components/HuahuoAssistant.vue` | Live2D 加载、表情控制、对话面板、拖拽管理 |
-| `composables/useLive2d.js` | 情绪检测、表情映射、Live2D 钩子 |
-| `public/live2d/huahuo/` | Live2D 模型资源（Cubism5 格式） |
-| `public/live2d-widget-dist/` | Live2D Widget SDK |
+| `composables/useLive2d.js`       | 情绪检测、表情映射、Live2D 钩子           |
+| `public/live2d/huahuo/`          | Live2D 模型资源（Cubism5 格式）           |
+| `public/live2d-widget-dist/`     | Live2D Widget SDK                         |
 
 ### 7.3 表情联动执行逻辑
 
@@ -659,11 +680,11 @@ ai_service.py 中对应函数：
 
 ### 9.1 AI 相关数据模型
 
-| 模型 | 表名 | 用途 |
-|------|------|------|
-| `AiRecord` | `ai_records` | AI 分析工具调用记录（项目简介/商业建议/风险分析） |
-| `AgentTask` | `agent_tasks` | Agent 智能体任务记录（12 大能力的调用记录） |
-| `AgentMaterialIndex` | `agent_material_indexes` | 材料索引状态记录（哪些文件已建立索引） |
+| 模型                   | 表名                       | 用途                                              |
+| ---------------------- | -------------------------- | ------------------------------------------------- |
+| `AiRecord`           | `ai_records`             | AI 分析工具调用记录（项目简介/商业建议/风险分析） |
+| `AgentTask`          | `agent_tasks`            | Agent 智能体任务记录（12 大能力的调用记录）       |
+| `AgentMaterialIndex` | `agent_material_indexes` | 材料索引状态记录（哪些文件已建立索引）            |
 
 ### 9.2 AgentTask 模型结构
 
@@ -747,7 +768,7 @@ class AgentTask(db.Model):
 └─────────────────────┘            └─────────────────────┘
          │                                   │
          ▼                                   ▼
-   ai_service.py                    langchain_service.py
+   ai_service.py                    ai_prompt_service.py
    (LLM + 会话 + 流式)              (Prompt + LLM + RAG)
          │                                   │
          └───────────┬───────────────────────┘
@@ -775,7 +796,7 @@ class AgentTask(db.Model):
         ↓
 [6] vector_store.py 检索 top-4 相关文本块
         ↓
-[7] langchain_service.py 构建 Prompt：
+[7] ai_prompt_service.py 构建 Prompt：
     ├── 系统角色设定
     ├── 检索到的材料片段（RAG 上下文）
     ├── 项目基本信息
@@ -801,6 +822,7 @@ RAG 是本项目的核心技术范式，其原理是：
 3. **增强生成阶段**：将检索到的文档块作为上下文注入 LLM Prompt，让 LLM 基于真实材料回答
 
 **为什么需要 RAG？**
+
 - LLM 的知识有截止日期，不了解用户的具体项目材料
 - RAG 让 LLM 能基于用户上传的真实文档回答问题，减少幻觉
 - 检索到的材料片段作为"证据"，提高回答的可信度和可追溯性
@@ -880,6 +902,7 @@ LangChain 在项目中的作用：
 ```
 
 **重要区分**：
+
 - **LangChain** = 框架，提供一套工具帮你把各种组件组合起来用
 - **RAG** = 一种技术思想/方案（不是库！）
 - **FAISS** = 具体的技术库（Facebook/Meta 开发的）
@@ -914,6 +937,7 @@ LangChain 在项目中的作用：
 ```
 
 **你有了厨房设备（LangChain），但你还是需要：**
+
 1. 去买食材（大模型 API）
 2. 有会员卡才能买（API Key）
 
@@ -950,7 +974,7 @@ LangChain 在项目中的作用：
 你的项目 `.env` 文件中配置了：
 
 ```python
-# langchain_service.py 第36-55行
+# ai_prompt_service.py 第36-55行
 def get_llm():
     global _llm
     if _llm is not None:
@@ -1063,12 +1087,12 @@ RAG = **R**etrieval-**A**ugmented **G**eneration（检索增强生成）
 #### 12.4.4 RAG 在你项目中的实际使用
 
 ```python
-# langchain_service.py 第545-596行 material_qa 函数
+# ai_prompt_service.py 第545-596行 material_qa 函数
 def material_qa(question, project=None, search_result=None, project_info_text=None):
     # 第546行：从 vector_store 获取检索结果
     context = _build_context_from_search(search_result)
     # 这里 context 就是 RAG 的 "R" - 检索到的内容
-    
+  
     # 第561-575行：构建包含检索结果的 Prompt
     prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，专门帮助用户理解项目材料内容。
 
@@ -1086,7 +1110,7 @@ def material_qa(question, project=None, search_result=None, project_info_text=No
 2. 如果材料不足以回答问题，请明确说明并建议补充哪些材料
 3. 如果涉及创新点、商业模式、市场风险等，请给出专业分析
 4. 回答使用中文"""
-    
+  
     # 第577行：调用大模型生成
     result, is_fallback = _call_llm_with_fallback(prompt, ...)
 ```
@@ -1212,7 +1236,7 @@ class FAISSIndex:
         self.index = None  # FAISS 索引对象
         self.documents = []
         self.metadatas = []
-    
+  
     # 第92-114行：获取 Embedding 模型
     def _get_embeddings(self):
         # 优先使用火山方舟 Embedding API
@@ -1222,37 +1246,37 @@ class FAISSIndex:
             openai_api_key=os.getenv('ARK_API_KEY'),
             openai_api_base=os.getenv('ARK_BASE_URL'),
         )
-    
+  
     # 第116-135行：构建索引
     def build(self, documents, metadatas):
         # 1. 获取 Embedding 模型
         embeddings = self._get_embeddings()
-        
+    
         # 2. 把文字变成向量
         vectors = embeddings.embed_documents(documents)
-        
+    
         # 3. 转换成 numpy 数组
         import numpy as np
         vectors = np.array(vectors, dtype=np.float32)
-        
+    
         # 4. 创建 FAISS 索引
         dimension = vectors.shape[1]  # 向量维度
         self.index = faiss.IndexFlatL2(dimension)  # L2 距离索引
         self.index.add(vectors)  # 添加文档向量
-        
+    
         self.documents = documents
         self.metadatas = metadatas
         return True
-    
+  
     # 第137-160行：搜索
     def search(self, query, top_k=4):
         # 1. 把问题变成向量
         query_vector = embeddings.embed_query(query)
         query_vector = np.array([query_vector], dtype=np.float32)
-        
+    
         # 2. 在索引中搜索最近的 top_k 个文档
         distances, indices = self.index.search(query_vector, top_k)
-        
+    
         # 3. 返回结果
         results = []
         for i, idx in enumerate(indices[0]):
@@ -1356,31 +1380,31 @@ class BM25Index:
         self.documents = []
         self.metadatas = []
         self.tokenized_corpus = []
-    
+  
     # 第205-211行：构建索引
     def build(self, documents, metadatas):
         # 1. 保存原始文档
         self.documents = documents
         self.metadatas = metadatas
-        
+    
         # 2. 对每个文档进行中文分词（使用 jieba）
         self.tokenized_corpus = [_simple_tokenize(doc) for doc in documents]
-        
+    
         # 3. 构建 BM25 索引
         self.bm25 = BM25Plus(self.tokenized_corpus)
         return True
-    
+  
     # 第216-234行：搜索
     def search(self, query, top_k=4):
         # 1. 对查询进行分词
         tokenized_query = _simple_tokenize(query)
-        
+    
         # 2. 计算每个文档的 BM25 分数
         scores = self.bm25.get_scores(tokenized_query)
-        
+    
         # 3. 按分数排序，取 top_k
         top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
-        
+    
         # 4. 返回结果
         results = []
         for idx in top_indices:
@@ -1399,15 +1423,15 @@ class BM25Index:
 
 ### 12.7 完整的技术来源对照表
 
-| 组件 | 实际来源 | 你的项目中在哪里 | 是 LangChain 吗？ |
-|------|---------|----------------|-----------------|
-| LangChain 框架 | LangChain 官方 | `langchain-openai` 封装 | ✅ 是 |
-| RAG 思想/方案 | **独立技术方案，不是库！** | `langchain_service.py` 中的检索+生成流程 | ❌ 不是 |
-| FAISS 向量检索 | **Facebook (Meta)** 开发 | `vector_store.py` 的 `FAISSIndex` 类 | ❌ 不是 |
-| BM25 关键词检索 | **学术界算法** | `vector_store.py` 的 `BM25Index` 类 | ❌ 不是 |
-| Embedding 向量化 | **OpenAI/HuggingFace** | `langchain_openai.OpenAIEmbeddings` | ❌ 不是 |
-| 文档解析 | **原生 Python 库** | `pypdf`, `python-docx`, `python-pptx` | ❌ 不是 |
-| 大模型调用 | **豆包/智谱/阿里等** | 需要 API Key | ❌ 不是 |
+| 组件             | 实际来源                         | 你的项目中在哪里                            | 是 LangChain 吗？ |
+| ---------------- | -------------------------------- | ------------------------------------------- | ----------------- |
+| LangChain 框架   | LangChain 官方                   | `langchain-openai` 封装                   | ✅ 是             |
+| RAG 思想/方案    | **独立技术方案，不是库！** | `ai_prompt_service.py` 中的检索+生成流程  | ❌ 不是           |
+| FAISS 向量检索   | **Facebook (Meta)** 开发   | `vector_store.py` 的 `FAISSIndex` 类    | ❌ 不是           |
+| BM25 关键词检索  | **学术界算法**             | `vector_store.py` 的 `BM25Index` 类     | ❌ 不是           |
+| Embedding 向量化 | **OpenAI/HuggingFace**     | `langchain_openai.OpenAIEmbeddings`       | ❌ 不是           |
+| 文档解析         | **原生 Python 库**         | `pypdf`, `python-docx`, `python-pptx` | ❌ 不是           |
+| 大模型调用       | **豆包/智谱/阿里等**       | 需要 API Key                                | ❌ 不是           |
 
 ---
 
@@ -1509,7 +1533,7 @@ class BM25Index:
 │  │                     第四层：LangChain                         │ │
 │  │                                                                 │ │
 │  │  ┌─────────────────────────────────────────────────────────┐   │ │
-│  │  │            langchain_service.py                         │   │ │
+│  │  │            ai_prompt_service.py                         │   │ │
 │  │  │                                                         │   │ │
 │  │  │  你实际用到的 LangChain：                                │   │ │
 │  │  │  ┌─────────────────────────────────────────────────┐   │   │ │
@@ -1660,7 +1684,7 @@ class BM25Index:
 # 你项目中的 LangChain 代码 - 全部就这些！
 # ═══════════════════════════════════════════════════════════════
 
-# 1. langchain_service.py 第42行 - 初始化大模型
+# 1. ai_prompt_service.py 第42行 - 初始化大模型
 from langchain_openai import ChatOpenAI
 _llm = ChatOpenAI(
     model_name=os.getenv('GLM_MODEL', 'glm-5'),
@@ -1672,7 +1696,7 @@ _llm = ChatOpenAI(
     request_timeout=120,
 )
 
-# 2. langchain_service.py 第96行 - 调用大模型
+# 2. ai_prompt_service.py 第96行 - 调用大模型
 from langchain_core.messages import HumanMessage
 response = llm.invoke([HumanMessage(content=prompt_text)])
 
@@ -1685,54 +1709,550 @@ response = llm.invoke([HumanMessage(content=prompt_text)])
 
 ### 12.13 完整问题解答
 
-| 问题 | 回答 |
-|------|------|
-| LangChain 是什么？ | 一个框架/工具箱，帮你把各种组件串联起来 |
-| LangChain 全家桶包含什么？ | Agents、Chains、Memory、Tools、Embeddings、Vectorstores 等 |
-| 你的项目用 LangChain 全家桶了吗？ | **没有**，只用了 `langchain_openai` 封装调用大模型 |
-| RAG 是什么？ | 一种技术方案：检索相关材料 + 让大模型基于材料回答 |
-| FAISS 是什么？ | Facebook 开发的向量搜索库，用于快速找到相似内容 |
-| BM25 是什么？ | 学术界发明的关键词检索算法 |
-| RAG/FAISS/BM25 来自 LangChain 吗？ | **不是！** 它们都是独立的技术 |
-| 需要 API Key 吗？ | **需要！** 不管用不用 LangChain，都需要大模型 API Key |
-| 你的项目有哪些层？ | 文档解析 → 文本切块 → 索引引擎(FAISS/BM25) → LangChain → 大模型 API |
-| LangChain 在第几层？ | LangChain 只在调用大模型的这一层 |
+| 问题                               | 回答                                                                    |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| LangChain 是什么？                 | 一个框架/工具箱，帮你把各种组件串联起来                                 |
+| LangChain 全家桶包含什么？         | Agents、Chains、Memory、Tools、Embeddings、Vectorstores 等              |
+| 你的项目用 LangChain 全家桶了吗？  | **没有**，只用了 `langchain_openai` 封装调用大模型              |
+| RAG 是什么？                       | 一种技术方案：检索相关材料 + 让大模型基于材料回答                       |
+| FAISS 是什么？                     | Facebook 开发的向量搜索库，用于快速找到相似内容                         |
+| BM25 是什么？                      | 学术界发明的关键词检索算法                                              |
+| RAG/FAISS/BM25 来自 LangChain 吗？ | **不是！** 它们都是独立的技术                                     |
+| 需要 API Key 吗？                  | **需要！** 不管用不用 LangChain，都需要大模型 API Key             |
+| 你的项目有哪些层？                 | 文档解析 → 文本切块 → 索引引擎(FAISS/BM25) → LangChain → 大模型 API |
+| LangChain 在第几层？               | LangChain 只在调用大模型的这一层                                        |
 
 ---
 
 ### 12.14 费用/免费情况
 
-| 大模型 | 是否免费 | 备注 |
-|--------|---------|------|
-| GPT-4 | ❌ 收费 | 按 token 计费 |
-| GPT-3.5 | ✅ 有免费额度 | 有限制 |
-| 豆包(GLM) | ✅ 有免费额度 | 看你申请的情况 |
-| 通义千问 | ✅ 有免费额度 | 阿里云赠送 |
-| 文心一言 | ✅ 有免费额度 | 百度赠送 |
-| 本地模型 | ✅ 完全免费 | 但需要自己运行（慢、占内存） |
+| 大模型    | 是否免费      | 备注                         |
+| --------- | ------------- | ---------------------------- |
+| GPT-4     | ❌ 收费       | 按 token 计费                |
+| GPT-3.5   | ✅ 有免费额度 | 有限制                       |
+| 豆包(GLM) | ✅ 有免费额度 | 看你申请的情况               |
+| 通义千问  | ✅ 有免费额度 | 阿里云赠送                   |
+| 文心一言  | ✅ 有免费额度 | 百度赠送                     |
+| 本地模型  | ✅ 完全免费   | 但需要自己运行（慢、占内存） |
 
 **不管用不用 LangChain，都需要大模型 API Key！LangChain 只是帮你更方便地调用大模型！**
 
 ---
 
+### 12.15 一句话总结：LangChain 在项目中的真实角色
+
+> **LangChain 在你项目里不是"整个 Agent 大脑"，而是"调用大模型的适配器 + Prompt 组织的一部分"。**
+
+用一句话概括你的项目：
+
+```
+前端 Vue：负责用户点按钮、输入问题、展示结果
+
+后端 Flask：负责权限、项目数据、文件、API 调度
+
+document_parser.py：负责把 PDF / Word / PPT 变成文字
+
+vector_store.py：负责用 FAISS / BM25 搜材料
+
+ai_prompt_service.py：负责拼 Prompt，并通过 LangChain 的 ChatOpenAI 调大模型
+
+大模型：负责真正生成答案
+```
+
+#### Agent 层详细架构图
+
+![Agent 层详细架构图](docs_and_images/Agent层详细架构图-修订版.png)
+
+**一句话总结**：你的 Agent 层本质上是固定能力型 Agent：前端选择能力，`routes/agent.py` 做认证、权限与任务调度，`vector_store.py` 负责 RAG 检索，`ai_prompt_service.py` 负责 Prompt 构建与 LLM 调用，大模型负责生成结果。
+
+---
+
+### 12.16 重点区分：固定功能型 Agent vs 自主型 Agent
+
+**这个地方最容易混淆，必须彻底搞清楚！**
+
+#### 你的项目是"固定功能型 Agent"
+
+```
+用户点"材料问答"
+    ↓
+后端固定调用 material_qa()
+
+用户点"BP体检"
+    ↓
+后端固定调用 bp_check()
+
+用户点"路演稿生成"
+    ↓
+后端固定调用 roadshow()
+```
+
+**也就是说：用户选什么能力，后端就走对应的固定流程。**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│               你的项目：程序员写死的线性流程                           │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│   用户输入 ──→ 纯 Python 处理 ──→ 调用 LLM ──→ 返回结果           │
+│                                                                      │
+│   每一步都是程序员写死的                                              │
+│   AI 只是"执行命令"，没有真正的"思考"                               │
+│                                                                      │
+│   ✅ 可以叫"AI Agent 功能"，因为它能帮用户完成任务                  │
+│   ❌ 但它不是最典型的 LangChain Agent                                │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+#### 真正的 LangChain Agent 是"自主型 Agent"
+
+```
+用户说：
+"帮我分析项目材料，推荐比赛，并生成一份答辩问题。"
+
+AI 自己判断：
+1. 我先查项目材料
+2. 再分析项目方向
+3. 再查竞赛列表
+4. 再做推荐
+5. 再生成答辩问题
+
+然后 AI 自己调用不同工具。
+```
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│              真正的 LangChain Agent：AI 自主决策                       │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│   用户："帮我分析项目材料，推荐比赛，并生成答辩问题。"                 │
+│                                    ↓                                 │
+│   ┌──────────────────────────────────────────────────────────┐       │
+│   │  Agent 思考：我需要按顺序做这几件事：                      │       │
+│   │  1. 查项目材料 → 2. 分析方向 → 3. 查竞赛 → 4. 推荐      │       │
+│   │  5. 生成答辩问题                                          │       │
+│   │                                                          │       │
+│   │  AI 自己决定下一步做什么，而不是程序员写死的流程           │       │
+│   └──────────────────────────────────────────────────────────┘       │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+#### 对比总结
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        两种 Agent 对比                               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│   ┌────────────────────────┐    ┌────────────────────────────┐     │
+│   │   固定功能型 Agent      │    │      自主型 Agent            │     │
+│   │   （你项目的类型）      │    │  （真正的 LangChain Agent） │     │
+│   ├────────────────────────┤    ├────────────────────────────┤     │
+│   │                        │    │                            │     │
+│   │  程序员写死流程        │    │  AI 自己决定流程            │     │
+│   │                        │    │                            │     │
+│   │  用户选什么就调什么    │    │  AI 分析任务后自主选择工具  │     │
+│   │                        │    │                            │     │
+│   │  LangChain 只调模型    │    │  LangChain 负责：          │     │
+│   │                        │    │  工具注册、调用、决策、多轮 │     │
+│   │  你项目的 12 大能力    │    │                            │     │
+│   │  就是这种             │    │  ChatGPT、Claude 这种      │     │
+│   │                        │    │  才是这种                  │     │
+│   └────────────────────────┘    └────────────────────────────┘     │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+#### 最准确的说法
+
+对于你的项目，最准确的说法是：
+
+> **本项目使用 LangChain 的 OpenAI 兼容封装来统一调用大模型，并在 `ai_prompt_service.py` 中结合 Prompt 工程、RAG 检索结果和业务数据，实现材料问答、BP 体检、路演稿生成等固定能力型 AI Agent 功能。**
+
+---
+
+### 12.17 完整架构流程图（文字版）
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        完整架构流程                                  │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  【用户】                                                            │
+│  点击：材料问答 / BP体检 / 路演稿 / 评审辅助 / 竞赛推荐              │
+│       ↓                                                              │
+│  【前端 Vue】                                                        │
+│  把问题和项目 ID 发给后端                                            │
+│       ↓                                                              │
+│  【后端 Flask / agent.py】                                          │
+│  判断权限、创建任务、找到项目                                         │
+│       ↓                                                              │
+│  【document_parser.py】                                              │
+│  把 PDF / Word / PPT 解析成文字                                     │
+│       ↓                                                              │
+│  【vector_store.py】                                                 │
+│  把文字切块，并用 FAISS / BM25 搜相关片段                            │
+│       ↓                                                              │
+│  【ai_prompt_service.py】                                            │
+│  把：                                                                │
+│  - 用户问题                                                          │
+│  - 项目信息                                                          │
+│  - 搜到的材料片段                                                    │
+│  - 专门的 Prompt 模板                                               │
+│       ↓                                                              │
+│  拼成一个完整 Prompt                                                 │
+│       ↓                                                              │
+│  【LangChain ChatOpenAI】                                            │
+│  用统一方式调用 qwen / GLM / 豆包                                    │
+│       ↓                                                              │
+│  【大模型】                                                          │
+│  生成回答                                                            │
+│       ↓                                                              │
+│  【前端】                                                            │
+│  Markdown 渲染、Live2D 表情联动、朗读                                │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 12.18 答辩话术（可以直接用）
+
+> **问：你们项目的 AI Agent 是怎么做出来的？LangChain 起到什么作用？**
+
+**答：**
+
+我们平台的 AI 智能体不是简单聊天机器人，而是面向创新创业竞赛场景设计的**固定能力型 Agent**。
+
+**整体架构是这样的：**
+
+- 前端通过 AgentPanel 让用户选择材料问答、商业计划书体检、路演稿生成等能力；
+- 后端负责权限校验、任务记录和业务调度；
+- 系统会先解析用户上传的 PDF、Word、PPT 材料，并通过 FAISS 和 BM25 进行**混合检索**，找到与用户问题最相关的材料片段；
+- 然后由 `ai_prompt_service.py` 构建包含项目资料、用户问题和任务要求的 Prompt，并通过 LangChain 的 ChatOpenAI 兼容接口调用大模型生成结果。
+
+**关于 LangChain 的作用：**
+
+- LangChain 在本项目中主要承担**大模型调用封装**作用
+- 所有"Prompt 构建"都是程序员用 Python 手工拼接字符串实现的，不是 LangChain 的编排框架
+- RAG（检索增强生成）、FAISS（向量搜索）、BM25（关键词检索）是**独立技术**，负责让大模型能够基于真实项目材料回答问题
+- 我们没有使用 LangChain 的 Agent、Chain、Memory 等高级编排能力
+
+---
+
+### 12.19 最小白版本总结（就记这几句）
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     最小白版本总结                                   │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  RAG：                                                               │
+│  先查项目材料，再让 AI 回答。                                        │
+│                                                                      │
+│  FAISS：                                                             │
+│  按"意思"查材料（语义搜索）。                                        │
+│                                                                      │
+│  BM25：                                                              │
+│  按"关键词"查材料。                                                  │
+│                                                                      │
+│  LangChain：                                                         │
+│  在你项目里主要负责把 Prompt 发给大模型。                             │
+│                                                                      │
+│  Agent：                                                             │
+│  你项目里的 Agent 是"固定功能型 AI 专家"，                            │
+│  不是"AI 自己规划任务的自主智能体"。                                  │
+│                                                                      │
+│  FAISS / BM25 = 搜材料的人                                           │
+│  LangChain = 后面负责调用大模型的那层                                 │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 12.20 重要澄清：`ai_prompt_service.py` 到底在做什么？
+
+#### 你之前问：既然没用全家桶，为什么还能"编排"？
+
+**答案：根本就没有用到 LangChain 的"编排"能力！**
+
+#### 真相：`ai_prompt_service.py` 实际只做了两件事
+
+**第一件事：用手工 Python 拼接字符串构建 Prompt（不是 LangChain 编排）**
+
+```python
+# ai_prompt_service.py 第561-575行 - 实际代码
+prompt = f"""你是高校创新创业竞赛服务平台的 AI 助手，专门帮助用户理解项目材料内容。
+
+以下是检索到的相关项目材料片段：
+{context}           ← 手工用 f-string 拼进去
+
+项目基本信息：
+{project_info}      ← 手工用 f-string 拼进去
+
+用户问题：
+{question}         ← 手工用 f-string 拼进去
+
+请基于以上材料和信息回答用户问题。要求：
+1. 回答要准确、具体...
+2. ... """
+
+result, is_fallback = _call_llm_with_fallback(prompt, ...)
+```
+
+**这根本不是 LangChain 编排！这是 Python 的 f-string 字符串拼接！**
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                  手工 Prompt 拼接 ≠ LangChain 编排                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│   你以为的"编排"：                                                 │
+│   LangChain 自动把各种材料组合成最佳 Prompt                          │
+│                                                                      │
+│   实际上发生的事：                                                   │
+│                                                                      │
+│   程序员用 f"""{...}""" 手动把字符串拼在一起                        │
+│                                                                      │
+│   ┌───────────────────────────────────────────────────────────┐    │
+│   │   prompt = f"""                                            │    │
+│   │       "角色设定："                                        │    │
+│   │       "你是一个AI助手"                                   │    │
+│   │       + {context}  ← 手动拼接                             │    │
+│   │       + {project_info}  ← 手动拼接                      │    │
+│   │       + {question}  ← 手动拼接                           │    │
+│   │       + "回答要求..."                                     │    │
+│   │   """                                                     │    │
+│   └───────────────────────────────────────────────────────────┘    │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**第二件事：调一次 LangChain 的 `.invoke()` 发请求（这是 LangChain 唯一做的事）**
+
+```python
+# ai_prompt_service.py 第91-98行 - 实际代码
+def _call_llm_with_fallback(prompt_text, fallback_template=''):
+    llm = get_llm()  # 获取 ChatOpenAI 实例
+    try:
+        from langchain_core.messages import HumanMessage
+        response = llm.invoke([HumanMessage(content=prompt_text)])
+        # ↑ 这就是 LangChain 做的唯一一件事：发请求给大模型
+        return response.content, False
+```
+
+#### `ai_prompt_service.py` 完整内容清单
+
+```
+ai_prompt_service.py 里面有什么？
+│
+├── get_llm()                
+│   └── 初始化 ChatOpenAI（LangChain 的封装）
+│
+├── _build_context_from_search() 
+│   └── 手工拼检索结果成字符串
+│
+├── _build_project_info_text() 
+│   └── 手工拼项目信息成字符串
+│
+├── _call_llm_with_fallback()  
+│   └── 调 LangChain 发请求
+│
+├── smart_navigate()          
+│   └── 手工拼导航 Prompt → 调 LLM
+│
+├── project_idea_generate()  
+│   └── 手工拼创意生成 Prompt → 调 LLM
+│
+├── mock_defense()           
+│   └── 手工拼模拟答辩 Prompt → 调 LLM
+│
+├── batch_review_assist()     
+│   └── 手工拼批量审核 Prompt → 调 LLM
+│
+├── smart_feedback_generate()   
+│   └── 手工拼反馈生成 Prompt → 调 LLM
+│
+├── review_draft_generate()   
+│   └── 手工拼评审草稿 Prompt → 调 LLM
+│
+├── score_consistency_check()   
+│   └── 手工拼评分检查 Prompt → 调 LLM
+│
+├── material_qa()             
+│   └── 手工拼材料问答 Prompt → 调 LLM
+│
+├── bp_check()               
+│   └── 手工拼 BP 体检 Prompt → 调 LLM
+│
+├── roadshow_generate()       
+│   └── 手工拼路演稿 Prompt → 调 LLM
+│
+├── review_assist()           
+│   └── 手工拼评审辅助 Prompt → 调 LLM
+│
+└── competition_recommend()   
+    └── 手工拼竞赛推荐 Prompt → 调 LLM
+```
+
+**每个函数都是：手工拼接 Prompt → 调 LangChain → 返回结果**
+
+---
+
+#### 什么是真正的 LangChain 编排？（你没用这个）
+
+```python
+# 真正的 LangChain 编排（你没用到）
+from langchain import Chain
+from langchain.agents import Agent
+from langchain.tools import Tool
+
+# 这些才是 LangChain 的编排能力：
+chain = Chain(
+    prompt=prompt_template,        # LangChain Prompt 模板
+    llm=llm,
+    memory=ConversationMemory(),  # LangChain 记忆
+)
+
+agent = Agent(
+    tools=[search_tool, calc_tool, ...],  # 工具注册
+    llm=llm,
+    memory=ConversationMemory(),
+)
+
+# AI 自动决定调用哪个工具、自动规划步骤
+result = agent.run("分析我的商业计划书")
+```
+
+**你没用到这些！**
+
+---
+
+#### 总结：你的项目和 LangChain 编排的关系
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                   你的项目 vs LangChain 编排                           │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  你以为发生的：                                                     │
+│  LangChain 自动编排各种组件 → 调用大模型                             │
+│                                                                      │
+│  实际发生的：                                                       │
+│  程序员用 Python 手工拼接字符串 → LangChain 的 .invoke() 发一次请求  │
+│                                                                      │
+│  LangChain 做的事：                                                 │
+│  ✅ get_llm() 初始化 ChatOpenAI                                    │
+│  ✅ llm.invoke() 发一次请求                                         │
+│                                                                      │
+│  LangChain 没做的事：                                               │
+│  ❌ Chain（链式调用）                                              │
+│  ❌ Agent（自主决策）                                               │
+│  ❌ Tool（工具注册）                                               │
+│  ❌ Memory（记忆管理）                                              │
+│  ❌ Prompt 模板自动编排                                            │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 12.21 纠正后的准确说法
+
+**之前说的（不准确）：**
+
+> "LangChain 在本项目中主要承担大模型调用封装和 AI 编排辅助作用"
+
+**纠正后（准确）：**
+
+> "LangChain 在本项目中只负责大模型调用封装。所有 Prompt 构建都是程序员用 Python 手工拼接字符串实现的，没有使用 LangChain 的任何编排能力（Chain、Agent、Tool、Memory）"
+
+**之前说的（不准确）：**
+
+> "本项目使用 LangChain 的 OpenAI 兼容封装来统一调用大模型，并在 ai_prompt_service.py 中结合 Prompt 工程、RAG 检索结果和业务数据，实现材料问答、BP 体检、路演稿生成等固定能力型 AI Agent 功能"
+
+**纠正后（准确）：**
+
+> "本项目使用 LangChain 的 OpenAI 兼容封装（ChatOpenAI）来调用大模型。ai_prompt_service.py 中各种 AI 能力的实现逻辑是程序员用手工 Python 拼接字符串构建 Prompt 来实现的，不是 LangChain 框架的编排能力。RAG、FAISS、BM25 是独立技术，负责从项目材料中检索相关内容注入 Prompt。"
+
+---
+
 ## 十三、总结
+
+**RAG 不是 LangChain，它是一种技术方案！你的项目实现了完整的 RAG 流程。**
+
+RAG = **R**etrieval（检索）+ **A**ugmented（增强）+ **G**eneration（生成）
+
+用大白话说就是：**先查资料，再让 AI 回答**
+
+例如用户问："分析我的商业计划书创新点"
+
+**没有 RAG 时**：大模型只能靠"记忆"（训练数据）来回答，可能瞎编
+**有 RAG 时**：大模型先从你的项目材料中找到相关内容，再基于这些真实内容来回答
+
+下面是 RAG 三步工作流程（详见 12.4.3 节图示）：
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                        RAG 工作流程（你的项目实现）                  │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  用户问题："分析我的商业计划书创新点"                               │
+│                              ↓                                     │
+│                                                                     │
+│  ┌────────────────────────────────────────────────────────────┐   │
+│  │ 第一步：检索（Retrieval）                                    │   │
+│  │                                                              │   │
+│  │    从你的文档中找到相关段落                                  │   │
+│  │    ↓                                                        │   │
+│  │    使用 FAISS（语义搜索）或 BM25（关键词搜索）                │   │
+│  │    ↓                                                        │   │
+│  │    例如找到：                                                │   │
+│  │    • 第3页："本项目采用XXX技术创新..."                     │   │
+│  │    • 第5页："相比同类产品，我们解决了YYY问题..."           │   │
+│  └────────────────────────────────────────────────────────────┘   │
+│                              ↓                                     │
+│  ┌────────────────────────────────────────────────────────────┐   │
+│  │ 第二步：增强（Augmented）                                   │   │
+│  │                                                              │   │
+│  │    把找到的内容 + 问题一起发送给大模型                       │   │
+│  │    ↓                                                        │   │
+│  │    prompt = f"""{context}\n{project_info}\n{question}"""   │   │
+│  │    （手工拼接，不是 LangChain 模板）                        │   │
+│  └────────────────────────────────────────────────────────────┘   │
+│                              ↓                                     │
+│  ┌────────────────────────────────────────────────────────────┐   │
+│  │ 第三步：生成（Generation）                                   │   │
+│  │                                                              │   │
+│  │    大模型基于"真实材料"回答，而不是瞎编                     │   │
+│  │    ↓                                                        │   │
+│  │    "根据您文档第3页和第5页的内容，我分析出以下创新点..."    │   │
+│  └────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+└────────────────────────────────────────────────────────────┘
+```
+
+---
 
 ### 13.1 AI/Agent 技术栈总览
 
-| 技术领域 | 具体技术 | 用途 |
-|----------|----------|------|
-| 大语言模型 | 通义千问 qwen-plus、GLM-5、火山方舟 doubao | AI 对话、意图识别、内容生成 |
-| AI 编排框架 | LangChain (langchain-openai / langchain-community) | LLM 调用、消息管理、Embedding |
-| 向量检索 | FAISS (IndexFlatL2) | 语义相似度检索 |
-| 稀疏检索 | rank-bm25 (BM25Plus) + jieba | 关键词匹配检索 |
-| 文档解析 | python-docx / python-pptx / pypdf | .docx/.pptx/.pdf 文本提取 |
-| 语音识别 | Web Speech API / 豆包 ASR / faster-whisper | 语音转文字 |
-| 语音合成 | 火山 TTS HTTP API / 浏览器 SpeechSynthesis | 文字转语音 |
-| 实时语音 | 火山实时语音 WebSocket + 自定义二进制协议 | 端到端语音对话 |
-| 虚拟形象 | Live2D Cubism5 SDK | 表情联动、口型驱动 |
-| 流式输出 | SSE (Server-Sent Events) | 打字机效果 |
-| 繁简转换 | OpenCC | ASR 结果繁转简 |
-| Token 计数 | tiktoken | Token 用量统计 |
+| 技术领域     | 具体技术                                   | 用途                               |
+| ------------ | ------------------------------------------ | ---------------------------------- |
+| 大语言模型   | 通义千问 qwen-plus、GLM-5、火山方舟 doubao | AI 对话、意图识别、内容生成        |
+| LLM 调用封装 | LangChain (langchain-openai)               | 通过 ChatOpenAI 统一接口调用大模型 |
+| 向量检索     | FAISS (IndexFlatL2)                        | 语义相似度检索                     |
+| 稀疏检索     | rank-bm25 (BM25Plus) + jieba               | 关键词匹配检索                     |
+| 文档解析     | python-docx / python-pptx / pypdf          | .docx/.pptx/.pdf 文本提取          |
+| 语音识别     | Web Speech API / 豆包 ASR / faster-whisper | 语音转文字                         |
+| 语音合成     | 火山 TTS HTTP API / 浏览器 SpeechSynthesis | 文字转语音                         |
+| 实时语音     | 火山实时语音 WebSocket + 自定义二进制协议  | 端到端语音对话                     |
+| 虚拟形象     | Live2D Cubism5 SDK                         | 表情联动、口型驱动                 |
+| 流式输出     | SSE (Server-Sent Events)                   | 打字机效果                         |
+| 繁简转换     | OpenCC                                     | ASR 结果繁转简                     |
+| Token 计数   | tiktoken                                   | Token 用量统计                     |
 
 ### 13.2 核心设计亮点
 

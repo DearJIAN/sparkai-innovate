@@ -415,7 +415,7 @@ def _stream_unified_model(queue, message, role, scene_name, session_id):
             intent, params = detect_intent(message, role)
 
             if intent == 'navigate':
-                from services.langchain_service import smart_navigate
+                from services.ai_prompt_service import smart_navigate
                 nav_result = smart_navigate(message, role)
                 reply = nav_result.get('reply', '好的~')
                 nav_json = json.dumps(nav_result, ensure_ascii=False)
@@ -435,23 +435,23 @@ def _stream_unified_model(queue, message, role, scene_name, session_id):
                 capability = intent
                 try:
                     if intent == 'mock_defense':
-                        from services.langchain_service import mock_defense as _mock_defense
+                        from services.ai_prompt_service import mock_defense as _mock_defense
                         result = _mock_defense(question_type=params.get('question_type', 'general'))
                         agent_reply = result.get('defense', '')
                     elif intent == 'batch_review':
-                        from services.langchain_service import batch_review_assist
+                        from services.ai_prompt_service import batch_review_assist
                         result = batch_review_assist(projects_info=None)
                         agent_reply = result.get('report', '')
                     elif intent == 'smart_feedback':
-                        from services.langchain_service import smart_feedback_generate
+                        from services.ai_prompt_service import smart_feedback_generate
                         result = smart_feedback_generate(feedback_type=params.get('feedback_type', 'modify'))
                         agent_reply = result.get('feedback', '')
                     elif intent == 'review_draft':
-                        from services.langchain_service import review_draft_generate
+                        from services.ai_prompt_service import review_draft_generate
                         result = review_draft_generate()
                         agent_reply = result.get('draft', '')
                     elif intent == 'score_check':
-                        from services.langchain_service import score_consistency_check
+                        from services.ai_prompt_service import score_consistency_check
                         result = score_consistency_check(review_data=None)
                         agent_reply = result.get('report', '')
                 except Exception as agent_err:

@@ -19,7 +19,7 @@ from utils.response import success, error
 from utils.decorators import require_min_role, require_roles
 from services.document_parser import parse_project_files, parse_registration_materials
 from services.vector_store import index_documents, search_documents, index_exists, get_index_info
-from services.langchain_service import (
+from services.ai_prompt_service import (
     material_qa as _material_qa,
     bp_check as _bp_check,
     roadshow_generate as _roadshow_generate,

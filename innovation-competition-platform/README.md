@@ -215,6 +215,13 @@
 - **评审意见草稿**（仅 judge / admin）：帮助评委快速生成评审意见草稿，含项目概述/各维度评审意见/综合评审意见/建议追问问题
 - **评分一致性检查**（仅 judge / admin）：检查评委评分与文字评价之间是否存在不一致，给出详细分析和改进建议
 
+> **📚 详细技术文档**：关于 AI 项目智能体的完整技术架构、实现原理、LangChain 使用方式、RAG 检索流程等详细说明，请参阅 [AI-Agent功能分析报告.md](./AI-Agent功能分析报告.md)。该文档包含：
+> - 项目真实架构图与 Agent 层架构图
+> - LangChain 在本项目中的实际作用与使用方式
+> - RAG 检索流程详解（FAISS + BM25 混合检索）
+> - 12 大 AI 能力的实现原理与代码示例
+> - 固定功能型 AI Agent 的设计思路
+
 ### 火山实时语音对话
 
 - 通过 WebSocket 连接火山实时语音对话服务（`volc_realtime_bridge.py`）
@@ -304,7 +311,7 @@ innovation-competition-platform/
 │   ├── services/                     # 业务逻辑
 │   │   ├── __init__.py
 │   │   ├── ai_service.py             # AI 核心（通义千问 qwen-plus + LangChain + 统一对话路由 + 智能导航 + 意图识别 + 会话管理 + 流式输出 + 回答清洗）
-│   │   ├── langchain_service.py      # LangChain 编排服务（RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐 / 智能导航 / 意图检测）
+│   │   ├── ai_prompt_service.py      # AI Prompt 服务（手工拼接 Prompt + 调用 LLM）
 │   │   ├── document_parser.py        # 文档解析服务（.docx / .pptx / .pdf 文本提取 + 分块）
 │   │   ├── vector_store.py           # 向量存储服务（FAISS 索引 + BM25 混合检索 + Embedding）
 │   │   ├── tts_service.py            # TTS 语音合成（火山 TTS HTTP API + 文件缓存 + 缓存统计/清理）
@@ -1879,8 +1886,8 @@ cd backend && flask db upgrade && python seed.py
 
 - **模拟答辩 question\_type 前后端不一致**：前端传 `challenge`，后端校验仅允许 `tough`，导致选择"挑战"类型时返回 400 错误。修复：前端 `AgentPanel.vue` 将 `label="challenge"` 改为 `label="tough"`（[AgentPanel.vue:158](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/frontend/src/views/ai-assistant/AgentPanel.vue#L158)）
 - **智能反馈 feedback\_type 前后端不一致**：前端传 `encourage`/`question`，后端校验仅允许 `approve`/`reject`，导致选择"鼓励指导"/"提问引导"时返回 400 错误。修复：前端选项改为"建议通过"（`approve`）和"建议驳回"（`reject`）（[AgentPanel.vue:164-165](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/frontend/src/views/ai-assistant/AgentPanel.vue#L164)）
-- **路演稿 duration 前后端不一致**：前端允许 8 分钟，后端校验仅允许 3/5，导致选择 8 分钟时返回 400 错误。修复：后端 `agent.py` 校验扩展为 `(3, 5, 8)`，`langchain_service.py` 新增 8 分钟对应约 2200 字目标（[agent.py:368](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/backend/routes/agent.py#L368)）
-- **路演稿 style 前后端不一致**：前端传 `story`，后端校验仅允许 `formal`/`passionate`/`concise`，导致选择"故事"风格时返回 400 错误。修复：后端校验新增 `story`，`langchain_service.py` 新增故事叙述风格描述（[agent.py:369](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/backend/routes/agent.py#L369)）
+- **路演稿 duration 前后端不一致**：前端允许 8 分钟，后端校验仅允许 3/5，导致选择 8 分钟时返回 400 错误。修复：后端 `agent.py` 校验扩展为 `(3, 5, 8)`，`ai_prompt_service.py` 新增 8 分钟对应约 2200 字目标（[agent.py:368](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/backend/routes/agent.py#L368)）
+- **路演稿 style 前后端不一致**：前端传 `story`，后端校验仅允许 `formal`/`passionate`/`concise`，导致选择"故事"风格时返回 400 错误。修复：后端校验新增 `story`，`ai_prompt_service.py` 新增故事叙述风格描述（[agent.py:369](file:///e:/软件工程课设/my-keshe/innovation-competition-platform/backend/routes/agent.py#L369)）
 
 #### 文档更新
 
@@ -1898,8 +1905,8 @@ cd backend && flask db upgrade && python seed.py
 
 - **通义千问 qwen-plus 大模型集成**：通过 LangChain ChatOpenAI 兼容接口接入通义千问 qwen-plus 模型（`GLM_API_KEY` / `GLM_BASE_URL` / `GLM_MODEL` 配置项），替代火山方舟 SDK 作为主要对话模型，支持多轮对话 / 意图识别 / 角色感知
 - **统一对话路由**（`unified_chat`）：`ai_service.py` 新增统一对话入口，根据用户消息自动识别意图（导航 / 通用对话 / 智能体能力），分发到对应处理逻辑
-- **智能导航功能**（`smart_navigate`）：`langchain_service.py` 新增智能导航能力，用户输入模糊指令（如"我想报名比赛""帮我看看项目"），AI 自动识别意图并返回路由跳转建议，前端自动执行页面跳转
-- **意图检测**（`detect_intent`）：`langchain_service.py` 新增意图检测函数，支持导航意图 / 智能体意图 / 通用对话意图三类识别
+- **智能导航功能**（`smart_navigate`）：`ai_prompt_service.py` 新增智能导航能力，用户输入模糊指令（如"我想报名比赛""帮我看看项目"），AI 自动识别意图并返回路由跳转建议，前端自动执行页面跳转
+- **意图检测**（`detect_intent`）：`ai_prompt_service.py` 新增意图检测函数，支持导航意图 / 智能体意图 / 通用对话意图三类识别
 - **角色感知对话**：AI 对话根据当前登录角色（学生/教师/评委/管理员）自动调整回复风格和可用能力介绍
 
 #### 功能修改
@@ -1939,7 +1946,7 @@ cd backend && flask db upgrade && python seed.py
 - **AgentPanel.vue 组件**：AI 智能体前端面板组件，集成材料索引/问答/体检/路演/评审辅助/推荐 6 大功能入口
 - **文档解析服务**（`document_parser.py`）：支持 .docx（python-docx）/ .pptx（python-pptx）/ .pdf（pypdf）三种格式文本提取 + RecursiveCharacterTextSplitter 分块
 - **向量存储服务**（`vector_store.py`）：FAISS 向量索引 + BM25 稀疏检索混合方案，支持 Embedding 向量化 + 相似度搜索
-- **LangChain 编排服务**（`langchain_service.py`）：基于 LangChain 的 RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐 5 大能力编排
+- **AI Prompt 服务**（`ai_prompt_service.py`）：手工拼接 Prompt + 调用 LLM 的 RAG 问答 / BP 体检 / 路演稿 / 评审辅助 / 竞赛推荐 5 大能力
 - **agent 路由蓝图**（`agent.py`）：8 个 API 端点（index-materials / material-qa / bp-check / roadshow / review-assist / competition-recommend / tasks / tasks/<id>）
 - **AgentTask 模型**：AI 智能体任务记录（task\_type / status / input\_params / result / error\_message）
 - **AgentMaterialIndex 模型**：AI 智能体材料索引记录（file\_type / chunk\_count / index\_status / index\_path）
