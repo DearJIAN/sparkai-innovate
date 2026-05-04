@@ -207,7 +207,7 @@ import { useRouter } from 'vue-router'
 import { marked } from 'marked'
 import { chatStream, generateAnalysis } from '@/api/ai'
 import { ElMessage } from 'element-plus'
-import { Loading, WarningFilled, MagicStick, ArrowDown, Microphone, Delete, Plus, VideoPause, VideoPlay, Rank } from '@element-plus/icons-vue'
+import { Loading, WarningFilled, MagicStick, ArrowDown, Microphone, Delete, Plus, VideoPause, VideoPlay } from '@element-plus/icons-vue'
 import { useLive2d } from '@/composables/useLive2d'
 import AgentPanel from '@/views/ai-assistant/AgentPanel.vue'
 import { useUserStore } from '@/stores/user'
@@ -255,12 +255,10 @@ const panelSize = ref({ width: 400, height: 580 })
 let resizeState = { resizing: false, startX: 0, startY: 0, startW: 0, startH: 0 }
 let recognition = null
 let speechUtterance = null
-let speechPulseInterval = null
 let dragState = { dragging: false, startX: 0, startY: 0 }
 let modelDragState = { dragging: false, startX: 0, startY: 0, origLeft: 0, origBottom: 0 }
 let modelPatchLoopId = null
 let autoExpressionTimer = null
-let streamMouthPulseId = null
 
 const analysisForm = reactive({ project_name: '', description: '', category: '', track: '', ai_type: 'summary' })
 const analysisLoading = ref(false)
@@ -710,9 +708,6 @@ function setupVoiceHooks() {
   }
 }
 
-function startStreamMouthPulse() {}
-function stopStreamMouthPulse() {}
-
 // ============================================================
 // Live2D 加载流程（参考 my_huahuo 的 autoload.js 方式）
 // ============================================================
@@ -785,18 +780,16 @@ async function initLive2D() {
       return
     }
 
-    console.log('[Live2D] initWidget found, initializing...')
-
-    // 调用 initWidget（参考 my_huahuo 的参数配置）
-    window.initWidget({
-      waifuPath: '/live2d-widget-dist/waifu-huahuo.json',
-      cubism2Path: '/live2d-widget-dist/live2d.min.js',
-      cubism5Path: '/live2d-widget-dist/live2dcubismcore.min.js',
-      modelId: 0,
-      tools: [],
-      drag: false,
-      logLevel: 'warn'
-    })
+    try {
+      window.initWidget({
+        waifuPath: '/live2d-widget-dist/waifu-huahuo.json',
+        cubism2Path: '/live2d-widget-dist/live2d.min.js',
+        cubism5Path: '/live2d-widget-dist/live2dcubismcore.min.js',
+        modelId: 0,
+        tools: [],
+        drag: false,
+        logLevel: 'warn'
+      })
 
     // 等待模型加载完成（监听 live2d:model-ready 事件 + 轮询 canvas）
     await new Promise((resolve) => {
@@ -1159,21 +1152,18 @@ async function startFirefoxVoice() {
 }
 
 function toggleSpeech() {
-  if (isSpeaking.value) { window.speechSynthesis.cancel(); isSpeaking.value = false; notifyLive2dHook('onSpeechEnd'); stopSpeechMouthPulse(); return }
+  if (isSpeaking.value) { window.speechSynthesis.cancel(); isSpeaking.value = false; notifyLive2dHook('onSpeechEnd'); return }
   if (!currentReplyText.value) return
   const u = new SpeechSynthesisUtterance(currentReplyText.value)
   u.lang = 'zh-CN'; u.rate = 1.0; u.pitch = 1.0
   const voices = window.speechSynthesis.getVoices()
   const zhVoice = voices.find(v => v.lang.startsWith('zh') && v.name.includes('Female')) || voices.find(v => v.lang.startsWith('zh'))
   if (zhVoice) u.voice = zhVoice
-  u.onstart = () => { isSpeaking.value = true; notifyLive2dHook('onSpeechStart'); startSpeechMouthPulse() }
-  u.onend = () => { isSpeaking.value = false; notifyLive2dHook('onSpeechEnd'); stopSpeechMouthPulse() }
-  u.onerror = () => { isSpeaking.value = false; notifyLive2dHook('onSpeechEnd'); stopSpeechMouthPulse() }
+  u.onstart = () => { isSpeaking.value = true; notifyLive2dHook('onSpeechStart') }
+  u.onend = () => { isSpeaking.value = false; notifyLive2dHook('onSpeechEnd') }
+  u.onerror = () => { isSpeaking.value = false; notifyLive2dHook('onSpeechEnd') }
   window.speechSynthesis.speak(u)
 }
-
-function startSpeechMouthPulse() {}
-function stopSpeechMouthPulse() {}
 
 function clearMessages() {
   messages.value = []
@@ -1340,8 +1330,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('open-huahuo-agent', handleOpenHuahuoAgent)
   stopVoiceRecognition()
-  stopSpeechMouthPulse()
-  stopStreamMouthPulse()
   stopModelPatchLoop()
   stopAutoExpression()
   if (window.speechSynthesis) window.speechSynthesis.cancel()

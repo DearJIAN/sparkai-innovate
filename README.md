@@ -394,7 +394,6 @@ innovation-competition-platform/
 │       │   ├── GuideSystem.vue       # 全局引导系统（首次登录引导/高亮/拖拽弹窗/路由跳转）
 │       │   ├── HuahuoAssistant.vue   # Live2D 虚拟形象「火花」（全屏拖拽/AI对话/语音/关键字表情联动/完整清理）
 │       │   ├── VoiceChat.vue         # 语音交互面板（流式对话/语音识别/TTS/可拖拽/深色毛玻璃）
-│       │   ├── Live2dWidget.vue      # Live2D 看板娘组件（旧版，已被 HuahuoAssistant 替代）
 │       │   ├── TestButton.vue        # 测试按钮组件
 │       │   ├── TestButtonDemo.vue    # 测试按钮演示
 │       │   └── HelloWorld.vue        # 示例组件
@@ -1909,7 +1908,7 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
-### v4.3.2 - 2026-05-04（当前版本）
+### v4.3.2 - 2026-05-04
 
 > 浏览器兼容性统一（Firefox 滚动条）+ 口型动画系统全量禁用（移除诡异眼部动画）+ 关键字表情切换恢复（仅 onDelta 关键词驱动）
 
@@ -1925,6 +1924,25 @@ cd backend && flask db upgrade && python seed.py
 #### 文档更新
 
 - **README.md**：版本变更记录新增 v4.3.2；v4.3.1 移除"当前版本"标记
+
+***
+
+### v4.3.3 - 2026-05-04（当前版本）
+
+> 全项目死代码大清理：删除未使用组件/常量/空函数/调试日志/未使用导入
+
+#### 代码清理
+
+- **删除 `Live2dWidget.vue`**：该组件已被 `HuahuoAssistant.vue` 完全替代，项目中无任何导入引用。删除文件（[Live2dWidget.vue](frontend/src/components/Live2dWidget.vue)——已删除）
+- **删除 `useLive2d.js` 中 3 个死常量**：`META_LINE_PREFIXES`（14 项）、`META_LINE_KEYWORDS`（7 项）、`ANSWER_MARKERS`（7 项）三个数组常量定义后从未被任何代码引用，为旧的回答清洗逻辑残留（[useLive2d.js](frontend/src/composables/useLive2d.js)）
+- **删除 `HuahuoAssistant.vue` 中 6 项死代码**：① 空函数 `startStreamMouthPulse()` ② 空函数 `stopStreamMouthPulse()` ③ 空函数 `startSpeechMouthPulse()` ④ 空函数 `stopSpeechMouthPulse()`（v4.3.2 中改为空函数，现直接删除定义和所有调用点）；⑤ 未使用变量 `speechPulseInterval` ⑥ 未使用变量 `streamMouthPulseId`（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **删除 `VoiceChat.vue` 中 3 项口型脉冲死代码**：① 函数 `startSpeechMouthPulse()` ② 函数 `stopSpeechMouthPulse()` ③ 变量 `speechPulseInterval`。v4.3.2 将 Live2D 语音钩子改为空操作后，`notifyLive2dHook('onSpeechPulse', ...)` 不再生效，口型正弦波驱动完全废弃。删除函数定义、变量声明、以及 `utterance.onstart/onend/onerror` 和 `onBeforeUnmount` 中的全部调用点（[VoiceChat.vue](frontend/src/components/VoiceChat.vue)）
+- **删除 3 处调试日志**：`console.log('[Live2D] initWidget found...')`（HuahuoAssistant.vue）、`console.log('[CreateProject] Submitting data:...')`（projects/create.vue）、`console.log('[AgentPanel] fetchProjects got...')`（ai-assistant/AgentPanel.vue）
+- **删除 `HuahuoAssistant.vue` 中未使用导入 `Rank`**：从 `@element-plus/icons-vue` 导入但模板/脚本均未使用
+
+#### 文档更新
+
+- **README.md**：项目结构中移除 `Live2dWidget.vue` 条目；版本变更记录新增 v4.3.3；v4.3.2 移除"当前版本"标记
 
 ### v4.2.0 - 2026-05-04
 

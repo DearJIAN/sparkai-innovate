@@ -332,40 +332,19 @@ function toggleSpeech() {
   utterance.onstart = () => {
     isSpeaking.value = true
     notifyLive2dHook('onSpeechStart')
-    startSpeechMouthPulse()
   }
 
   utterance.onend = () => {
     isSpeaking.value = false
     notifyLive2dHook('onSpeechEnd')
-    stopSpeechMouthPulse()
   }
 
   utterance.onerror = () => {
     isSpeaking.value = false
     notifyLive2dHook('onSpeechEnd')
-    stopSpeechMouthPulse()
   }
 
   window.speechSynthesis.speak(utterance)
-}
-
-let speechPulseInterval = null
-function startSpeechMouthPulse() {
-  stopSpeechMouthPulse()
-  const startTime = Date.now()
-  speechPulseInterval = setInterval(() => {
-    const elapsed = (Date.now() - startTime) / 1000
-    const intensity = 0.3 + 0.5 * Math.abs(Math.sin(elapsed * 6))
-    notifyLive2dHook('onSpeechPulse', { intensity })
-  }, 80)
-}
-
-function stopSpeechMouthPulse() {
-  if (speechPulseInterval) {
-    clearInterval(speechPulseInterval)
-    speechPulseInterval = null
-  }
 }
 
 function clearMessages() {
@@ -455,7 +434,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stopVoiceRecognition()
-  stopSpeechMouthPulse()
   if (window.speechSynthesis) {
     window.speechSynthesis.cancel()
   }

@@ -238,8 +238,6 @@ const handleSubmit = async () => {
       data.end_date = data.end_date.toISOString().split('T')[0]
     }
 
-    console.log('[CreateProject] Submitting data:', JSON.stringify(data))
-
     const res = await createProject(data)
     if (res.code === 201 || res.code === 200) {
       ElMessage.success('项目创建成功')

@@ -378,7 +378,6 @@ async function fetchProjects() {
     } else if (Array.isArray(res)) {
       list = res
     }
-    console.log('[AgentPanel] fetchProjects got', list.length, 'projects')
     projects.value = list
   } catch (e) {
     console.error('获取项目列表失败:', e)

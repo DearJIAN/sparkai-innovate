@@ -1,16 +1,3 @@
-const META_LINE_PREFIXES = [
-  "用户问的是", "首先我需要", "首先需要", "我需要", "还要", "得用",
-  "检查一下", "是的，", "是的，这样", "这应该", "可以了", "按照要求", "符合要求", "回复里"
-]
-
-const META_LINE_KEYWORDS = [
-  "自我思考", "思考过程", "分析步骤", "提示词复述", "内部说明", "用户问的是", "我需要给出"
-]
-
-const ANSWER_MARKERS = [
-  "最终答案：", "答案：", "可以这样说：", "比如可以这样说：", "直接回答：", "简洁地说：", "可以回答："
-]
-
 export function detectEmotionByText(text) {
   const lower = (text || '').toLowerCase()
   if (/开心|高兴|太好了|哈哈|棒|厉害|优秀|成功|恭喜/.test(lower)) return 'happy'
