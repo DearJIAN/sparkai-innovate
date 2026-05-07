@@ -757,110 +757,100 @@ async function loadLive2DLibraries() {
 }
 
 async function initLive2D() {
-  try {
-    loadError.value = false
+  loadError.value = false
 
-    const oldWaifu = document.getElementById('waifu')
-    if (oldWaifu) oldWaifu.remove()
-    const oldToggle = document.getElementById('waifu-toggle')
-    if (oldToggle) oldToggle.remove()
-    const oldTool = document.getElementById('waifu-tool')
-    if (oldTool) oldTool.remove()
+  const oldWaifu = document.getElementById('waifu')
+  if (oldWaifu) oldWaifu.remove()
+  const oldToggle = document.getElementById('waifu-toggle')
+  if (oldToggle) oldToggle.remove()
+  const oldTool = document.getElementById('waifu-tool')
+  if (oldTool) oldTool.remove()
 
-    window.localStorage.removeItem('waifu-display')
-    window.localStorage.removeItem('modelId')
-    window.localStorage.removeItem('modelTexturesId')
+  window.localStorage.removeItem('waifu-display')
+  window.localStorage.removeItem('modelId')
+  window.localStorage.removeItem('modelTexturesId')
 
-    // 加载库文件
-    await loadLive2DLibraries()
+  await loadLive2DLibraries()
 
-    if (typeof window.initWidget !== 'function') {
-      console.warn('[Live2D] initWidget not available after loading libraries')
-      loadError.value = true
-      return
+  if (typeof window.initWidget !== 'function') {
+    console.warn('[Live2D] initWidget not available after loading libraries')
+    loadError.value = true
+    return
+  }
+
+  window.initWidget({
+    waifuPath: '/live2d-widget-dist/waifu-huahuo.json',
+    cubism2Path: '/live2d-widget-dist/live2d.min.js',
+    cubism5Path: '/live2d-widget-dist/live2dcubismcore.min.js',
+    modelId: 0,
+    tools: [],
+    drag: false,
+    logLevel: 'warn'
+  })
+
+  await new Promise((resolve) => {
+    let resolved = false
+
+    const onModelReady = () => {
+      if (!resolved) {
+        resolved = true
+        window.removeEventListener('live2d:model-ready', onModelReady)
+        resolve()
+      }
     }
+    window.addEventListener('live2d:model-ready', onModelReady)
 
-    try {
-      window.initWidget({
-        waifuPath: '/live2d-widget-dist/waifu-huahuo.json',
-        cubism2Path: '/live2d-widget-dist/live2d.min.js',
-        cubism5Path: '/live2d-widget-dist/live2dcubismcore.min.js',
-        modelId: 0,
-        tools: [],
-        drag: false,
-        logLevel: 'warn'
-      })
-
-    // 等待模型加载完成（监听 live2d:model-ready 事件 + 轮询 canvas）
-    await new Promise((resolve) => {
-      let resolved = false
-
-      // 方式1：监听 live2d:model-ready 事件
-      const onModelReady = () => {
+    let attempts = 0
+    const maxAttempts = 30
+    const interval = setInterval(() => {
+      attempts++
+      const canvas = document.getElementById('live2d')
+      if ((canvas && canvas.width > 0) || attempts >= maxAttempts) {
         if (!resolved) {
           resolved = true
+          clearInterval(interval)
           window.removeEventListener('live2d:model-ready', onModelReady)
           resolve()
         }
       }
-      window.addEventListener('live2d:model-ready', onModelReady)
+    }, 300)
+  })
 
-      // 方式2：轮询 canvas 作为备用
-      let attempts = 0
-      const maxAttempts = 30 // 最多等 9 秒
-      const interval = setInterval(() => {
-        attempts++
-        const canvas = document.getElementById('live2d')
-        if ((canvas && canvas.width > 0) || attempts >= maxAttempts) {
-          if (!resolved) {
-            resolved = true
-            clearInterval(interval)
-            window.removeEventListener('live2d:model-ready', onModelReady)
+  loaded.value = true
+
+  const waifuEl = document.getElementById('waifu')
+  if (!waifuEl) return
+
+  await new Promise((resolve) => {
+    if (waifuEl.classList.contains('waifu-active')) {
+      resolve()
+      return
+    }
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === 'attributes' && m.attributeName === 'class') {
+          if (waifuEl.classList.contains('waifu-active')) {
+            observer.disconnect()
             resolve()
+            return
           }
         }
-      }, 300)
-    })
-
-    loaded.value = true
-
-    const waifuEl = document.getElementById('waifu')
-    if (!waifuEl) return
-
-    // 等待 widget 完全初始化（waifu-active class 已添加）
-    await new Promise((resolve) => {
-      if (waifuEl.classList.contains('waifu-active')) {
-        resolve()
-        return
       }
-      const observer = new MutationObserver((mutations) => {
-        for (const m of mutations) {
-          if (m.type === 'attributes' && m.attributeName === 'class') {
-            if (waifuEl.classList.contains('waifu-active')) {
-              observer.disconnect()
-              resolve()
-              return
-            }
-          }
-        }
-      })
-      observer.observe(waifuEl, { attributes: true, attributeFilter: ['class'] })
-      setTimeout(() => { observer.disconnect(); resolve() }, 5000)
     })
+    observer.observe(waifuEl, { attributes: true, attributeFilter: ['class'] })
+    setTimeout(() => { observer.disconnect(); resolve() }, 5000)
+  })
 
-    // 绑定点击事件到 waifu 元素 + 创建拖拽按钮 + 滑入动画
-    try {
-      const modelPos = localStorage.getItem('huahuoModelPos')
-      if (modelPos) {
-        const pos = JSON.parse(modelPos)
-        waifuEl.style.left = pos.left + 'px'
-        waifuEl.style.right = 'auto'
-        waifuEl.style.bottom = 'auto'
-        waifuEl.style.top = pos.top + 'px'
-      }
-    } catch (_e) {}
+  try {
+    const modelPos = localStorage.getItem('huahuoModelPos')
+    if (modelPos) {
+      const pos = JSON.parse(modelPos)
+      waifuEl.style.left = pos.left + 'px'
+      waifuEl.style.right = 'auto'
+      waifuEl.style.bottom = 'auto'
+      waifuEl.style.top = pos.top + 'px'
+    }
 
-    // 滑入动画：用 JS 设置 inline style
     waifuEl.style.opacity = '0'
     waifuEl.style.transform = 'translateY(320px)'
     waifuEl.style.pointerEvents = 'none'
@@ -873,7 +863,6 @@ async function initLive2D() {
     hint.textContent = '点击对话'
     waifuEl.appendChild(hint)
 
-    // 动态创建拖拽按钮，挂载到 #waifu 内部（修复 Firefox 不显示问题）
     const handleEl = document.createElement('div')
     handleEl.id = 'live2d-drag-handle'
     handleEl.className = 'live2d-drag-handle'
@@ -884,7 +873,6 @@ async function initLive2D() {
     handleEl.addEventListener('click', (e) => e.stopPropagation())
     waifuEl.appendChild(handleEl)
 
-    // 触发滑入动画
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         waifuEl.style.opacity = '1'
@@ -903,22 +891,18 @@ async function initLive2D() {
       })
     })
 
-    // 隐藏 waifu-toggle 按钮（我们有自己的 UI）
     const toggleEl = document.getElementById('waifu-toggle')
     if (toggleEl) {
       toggleEl.style.display = 'none'
     }
 
-    // 隐藏 waifu-tool 工具栏
     const toolEl = document.getElementById('waifu-tool')
     if (toolEl) {
       toolEl.style.display = 'none'
     }
 
-    // 启动模型修补循环
     startModelPatchLoop()
 
-    // 初始化默认表情
     setTimeout(() => {
       const model = getCurrentCubism5Model()
       if (model) {
@@ -926,7 +910,6 @@ async function initLive2D() {
       }
       startAutoExpression()
     }, 1000)
-
   } catch (err) {
     console.warn('Live2D init error:', err.message)
     loadError.value = true

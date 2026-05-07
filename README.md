@@ -163,6 +163,8 @@
 
 ### Live2D 虚拟形象「火花」
 
+> **📚 详细技术文档**：关于 Live2D 表情系统的完整实现机制、叠加效果共存逻辑、情绪关键词触发机制等详细说明，请参阅 [Live2D-表情系统实现文档.md](./Live2D-表情系统实现文档.md)。
+
 - 全局浮动 Live2D 看板娘，支持全屏拖拽（通过 `HuahuoAssistant.vue` 组件 + `MainLayout.vue` 集成）
 - 拖拽位置持久化到 localStorage，刷新页面后自动恢复
 - 10 种基础表情（黑脸 / 脸红爱心 / 生气 / 晕 / ＞＜ / 0.0 / 星星眼 / 流泪 / 捧心 / 要饭）+ 2 种叠加效果（月卡 / 水印）
@@ -1927,7 +1929,7 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
-### v4.3.3 - 2026-05-04（当前版本）
+### v4.3.3 - 2026-05-04
 
 > 全项目死代码大清理：删除未使用组件/常量/空函数/调试日志/未使用导入
 
@@ -1943,6 +1945,18 @@ cd backend && flask db upgrade && python seed.py
 #### 文档更新
 
 - **README.md**：项目结构中移除 `Live2dWidget.vue` 条目；版本变更记录新增 v4.3.3；v4.3.2 移除"当前版本"标记
+
+### v4.3.4 - 2026-05-07（当前版本）
+
+> HuahuoAssistant.vue 构建语法错误修复
+
+#### Bug 修复
+
+- **HuahuoAssistant.vue 构建失败**：`initLive2D` 函数存在不完整的嵌套 `try` 语句结构，外层 `try` 缺少对应的 `catch` 或 `finally` 子句，导致 Vue 编译器报错 "Missing catch or finally clause"。修复：移除外层多余的 `try`，保留内层 `try...catch` 用于捕获初始化错误（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.3.4；v4.3.3 移除"当前版本"标记
 
 ### v4.2.0 - 2026-05-04
 
