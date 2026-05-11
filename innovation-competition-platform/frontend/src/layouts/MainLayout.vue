@@ -355,9 +355,11 @@ const handleCommand = async (command) => {
         type: 'warning'
       })
       userStore.logout()
-      router.push('/login')
       ElMessage.success('已退出登录')
+      // 使用 window.location.href 强制刷新跳转到登录页，确保所有状态完全重置
+      window.location.href = '/login'
     } catch {
+      // 用户点击取消，不做任何操作
     }
   } else if (command === 'portal') {
     router.push('/portal')

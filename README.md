@@ -2086,6 +2086,10 @@ cd backend && flask db upgrade && python seed.py
 
 - **移动端适配**：新增 `isMobile` 检测（`window.innerWidth <= 768`），移动端自动调整面板尺寸为 `min(360, 屏幕宽-20) × min(520, 屏幕高-100)`，位置固定在屏幕底部；桌面端与移动端状态切换时自动恢复/重置持久化数据（`frontend/src/components/HuahuoAssistant.vue`）
 
+#### Bug 修复
+
+- **退出登录后页面不跳转**：点击退出登录确认后，页面仍停留在首页且无反应。根因：`router.push('/login')` 跳转后，路由守卫检测到 `userStore.token` 和 `userStore.userInfo` 的响应式状态尚未同步更新，仍认为用户已登录，于是重定向回 `/portal`。修复：将 `router.push('/login')` 改为 `window.location.href = '/login'`，强制页面刷新，确保所有 Pinia 状态和组件实例完全重置（`frontend/src/layouts/MainLayout.vue`）
+
 #### 文档更新
 
 - **README.md**：版本变更记录新增 v4.5.1；v4.5.0 移除"当前版本"标记
