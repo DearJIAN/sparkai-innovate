@@ -60,8 +60,12 @@ request.interceptors.response.use(
       }
 
       if (res.code === 401) {
+        const currentPath = router.currentRoute.value.fullPath
         localStorage.removeItem('token')
-        router.push('/login')
+        router.push({
+          path: '/login',
+          query: currentPath && currentPath !== '/login' ? { redirect: currentPath } : {}
+        })
       }
     }
 
@@ -79,8 +83,12 @@ request.interceptors.response.use(
       }
 
       if (response.status === 401) {
+        const currentPath = router.currentRoute.value.fullPath
         localStorage.removeItem('token')
-        router.push('/login')
+        router.push({
+          path: '/login',
+          query: currentPath && currentPath !== '/login' ? { redirect: currentPath } : {}
+        })
       }
     } else {
       ElMessage.error('网络错误，请检查网络连接')

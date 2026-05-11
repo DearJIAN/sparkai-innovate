@@ -1,8 +1,16 @@
 <template>
   <div class="training-camps">
     <!-- Banner -->
-    <div class="camps-banner">
+    <div class="portal-hero-banner portal-hero-banner--training">
+      <div class="banner-decoration">
+        <div class="deco-circle c1"></div>
+        <div class="deco-circle c2"></div>
+      </div>
       <div class="banner-content">
+        <div class="banner-badge">
+          <el-icon size="16"><Notebook /></el-icon>
+          <span>训练营</span>
+        </div>
         <h1 class="banner-title">创新创业训练营</h1>
         <p class="banner-subtitle">系统化学习，专业化训练，助力项目快速成长</p>
       </div>
@@ -11,64 +19,24 @@
     <!-- 训练营列表 -->
     <div class="camps-section">
       <div class="camps-grid">
-        <div
+        <SparkPortalCard
           v-for="camp in camps"
           :key="camp.id"
-          class="camp-card"
-        >
-          <div class="camp-header" :style="camp.cover ? {} : { background: camp.gradient }">
-            <img
-              v-if="camp.cover"
-              :src="camp.cover"
-              :alt="camp.title"
-              class="camp-cover-img"
-              :style="{ aspectRatio: '16/9', objectFit: 'cover', width: '100%', display: 'block' }"
-              @error="handleCoverError($event, camp)"
-            />
-            <template v-else>
-              <div class="camp-icon">
-                <el-icon size="40"><component :is="camp.icon" /></el-icon>
-              </div>
-              <h3 class="camp-title">{{ camp.title }}</h3>
-            </template>
-          </div>
-          <div class="camp-body">
-            <p class="camp-desc">{{ camp.description }}</p>
-            <div class="camp-meta">
-              <div class="meta-item">
-                <el-icon><Clock /></el-icon>
-                <span>{{ camp.hours }} 课时</span>
-              </div>
-              <div class="meta-item">
-                <el-icon><User /></el-icon>
-                <span>{{ camp.students }} 人学习</span>
-              </div>
-              <div class="meta-item">
-                <el-icon><Star /></el-icon>
-                <span>难度：{{ camp.difficulty }}</span>
-              </div>
-            </div>
-            <div class="camp-tags">
-              <el-tag
-                v-for="tag in camp.tags"
-                :key="tag"
-                size="small"
-                class="camp-tag"
-              >
-                {{ tag }}
-              </el-tag>
-            </div>
-            <div class="camp-footer">
-              <div class="camp-progress">
-                <span class="progress-label">适合对象</span>
-                <span class="progress-value">{{ camp.target }}</span>
-              </div>
-              <el-button type="primary" size="small" @click="openCamp(camp)">
-                开始学习
-              </el-button>
-            </div>
-          </div>
-        </div>
+          :gradient="camp.gradient"
+          :cover-image="camp.cover || ''"
+          :title="camp.title"
+          :description="camp.description"
+          :tags="camp.tags"
+          :max-tags="3"
+          :meta-items="[
+            { icon: Clock, text: camp.hours + ' 课时' },
+            { icon: User, text: camp.students + ' 人学习' },
+            { icon: Star, text: '难度：' + camp.difficulty }
+          ]"
+          :primary-action-text="'开始学习'"
+          :primary-action-icon="VideoPlay"
+          :on-primary-click="() => openCamp(camp)"
+        />
       </div>
     </div>
 
@@ -142,26 +110,20 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Clock, User, Star, Opportunity, EditPen, Mic, Cpu, ArrowRight, VideoPlay } from '@element-plus/icons-vue'
+import { Clock, User, Star, Opportunity, EditPen, Mic, Cpu, ArrowRight, VideoPlay, Notebook } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import SparkPortalCard from '@/components/portal/SparkPortalCard.vue'
 
-// 导入训练营封面图片
 import coverChuangxin from '@/assets/images/training-camps/创新创业基础训练营.png'
 import coverShangye from '@/assets/images/training-camps/商业计划书写作训练营.png'
 import coverLuyan from '@/assets/images/training-camps/路演表达训练营.png'
 import coverAI from '@/assets/images/training-camps/AI项目孵化训练营.png'
 
-// 训练营封面映射
 const campCoverMap = {
   '创新创业基础训练营': coverChuangxin,
   '商业计划书写作训练营': coverShangye,
   '路演表达训练营': coverLuyan,
   'AI 项目孵化训练营': coverAI
-}
-
-// 图片加载失败时回退到渐变色
-function handleCoverError(event, camp) {
-  camp.cover = null
 }
 
 const dialogVisible = ref(false)
@@ -420,59 +382,89 @@ function startLearning() {
   background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
 }
 
-.camps-banner {
-  background: linear-gradient(135deg, #312e81 0%, #4338ca 40%, #7c3aed 100%);
-  padding: 50px 40px;
-  border-radius: 0 0 40px 40px;
+.portal-hero-banner {
   position: relative;
   overflow: hidden;
+  min-height: 260px;
+  padding: 56px 48px;
+  border-radius: 0 0 36px 36px;
+  color: #fff;
 }
 
-.camps-banner::before {
+.portal-hero-banner::before,
+.portal-hero-banner::after {
   content: '';
   position: absolute;
-  top: -40%;
-  right: -15%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(167,139,250,0.2) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: campGlow 7s ease-in-out infinite;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
 }
 
-.camps-banner::after {
-  content: '';
-  position: absolute;
-  bottom: -40%;
-  left: -15%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(196,181,253,0.12) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: campGlow 9s ease-in-out infinite reverse;
+.portal-hero-banner::before {
+  width: 280px;
+  height: 280px;
+  right: -60px;
+  top: -40px;
+  animation: bannerFloat 8s ease-in-out infinite;
 }
 
-@keyframes campGlow {
-  0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.5; }
-  33% { transform: scale(1.1) translate(20px, -10px); opacity: 0.8; }
-  66% { transform: scale(1.05) translate(-10px, 15px); opacity: 1; }
+.portal-hero-banner::after {
+  width: 180px;
+  height: 180px;
+  left: -40px;
+  bottom: -40px;
+  animation: bannerFloat 10s ease-in-out infinite reverse;
+}
+
+@keyframes bannerFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.05); }
+}
+
+.portal-hero-banner--training {
+  background: linear-gradient(135deg, #312e81 0%, #7c3aed 100%);
+}
+
+.banner-decoration { position: absolute; right: 48px; top: 0; width: 35%; height: 100%; z-index: 1; }
+
+.deco-circle { position: absolute; border-radius: 50%; opacity: 0.12; }
+.c1 { width: 220px; height: 220px; background: #a78bfa; right: -20px; top: -20px; animation: decoFloat 8s ease-in-out infinite; }
+.c2 { width: 150px; height: 150px; background: #c4b5fd; right: 140px; bottom: -20px; animation: decoFloat 10s ease-in-out infinite reverse; }
+
+@keyframes decoFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.05); }
 }
 
 .banner-content {
-  max-width: 1400px;
-  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+}
+
+.banner-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 18px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 24px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .banner-title {
-  font-size: 32px;
-  font-weight: 700;
+  font-size: 40px;
+  font-weight: 800;
   color: #ffffff;
-  margin-bottom: 12px;
+  margin: 0 0 18px;
+  line-height: 1.2;
 }
 
 .banner-subtitle {
-  font-size: 16px;
-  color: #bae6fd;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 720px;
+  line-height: 1.8;
 }
 
 .camps-section {
@@ -487,107 +479,6 @@ function startLearning() {
   gap: 24px;
 }
 
-.camp-card {
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
-}
-
-.camp-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
-}
-
-.camp-header {
-  padding: 32px;
-  text-align: center;
-  color: #ffffff;
-  position: relative;
-  overflow: hidden;
-}
-
-.camp-cover-img {
-  width: 100%;
-  display: block;
-  object-fit: cover;
-  aspect-ratio: 16/9;
-}
-
-.camp-icon {
-  margin-bottom: 12px;
-}
-
-.camp-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.camp-body {
-  padding: 24px;
-}
-
-.camp-desc {
-  font-size: 14px;
-  color: #64748b;
-  line-height: 1.6;
-  margin-bottom: 16px;
-}
-
-.camp-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  color: #475569;
-}
-
-.camp-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.camp-tag {
-  background-color: #f1f5f9;
-  color: #475569;
-  border: none;
-}
-
-.camp-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
-}
-
-.camp-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.progress-label {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.progress-value {
-  font-size: 13px;
-  color: #475569;
-  font-weight: 500;
-}
 
 /* Dialog styles */
 .dialog-intro {

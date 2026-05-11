@@ -102,12 +102,13 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import { User as UserIcon, Lock as LockIcon } from '@element-plus/icons-vue'
 import SparkLogo from '@/components/SparkLogo.vue'
 
+const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const formRef = ref()
@@ -141,8 +142,8 @@ const handleLogin = async () => {
 
   if (result.success) {
     ElMessage.success('登录成功')
-    // 登录成功后统一跳转到平台首页
-    router.push('/portal')
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/portal'
+    router.push(redirect.startsWith('/login') ? '/portal' : redirect)
   } else {
     ElMessage.error(result.message)
   }

@@ -140,7 +140,7 @@
         </router-view>
       </main>
     </div>
-    <HuahuoAssistant />
+    <HuahuoAssistant :key="huahuoInstanceKey" />
   </div>
 </template>
 
@@ -166,12 +166,19 @@ const isCollapsed = ref(false)
 const mobileMenuOpen = ref(false)
 
 const platformPages = [
-  '/portal', '/competitions', '/training-camps', '/courses',
+  '/portal', '/competition-center', '/external-competitions',
+  '/competitions', '/training-camps', '/courses',
   '/industry-topics', '/my-registrations', '/certificates'
 ]
 
 const isPlatformPage = computed(() => {
+  if (route.meta?.platformPage) return true
   return platformPages.some(path => route.path === path || route.path.startsWith(path + '/'))
+})
+
+const huahuoInstanceKey = computed(() => {
+  const user = userStore.userInfo
+  return `${user?.id || user?.user_id || user?.username || 'guest'}-${user?.role || 'none'}`
 })
 
 const showSidebar = computed(() => {
@@ -182,7 +189,8 @@ const showSidebar = computed(() => {
 // 顶部导航配置 - 所有角色都能看到核心功能入口，按使用习惯排序
 const topNavConfig = [
   { path: '/portal', title: '首页', roles: ['student', 'teacher', 'judge', 'admin'] },
-  { path: '/competitions', title: '竞赛', roles: ['student', 'teacher', 'judge', 'admin'] },
+  { path: '/external-competitions', title: '校外竞赛', roles: ['student', 'teacher', 'judge', 'admin'] },
+  { path: '/competitions', title: '校内竞赛', roles: ['student', 'teacher', 'judge', 'admin'] },
   { path: '/training-camps', title: '训练营', roles: ['student', 'teacher', 'judge', 'admin'] },
   { path: '/courses', title: '课程', roles: ['student', 'teacher', 'judge', 'admin'] },
   { path: '/industry-topics', title: '产业命题', roles: ['student', 'teacher', 'judge', 'admin'] },
@@ -201,7 +209,8 @@ const topNavItems = computed(() => {
 
 const isTopNavActive = (path) => {
   if (path === '/portal') return route.path === '/portal'
-  if (path === '/competitions') return route.path.startsWith('/competitions')
+  if (path === '/external-competitions') return route.path.startsWith('/external-competitions')
+  if (path === '/competitions') return route.path.startsWith('/competitions') || route.path.startsWith('/competition-center')
   if (path === '/training-camps') return route.path.startsWith('/training-camps')
   if (path === '/courses') return route.path.startsWith('/courses')
   if (path === '/industry-topics') return route.path.startsWith('/industry-topics')
@@ -226,7 +235,7 @@ const menuGroups = [
     label: '竞赛',
     roles: ['student', 'teacher', 'judge', 'admin'],
     items: [
-      { path: '/competitions', title: '竞赛广场', icon: 'Trophy', roles: ['student', 'teacher', 'judge', 'admin'] },
+      { path: '/competitions', title: '校内竞赛', icon: 'Trophy', roles: ['student', 'teacher', 'judge', 'admin'] },
       { path: '/my-registrations', title: '我的赛事', icon: 'Medal', roles: ['student'] },
       { path: '/competition-management', title: '比赛批次管理', icon: 'Trophy', roles: ['admin'] },
       { path: '/registration-management', title: '报名管理', icon: 'Document', roles: ['admin'] },

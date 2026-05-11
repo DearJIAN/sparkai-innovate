@@ -23,19 +23,29 @@
           class="guide-dialog"
           :class="[`position-${currentStepData.position || 'center'}`]"
           :style="dialogPosition"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="`新手引导：${currentStepData.title || '功能介绍'}`"
+          tabindex="-1"
           @mousedown="startDrag"
+          @keydown="handleGuideKeydown"
         >
           <!-- 拖拽手柄 -->
           <div class="guide-drag-handle">
             <div class="drag-dots">
               <span></span><span></span><span></span>
             </div>
+            <button type="button" class="guide-close-btn" aria-label="关闭并跳过新手引导" @click.stop="skipGuide">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
           </div>
 
           <!-- 主体：左右布局 -->
           <div class="guide-body">
             <!-- 左侧：步骤进度指示器 -->
-            <div class="guide-stepper">
+            <div ref="guideStepperRef" class="guide-stepper">
               <div class="stepper-track">
                 <div
                   v-for="(step, index) in totalSteps"
@@ -49,13 +59,15 @@
                     :class="{ completed: index <= guideStore.currentStep }"
                   ></div>
                   <!-- 节点 -->
-                  <div
+                  <button
+                    type="button"
                     class="stepper-node"
                     :class="{
                       active: index === guideStore.currentStep,
                       completed: index < guideStore.currentStep,
                       pending: index > guideStore.currentStep
                     }"
+                    :aria-label="`跳转到第 ${index + 1} 步`"
                     @click="guideStore.goToStep(index)"
                   >
                     <transition name="step-icon" mode="out-in">
@@ -74,7 +86,7 @@
                       </svg>
                       <span v-else key="num" class="step-number">{{ index + 1 }}</span>
                     </transition>
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -229,6 +241,7 @@ const guideStore = useGuideStore()
 const userStore = useUserStore()
 
 const guideDialogRef = ref(null)
+const guideStepperRef = ref(null)
 const showWelcomeDialog = ref(false)
 const showReopenButton = ref(false)
 const highlightRect = ref(null)
@@ -289,35 +302,38 @@ const dialogPosition = computed(() => {
   // 如果有目标元素，计算相对位置
   if (highlightRect.value) {
     const rect = highlightRect.value
-    const dialogWidth = 820
-    const dialogHeight = 400
+    const dialogWidth = Math.min(820, window.innerWidth - 32)
+    const dialogHeight = 430
     const gap = 20
+    const clamp = (value, min, max) => Math.max(min, Math.min(value, max))
+    const maxLeft = window.innerWidth - dialogWidth - 16
+    const maxTop = window.innerHeight - dialogHeight - 16
+    let left = window.innerWidth / 2 - dialogWidth / 2
+    let top = window.innerHeight / 2 - dialogHeight / 2
 
     switch (position) {
       case 'bottom':
-        return {
-          left: `${rect.left + rect.width / 2 - dialogWidth / 2}px`,
-          top: `${rect.bottom + gap}px`,
-          transform: 'none'
-        }
+        left = rect.left + rect.width / 2 - dialogWidth / 2
+        top = rect.bottom + gap
+        break
       case 'top':
-        return {
-          left: `${rect.left + rect.width / 2 - dialogWidth / 2}px`,
-          top: `${rect.top - dialogHeight - gap}px`,
-          transform: 'none'
-        }
+        left = rect.left + rect.width / 2 - dialogWidth / 2
+        top = rect.top - dialogHeight - gap
+        break
       case 'left':
-        return {
-          left: `${rect.left - dialogWidth - gap}px`,
-          top: `${rect.top + rect.height / 2 - dialogHeight / 2}px`,
-          transform: 'none'
-        }
+        left = rect.left - dialogWidth - gap
+        top = rect.top + rect.height / 2 - dialogHeight / 2
+        break
       case 'right':
-        return {
-          left: `${rect.right + gap}px`,
-          top: `${rect.top + rect.height / 2 - dialogHeight / 2}px`,
-          transform: 'none'
-        }
+        left = rect.right + gap
+        top = rect.top + rect.height / 2 - dialogHeight / 2
+        break
+    }
+
+    return {
+      left: `${clamp(left, 16, Math.max(16, maxLeft))}px`,
+      top: `${clamp(top, 16, Math.max(16, maxTop))}px`,
+      transform: 'none'
     }
   }
 
@@ -348,6 +364,31 @@ const updateHighlight = async () => {
     highlightRect.value = null
   }
   dialogPos.value = { x: 0, y: 0 }
+  scrollCurrentStepIntoView()
+  nextTick(() => guideDialogRef.value?.focus?.())
+}
+
+const scrollCurrentStepIntoView = () => {
+  nextTick(() => {
+    const stepper = guideStepperRef.value
+    const activeNode = stepper?.querySelector?.('.stepper-node.active')
+    activeNode?.scrollIntoView?.({ block: 'center', inline: 'center', behavior: 'smooth' })
+  })
+}
+
+const handleGuideKeydown = (e) => {
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    skipGuide()
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    if (guideStore.currentStep < totalSteps.value - 1) {
+      guideStore.nextStep()
+    } else {
+      finishGuide()
+    }
+  }
 }
 
 // 监听步骤变化
@@ -409,7 +450,7 @@ const onBtnDrag = (e) => {
 const stopBtnDrag = () => {
   btnDragging.value = false
   document.removeEventListener('mousemove', onBtnDrag)
-  document.removeEventListener('mouseup', stopBtnDragFn)
+  document.removeEventListener('mouseup', stopBtnDrag)
 }
 
 // 处理遮罩点击
@@ -476,6 +517,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateHighlight)
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.removeEventListener('mousemove', onBtnDrag)
+  document.removeEventListener('mouseup', stopBtnDrag)
 })
 </script>
 
@@ -487,7 +532,10 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.75);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(14, 165, 233, 0.22), transparent 34%),
+    radial-gradient(circle at 82% 72%, rgba(20, 184, 166, 0.18), transparent 36%),
+    rgba(15, 23, 42, 0.46);
   z-index: 9998;
   transition: opacity 0.3s ease;
 }
@@ -525,31 +573,38 @@ onUnmounted(() => {
 .guide-dialog {
   position: fixed;
   width: 820px;
-  max-height: 80vh;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(34, 211, 238, 0.25);
-  border-radius: 16px;
+  max-width: calc(100vw - 32px);
+  max-height: min(82vh, 560px);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(240, 249, 255, 0.9)),
+    radial-gradient(circle at 18% 0%, rgba(14, 165, 233, 0.18), transparent 32%);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(14, 165, 233, 0.22);
+  border-radius: 24px;
   box-shadow:
-    0 25px 60px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 0 40px rgba(34, 211, 238, 0.08);
+    0 28px 70px -32px rgba(15, 23, 42, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.62);
   z-index: 10000;
   overflow: hidden;
   cursor: default;
   user-select: none;
   display: flex;
   flex-direction: column;
+  outline: none;
 }
 
 /* ==================== 拖拽手柄 ==================== */
 .guide-drag-handle {
   display: flex;
   justify-content: center;
-  padding: 10px 0 6px;
+  align-items: center;
+  padding: 12px 0 8px;
   cursor: grab;
   flex-shrink: 0;
+  position: relative;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.12);
 }
 
 .guide-drag-handle:active {
@@ -564,8 +619,38 @@ onUnmounted(() => {
 .drag-dots span {
   width: 5px;
   height: 5px;
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(14, 116, 144, 0.28);
   border-radius: 50%;
+}
+
+.guide-close-btn {
+  position: absolute;
+  right: 14px;
+  top: 7px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.22s ease, color 0.22s ease;
+}
+
+.guide-close-btn:hover,
+.guide-close-btn:focus-visible {
+  background: rgba(14, 165, 233, 0.14);
+  color: #0f172a;
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.guide-close-btn svg {
+  width: 15px;
+  height: 15px;
 }
 
 /* ==================== 主体左右布局 ==================== */
@@ -582,7 +667,9 @@ onUnmounted(() => {
   align-items: stretch;
   padding: 24px 20px 24px 28px;
   flex-shrink: 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(14, 165, 233, 0.12);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .stepper-track {
@@ -602,7 +689,7 @@ onUnmounted(() => {
 .stepper-line {
   width: 2px;
   height: 20px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(14, 116, 144, 0.16);
   transition: background 0.4s ease;
 }
 
@@ -620,26 +707,30 @@ onUnmounted(() => {
   justify-content: center;
   font-size: 14px;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.72);
+  color: rgba(51, 65, 85, 0.78);
+  border: 2px solid rgba(14, 116, 144, 0.13);
   cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   position: relative;
   flex-shrink: 0;
+  appearance: none;
+  padding: 0;
 }
 
-.stepper-node:hover {
-  border-color: rgba(34, 211, 238, 0.4);
-  background: rgba(34, 211, 238, 0.08);
+.stepper-node:hover,
+.stepper-node:focus-visible {
+  border-color: rgba(14, 165, 233, 0.42);
+  background: rgba(14, 165, 233, 0.12);
+  outline: none;
 }
 
 .stepper-node.active {
   background: linear-gradient(135deg, var(--primary-500), var(--primary-400));
-  color: #fff;
+  color: #ffffff;
   border-color: transparent;
   transform: scale(1.15);
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.35), 0 0 0 4px rgba(34, 211, 238, 0.12);
+  box-shadow: 0 14px 28px -18px rgba(14, 116, 144, 0.7), 0 0 0 5px rgba(14, 165, 233, 0.12);
 }
 
 .stepper-node.completed {
@@ -650,9 +741,9 @@ onUnmounted(() => {
 }
 
 .stepper-node.pending {
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.62);
+  color: rgba(71, 85, 105, 0.58);
+  border-color: rgba(14, 116, 144, 0.12);
 }
 
 .step-number {
@@ -695,12 +786,13 @@ onUnmounted(() => {
 
 /* 步骤计数器 */
 .step-counter {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--primary-400);
-  letter-spacing: 1px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0e7490;
+  letter-spacing: 0.14em;
   margin-bottom: 16px;
   font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
 }
 
 /* 内容区域 */
@@ -712,19 +804,21 @@ onUnmounted(() => {
 }
 
 .guide-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #f1f5f9;
-  margin-bottom: 16px;
-  line-height: 1.4;
-  letter-spacing: -0.01em;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 14px;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 
 .guide-text {
   font-size: 15px;
-  color: rgba(203, 213, 225, 0.9);
-  line-height: 1.7;
+  color: rgba(51, 65, 85, 0.86);
+  line-height: 1.75;
   margin: 0 0 20px;
+  max-width: 58ch;
 }
 
 /* 提示信息区域 */
@@ -733,11 +827,11 @@ onUnmounted(() => {
   align-items: flex-start;
   gap: 10px;
   padding: 14px 16px;
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(34, 211, 238, 0.04));
-  border: 1px solid rgba(34, 211, 238, 0.15);
-  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(20, 184, 166, 0.06));
+  border: 1px solid rgba(14, 165, 233, 0.18);
+  border-radius: 14px;
   font-size: 13px;
-  color: rgba(34, 211, 238, 0.85);
+  color: rgba(14, 116, 144, 0.92);
   line-height: 1.6;
 }
 
@@ -771,7 +865,7 @@ onUnmounted(() => {
 /* ==================== 底部区域 ==================== */
 .guide-footer {
   flex-shrink: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(14, 165, 233, 0.12);
 }
 
 /* 按钮区域 */
@@ -798,7 +892,7 @@ onUnmounted(() => {
 }
 
 .guide-btn-prev {
-  color: rgba(203, 213, 225, 0.8);
+  color: rgba(51, 65, 85, 0.82);
 }
 
 .guide-btn-next,
@@ -812,14 +906,14 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 32px 14px;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(248, 250, 252, 0.78);
 }
 
 .opacity-control {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: rgba(148, 163, 184, 0.7);
+  color: rgba(51, 65, 85, 0.68);
 }
 
 .opacity-slider {
@@ -827,12 +921,12 @@ onUnmounted(() => {
 }
 
 .skip-btn {
-  color: rgba(148, 163, 184, 0.6);
+  color: rgba(71, 85, 105, 0.7);
   font-size: 13px;
 }
 
 .skip-btn:hover {
-  color: rgba(203, 213, 225, 0.9);
+  color: rgba(15, 23, 42, 0.92);
 }
 
 /* ==================== 左侧重新打开按钮 ==================== */
@@ -944,8 +1038,9 @@ onUnmounted(() => {
     flex-direction: row;
     padding: 16px 24px;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(14, 165, 233, 0.12);
     overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .stepper-track {
@@ -981,9 +1076,10 @@ onUnmounted(() => {
 
 @media (max-width: 480px) {
   .guide-dialog {
-    width: 96vw;
+    width: calc(100vw - 20px);
     max-width: none;
-    border-radius: 12px;
+    max-height: calc(100dvh - 20px);
+    border-radius: 18px;
   }
 
   .guide-stepper {

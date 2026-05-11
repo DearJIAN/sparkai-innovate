@@ -1,8 +1,16 @@
 <template>
   <div class="industry-topics">
     <!-- Banner -->
-    <div class="topics-banner">
+    <div class="portal-hero-banner portal-hero-banner--industry">
+      <div class="banner-decoration">
+        <div class="deco-circle c1"></div>
+        <div class="deco-circle c2"></div>
+      </div>
       <div class="banner-content">
+        <div class="banner-badge">
+          <el-icon size="16"><HomeFilled /></el-icon>
+          <span>产业命题</span>
+        </div>
         <h1 class="banner-title">产业命题</h1>
         <p class="banner-subtitle">对接企业真实需求，解决实际业务问题</p>
       </div>
@@ -11,57 +19,23 @@
     <!-- 命题列表 -->
     <div class="topics-section">
       <div class="topics-grid">
-        <div
+        <SparkPortalCard
           v-for="topic in topics"
           :key="topic.id"
-          class="topic-card"
-        >
-          <div class="topic-header">
-            <div class="topic-company">
-              <el-avatar :size="48" :style="{ background: topic.gradient }">
-                <el-icon size="24"><OfficeBuilding /></el-icon>
-              </el-avatar>
-              <div class="company-info">
-                <h4 class="company-name">{{ topic.company }}</h4>
-                <el-tag size="small" :type="topic.difficultyType">{{ topic.difficulty }}</el-tag>
-              </div>
-            </div>
-          </div>
-          <div class="topic-body">
-            <h3 class="topic-title">{{ topic.title }}</h3>
-            <div class="topic-section">
-              <h5 class="section-title">命题背景</h5>
-              <p class="section-content">{{ topic.background }}</p>
-            </div>
-            <div class="topic-section">
-              <h5 class="section-title">需求说明</h5>
-              <p class="section-content">{{ topic.requirement }}</p>
-            </div>
-            <div class="topic-section">
-              <h5 class="section-title">交付物要求</h5>
-              <ul class="deliverable-list">
-                <li v-for="(item, index) in topic.deliverables" :key="index">
-                  {{ item }}
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="topic-footer">
-            <div class="topic-meta">
-              <span class="meta-item">
-                <el-icon><Timer /></el-icon>
-                {{ topic.duration }}
-              </span>
-              <span class="meta-item">
-                <el-icon><Coin /></el-icon>
-                {{ topic.bonus }}
-              </span>
-            </div>
-            <el-button type="primary" size="small" @click="handleAccept(topic)">
-              承接命题
-            </el-button>
-          </div>
-        </div>
+          :gradient="topic.gradient"
+          :level="topic.difficulty"
+          :title="topic.title"
+          :description="'命题企业：' + topic.company + ' / ' + (topic.background || '').substring(0, 80) + '...'"
+          :tags="[topic.company, topic.industry]"
+          :max-tags="2"
+          :meta-items="[
+            { icon: Timer, text: topic.duration },
+            { icon: Coin, text: topic.bonus }
+          ]"
+          :primary-action-text="'承接命题'"
+          :primary-action-icon="ArrowRight"
+          :on-primary-click="() => handleAccept(topic)"
+        />
       </div>
     </div>
   </div>
@@ -70,8 +44,9 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { OfficeBuilding, Timer, Coin } from '@element-plus/icons-vue'
+import { OfficeBuilding, Timer, Coin, ArrowRight, HomeFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import SparkPortalCard from '@/components/portal/SparkPortalCard.vue'
 
 const router = useRouter()
 
@@ -110,6 +85,7 @@ const topics = ref([
   {
     id: 1,
     company: '智慧教育科技',
+    industry: '教育科技',
     title: '智慧校园服务创新命题',
     difficulty: '中等',
     difficultyType: 'warning',
@@ -128,6 +104,7 @@ const topics = ref([
   {
     id: 2,
     company: '绿色未来科技',
+    industry: '环保双碳',
     title: '低碳生活数据平台命题',
     difficulty: '困难',
     difficultyType: 'danger',
@@ -146,6 +123,7 @@ const topics = ref([
   {
     id: 3,
     company: '信用科技实验室',
+    industry: '金融科技',
     title: '校园二手交易信用体系命题',
     difficulty: '中等',
     difficultyType: 'warning',
@@ -164,6 +142,7 @@ const topics = ref([
   {
     id: 4,
     company: '数字企业咨询',
+    industry: '企业服务',
     title: '企业数字化运营工具命题',
     difficulty: '简单',
     difficultyType: 'success',
@@ -188,27 +167,89 @@ const topics = ref([
   background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
 }
 
-.topics-banner {
-  background: linear-gradient(135deg, #0c4a6e 0%, #075985 50%, #0ea5e9 100%);
-  padding: 50px 40px;
-  border-radius: 0 0 40px 40px;
+.portal-hero-banner {
+  position: relative;
+  overflow: hidden;
+  min-height: 260px;
+  padding: 56px 48px;
+  border-radius: 0 0 36px 36px;
+  color: #fff;
+}
+
+.portal-hero-banner::before,
+.portal-hero-banner::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.portal-hero-banner::before {
+  width: 280px;
+  height: 280px;
+  right: -60px;
+  top: -40px;
+  animation: bannerFloat 8s ease-in-out infinite;
+}
+
+.portal-hero-banner::after {
+  width: 180px;
+  height: 180px;
+  left: -40px;
+  bottom: -40px;
+  animation: bannerFloat 10s ease-in-out infinite reverse;
+}
+
+@keyframes bannerFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.05); }
+}
+
+.portal-hero-banner--industry {
+  background: linear-gradient(135deg, #0f172a 0%, #0e7490 100%);
+}
+
+.banner-decoration { position: absolute; right: 48px; top: 0; width: 35%; height: 100%; z-index: 1; }
+
+.deco-circle { position: absolute; border-radius: 50%; opacity: 0.12; }
+.c1 { width: 220px; height: 220px; background: #22d3ee; right: -20px; top: -20px; animation: decoFloat 8s ease-in-out infinite; }
+.c2 { width: 150px; height: 150px; background: #67e8f9; right: 140px; bottom: -20px; animation: decoFloat 10s ease-in-out infinite reverse; }
+
+@keyframes decoFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.05); }
 }
 
 .banner-content {
-  max-width: 1400px;
-  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+}
+
+.banner-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 18px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 24px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .banner-title {
-  font-size: 32px;
-  font-weight: 700;
+  font-size: 40px;
+  font-weight: 800;
   color: #ffffff;
-  margin-bottom: 12px;
+  margin: 0 0 18px;
+  line-height: 1.2;
 }
 
 .banner-subtitle {
-  font-size: 16px;
-  color: #bae6fd;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 720px;
+  line-height: 1.8;
 }
 
 .topics-section {
@@ -223,114 +264,7 @@ const topics = ref([
   gap: 24px;
 }
 
-.topic-card {
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
-}
-
-.topic-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
-}
-
-.topic-header {
-  padding: 20px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.topic-company {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.company-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.company-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.topic-body {
-  padding: 20px;
-}
-
-.topic-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 16px;
-}
-
-.topic-section {
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 6px;
-}
-
-.section-content {
-  font-size: 13px;
-  color: #64748b;
-  line-height: 1.6;
-}
-
-.deliverable-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.deliverable-list li {
-  font-size: 13px;
-  color: #64748b;
-  padding: 4px 0;
-  padding-left: 16px;
-  position: relative;
-}
-
-.deliverable-list li::before {
-  content: '•';
-  position: absolute;
-  left: 4px;
-  color: #0ea5e9;
-}
-
-.topic-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-top: 1px solid #f1f5f9;
-  background: #f8fafc;
-  min-height: 56px;
-}
-
-.topic-meta {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  flex: 1;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  color: #64748b;
-  white-space: nowrap;
+@media (max-width: 768px) {
+  .topics-grid { grid-template-columns: 1fr; }
 }
 </style>

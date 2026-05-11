@@ -583,7 +583,7 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .agent-panel--compact {
@@ -592,7 +592,7 @@ onMounted(() => {
 }
 
 .agent-panel :deep(.el-form-item__label) {
-  color: #94a3b8 !important;
+  color: #475569 !important;
   font-size: 12px;
 }
 
@@ -601,17 +601,17 @@ onMounted(() => {
 .agent-panel :deep(.el-textarea .el-textarea__inner) {
   color: #1e293b !important;
   background-color: #ffffff !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
 }
 
 .agent-panel :deep(.el-input__wrapper) {
   background-color: #ffffff !important;
-  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3) inset !important;
 }
 
 .agent-panel :deep(.el-textarea__wrapper) {
   background-color: #ffffff !important;
-  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3) inset !important;
 }
 
 .agent-panel :deep(.el-select .el-input__inner::placeholder),
@@ -621,7 +621,7 @@ onMounted(() => {
 }
 
 .agent-panel :deep(.el-radio__label) {
-  color: #e2e8f0 !important;
+  color: #475569 !important;
 }
 
 .agent-panel :deep(.el-select-dropdown__item) {
@@ -630,27 +630,27 @@ onMounted(() => {
 
 .agent-panel :deep(.el-select-dropdown) {
   background-color: #ffffff !important;
-  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
 }
 
 .agent-panel :deep(.el-select-dropdown__item.hover),
 .agent-panel :deep(.el-select-dropdown__item:hover) {
-  background-color: rgba(6, 182, 212, 0.15) !important;
+  background-color: rgba(59, 130, 246, 0.08) !important;
 }
 
 .agent-panel :deep(.el-select-dropdown__item.selected) {
-  color: #06b6d4 !important;
+  color: #3b82f6 !important;
   font-weight: 600;
 }
 
 .agent-panel :deep(.el-popper.is-light) {
   background-color: #ffffff !important;
-  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
 }
 
 .agent-panel :deep(.el-popper.is-light .el-popper__arrow::before) {
   background-color: #ffffff !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
 }
 
 .agent-panel :deep(.el-select-dropdown__empty) {
@@ -658,27 +658,27 @@ onMounted(() => {
 }
 
 .smart-navigate-section :deep(.el-input-group__append) {
-  background-color: rgba(6, 182, 212, 0.2) !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
-  color: #06b6d4 !important;
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
+  color: #3b82f6 !important;
   box-shadow: none !important;
 }
 
 .smart-navigate-section :deep(.el-input-group__append:hover) {
-  background-color: rgba(6, 182, 212, 0.3) !important;
+  background-color: rgba(59, 130, 246, 0.2) !important;
 }
 
 .capability-cards__title {
   font-size: 14px;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #1e293b;
   margin-bottom: 4px;
   text-align: center;
 }
 
 .capability-cards__desc {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
   text-align: center;
   margin-bottom: 8px;
 }
@@ -695,8 +695,8 @@ onMounted(() => {
 }
 
 .capability-card {
-  background: rgba(6, 182, 212, 0.08);
-  border: 1px solid rgba(6, 182, 212, 0.15);
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.12);
   border-radius: 8px;
   padding: 8px 4px;
   text-align: center;
@@ -705,8 +705,8 @@ onMounted(() => {
 }
 
 .capability-card:hover {
-  background: rgba(6, 182, 212, 0.15);
-  border-color: rgba(6, 182, 212, 0.3);
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.25);
   transform: translateY(-1px);
 }
 
@@ -717,32 +717,32 @@ onMounted(() => {
 
 .capability-card__name {
   font-size: 12px;
-  color: #e2e8f0;
+  color: #1e293b;
   font-weight: 500;
 }
 
 .capability-card__desc {
   font-size: 10px;
-  color: #94a3b8;
+  color: #64748b;
   margin-top: 2px;
 }
 
 .smart-navigate-section {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid rgba(6, 182, 212, 0.1);
+  border-top: 1px solid rgba(59, 130, 246, 0.08);
 }
 
 .smart-navigate-title {
   font-size: 13px;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #1e293b;
   margin-bottom: 2px;
 }
 
 .smart-navigate-desc {
   font-size: 11px;
-  color: #94a3b8;
+  color: #64748b;
   margin-bottom: 6px;
 }
 
@@ -751,8 +751,8 @@ onMounted(() => {
 }
 
 .navigate-result {
-  background: rgba(6, 182, 212, 0.08);
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: #f8fafc;
+  border: 1px solid rgba(59, 130, 246, 0.15);
   border-radius: 6px;
   padding: 8px;
   margin-top: 6px;
@@ -760,7 +760,7 @@ onMounted(() => {
 
 .navigate-reply {
   font-size: 12px;
-  color: #e2e8f0;
+  color: #1e293b;
   margin-bottom: 6px;
   line-height: 1.5;
 }
@@ -775,7 +775,7 @@ onMounted(() => {
 .capability-form__title {
   font-size: 14px;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .capability-form__body {
@@ -792,28 +792,28 @@ onMounted(() => {
 .capability-result {
   margin-top: 12px;
   padding: 10px;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: #f8fafc;
+  border: 1px solid rgba(59, 130, 246, 0.12);
   border-radius: 8px;
 }
 
 .capability-result__title {
   font-size: 13px;
   font-weight: 600;
-  color: #06b6d4;
+  color: #3b82f6;
   margin-bottom: 6px;
 }
 
 .capability-result__content {
   font-size: 12px;
   line-height: 1.6;
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .capability-result__content :deep(h1),
 .capability-result__content :deep(h2),
 .capability-result__content :deep(h3) {
-  color: #06b6d4;
+  color: #3b82f6;
   margin: 8px 0 4px;
 }
 
@@ -832,14 +832,14 @@ onMounted(() => {
 }
 
 .capability-result__content :deep(code) {
-  background: rgba(6, 182, 212, 0.1);
+  background: rgba(59, 130, 246, 0.08);
   padding: 1px 4px;
   border-radius: 3px;
   font-size: 11px;
 }
 
 .capability-result__content :deep(pre) {
-  background: rgba(6, 182, 212, 0.05);
+  background: #f1f5f9;
   padding: 6px;
   border-radius: 4px;
   overflow-x: auto;

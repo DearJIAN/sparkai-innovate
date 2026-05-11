@@ -71,8 +71,9 @@ export const useUserStore = defineStore('user', () => {
 
   const init = async () => {
     if (token.value && !userInfo.value) {
-      await fetchUserInfo()
+      return await fetchUserInfo()
     }
+    return !!userInfo.value
   }
 
   return {

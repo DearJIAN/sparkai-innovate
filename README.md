@@ -173,6 +173,8 @@
 - 可拖拽、可隐藏、可切换表情
 - 表情 / 情绪联动逻辑抽取为共享 composable（`useLive2d.js`）
 - 组件卸载时完整清理（CSS link / DOM 元素 / 全局变量），避免内存泄漏
+- Live2D 初始化带并发锁，账号/角色切换时通过 `MainLayout.vue` 的用户维度 key 强制重挂载，降低全局状态残留风险
+- AI Markdown 输出通过 DOMPurify 净化后再渲染，降低 `v-html` 带来的 XSS 风险
 
 ### AI 智能对话
 
@@ -186,6 +188,10 @@
 - AI 助手页面双标签页设计：**AI 分析工具** + **AI 对话**
 - 流式输出重试机制（最大重试 2 次，递增间隔 1s/2s）+ 3 分钟超时控制
 - 角色感知对话：根据当前登录角色（学生/教师/评委/管理员）自动调整 AI 回复风格和可用能力
+- **亮色清爽主题**：AI 助手窗口采用纯白背景 `#ffffff` + 蓝色系强调色 `#3b82f6`，消息气泡区分用户（浅蓝）和助手（浅灰），整体视觉清爽科技
+- **右下角拖拽缩放**：缩放手柄位于窗口右下角，鼠标向右下拖动时窗口自然变大，尺寸范围 320-800px 宽 / 400-900px 高，持久化到 localStorage
+- **标题栏拖拽分离**：仅标题文字区域可拖拽移动，按钮区域独立不触发拖拽
+- **移动端自适应**：屏幕宽度 ≤768px 时自动缩小面板尺寸并固定到底部
 
 ### 语音交互
 
@@ -239,13 +245,14 @@
 
 - 首次登录引导（`GuideSystem.vue`）
 - 高亮指引 + 拖拽弹窗 + 路由自动跳转（`routePath` 配置）
+- 引导弹窗支持键盘 Esc 跳过、Enter 下一步/完成，弹窗定位会钳制在视口内，进度节点可横向/纵向滚动查看
 - 引导状态持久化（Pinia `guide.js`）
 - 四角色独立引导步骤（学生 12 步 / 教师 9 步 / 评委 8 步 / 管理员 11 步）
 - 各角色引导均包含 AI 智能体能力介绍（AgentPanel 入口 + 各角色可用能力说明）
 
 ### 双模式布局
 
-- 平台页面（首页 / 竞赛广场 / 训练营等）：无侧边栏，顶部导航
+- 平台页面（首页 / 竞赛广场 / 训练营等）：无侧边栏，顶部导航，优先通过路由 `meta.platformPage` 判定平台页，避免布局清单和路由清单重复维护
 - 工作台页面（项目 / 评审 / 管理等）：左侧边栏 + 顶部导航
 - 侧边栏可折叠，响应式适配
 
@@ -394,7 +401,7 @@ innovation-competition-platform/
 │       ├── components/               # 公共组件
 │       │   ├── SparkLogo.vue         # 品牌 Logo 组件（彩色渐变文字+粒子浮动+奖杯光晕，烟花视觉效果）
 │       │   ├── GuideSystem.vue       # 全局引导系统（首次登录引导/高亮/拖拽弹窗/路由跳转）
-│       │   ├── HuahuoAssistant.vue   # Live2D 虚拟形象「火花」（全屏拖拽/AI对话/语音/关键字表情联动/完整清理）
+│       │   ├── HuahuoAssistant.vue   # Live2D 虚拟形象「火花」（全屏拖拽/AI对话/语音/关键字表情联动/完整清理/亮色主题/右下角缩放）
 │       │   ├── VoiceChat.vue         # 语音交互面板（流式对话/语音识别/TTS/可拖拽/深色毛玻璃）
 │       │   ├── TestButton.vue        # 测试按钮组件
 │       │   ├── TestButtonDemo.vue    # 测试按钮演示
@@ -425,12 +432,13 @@ innovation-competition-platform/
 │       │       ├── competitions/     # 竞赛海报图（10 张，与比赛名称一对一匹配）
 │       │       ├── certificates/     # 证书与获奖图片（5 张证书 + 2 张获奖）
 │       │       ├── training-camps/   # 训练营图片（4 张）
-│       │       └── courses/          # 在线课程图片（5 张）
+│       │       ├── courses/          # 在线课程图片（5 张）
+│       │       └── Off-campus_competitions/ # 校外竞赛官方海报（中国国际大学生创新大赛 / 挑战杯 / 三创赛）
 │       │
 │       └── views/                    # 页面视图（43 个 Vue 文件）
 │           ├── ai-assistant/         # AI 助手（双标签页：分析工具 + 对话）
 │           │   ├── index.vue
-│   │   └── AgentPanel.vue    # AI 智能体面板（12 大 AI 能力：智能引航/材料问答/体检/路演/评审辅助/竞赛推荐/项目创意/模拟答辩/批量审核/智能反馈/评审草稿/评分检查）
+│           │   └── AgentPanel.vue    # AI 智能体面板（12 大 AI 能力：智能引航/材料问答/体检/路演/评审辅助/竞赛推荐/项目创意/模拟答辩/批量审核/智能反馈/评审草稿/评分检查/亮色主题适配）
 │           ├── admin/                # 管理员页面（5 个）
 │           │   ├── users.vue         # 用户管理（搜索/角色筛选/状态筛选/CRUD弹窗）
 │           │   ├── projects.vue      # 项目管理（6维统计/搜索/阶段筛选/评分颜色分级）
@@ -452,10 +460,13 @@ innovation-competition-platform/
 │           │   └── register.vue      # 注册页
 │           ├── materials/
 │           │   └── index.vue         # 材料管理
-│           ├── portal/               # 平台页面（12 个，无侧边栏）
+│           ├── portal/               # 平台页面（15 个，无侧边栏）
 │           │   ├── PortalHome.vue    # 平台首页（全局数字雨背景 + 功能入口 + 推荐竞赛 + 动态统计）
-│           │   ├── CompetitionSquare.vue # 竞赛广场（深蓝渐变 Banner + 双光球呼吸动画 + 海报封面卡片）
-│           │   ├── CompetitionDetail.vue # 竞赛详情（海报占满宽度 + 完整时间/奖项/材料 + 智能内容生成）
+│           │   ├── CompetitionCenter.vue # 竞赛报名中心（校外/校内双入口分流页 + 蓝紫/青色双卡片）
+│           │   ├── ExternalCompetitions.vue # 校外竞赛（国家级赛事聚合 + 分类筛选 + 官方外链 + 官方海报封面）
+│           │   ├── ExternalCompetitionDetail.vue # 校外竞赛详情（真实海报 Hero + 8 大板块 + 右侧吸附卡）
+│           │   ├── CompetitionSquare.vue # 竞赛广场/校内竞赛（深蓝渐变 Banner + 双光球呼吸动画 + 海报封面卡片）
+│           │   ├── CompetitionDetail.vue # 校内竞赛详情（海报占满宽度 + 完整时间/奖项/材料 + 智能内容生成）
 │           │   ├── CompetitionRegister.vue # 竞赛报名（快速填充 + 团队信息 + 队员管理）
 │           │   ├── MyRegistrations.vue # 我的赛事（海报封面卡片 + 状态跟踪）
 │           │   ├── TrainingCamps.vue # 训练营（紫罗兰渐变 Banner + 光球漂浮动画 + 海报封面）
@@ -1106,16 +1117,19 @@ done:1                     # 流结束标记
 
 ### 平台页面（所有角色，无侧边栏）
 
-| 路径                    | 组件                            | 说明    |
-| --------------------- | ----------------------------- | ----- |
-| `/portal`             | portal/PortalHome.vue         | 平台首页  |
-| `/competitions`       | portal/CompetitionSquare.vue  | 竞赛广场  |
-| `/competitions/:id`   | portal/CompetitionDetail.vue  | 竞赛详情  |
-| `/training-camps`     | portal/TrainingCamps.vue      | 训练营   |
-| `/training-camps/:id` | portal/TrainingCampDetail.vue | 训练营详情 |
-| `/courses`            | portal/Courses.vue            | 在线课程  |
-| `/courses/:id`        | portal/CourseDetail.vue       | 课程详情  |
-| `/industry-topics`    | portal/IndustryTopics.vue     | 产业命题  |
+| 路径                          | 组件                                   | 说明       |
+| --------------------------- | ------------------------------------ | -------- |
+| `/portal`                   | portal/PortalHome.vue                | 平台首页     |
+| `/competition-center`       | portal/CompetitionCenter.vue         | 竞赛报名中心   |
+| `/external-competitions`    | portal/ExternalCompetitions.vue      | 校外竞赛     |
+| `/external-competitions/:slug` | portal/ExternalCompetitionDetail.vue | 校外竞赛详情   |
+| `/competitions`             | portal/CompetitionSquare.vue         | 校内竞赛     |
+| `/competitions/:id`         | portal/CompetitionDetail.vue         | 校内竞赛详情   |
+| `/training-camps`           | portal/TrainingCamps.vue             | 训练营      |
+| `/training-camps/:id`       | portal/TrainingCampDetail.vue        | 训练营详情    |
+| `/courses`                  | portal/Courses.vue                   | 在线课程     |
+| `/courses/:id`              | portal/CourseDetail.vue              | 课程详情     |
+| `/industry-topics`          | portal/IndustryTopics.vue            | 产业命题     |
 
 ### 通用路由（所有角色）
 
@@ -1524,6 +1538,34 @@ def create_competition():
 
 通过 `data-theme="dark"` 属性切换暗黑模式变量（尚未启用）。
 
+### 统一卡片设计（SparkPortalCard）
+
+竞赛广场、训练营、课程、产业命题 4 个门户列表页使用统一的 [SparkPortalCard](frontend/src/components/portal/SparkPortalCard.vue) 卡片组件：
+
+| 卡片属性       | 规范值 / 说明                                                  |
+| -------------- | -------------------------------------------------------------- |
+| 圆角           | `border-radius: 20px`                                          |
+| 封面高度       | `170px`                                                        |
+| 封面图片       | 使用 `<img>` + `object-fit: contain` 展示真实海报，避免关键文字被裁切；有图片时不再叠加重复封面标题 |
+| 卡片最小宽度   | `300px`（grid `minmax(300px, 1fr)`）                           |
+| hover 上浮     | `translateY(-6px)`                                             |
+| hover 阴影     | `0 16px 32px -8px rgba(0,0,0,0.12)`                           |
+| 渐变封面动画   | `background-size: 300%`, `sparkGradientFlow` 8s ease infinite  |
+| 无障碍         | `prefers-reduced-motion: reduce` 时关闭持续动画                 |
+| 主按钮样式     | 蓝紫渐变 `linear-gradient(135deg, #2563eb, #7c3aed)`，圆角 12px |
+| 标签样式       | `border-radius: 8px`, `background: #f1f5f9`, `font-size: 11px` |
+| 布局           | `display: flex; flex-direction: column`，按钮固定底部          |
+
+**各业务模块渐变色方案**：
+
+| 业务模块   | 渐变配色                                     | 说明             |
+| ---------- | -------------------------------------------- | ---------------- |
+| 校外竞赛   | 蓝紫/青绿/橙红渐变 + 官方海报图               | 国家级赛事，列表和详情页接入 `externalCompetitions.js` 的 `posterImage` |
+| 校内竞赛   | 分类动态渐变（青蓝/紫蓝/翠绿/橙红等 11 种）  | 按竞赛类别自动匹配 |
+| 训练营     | 各训练营独立渐变（蓝青/紫粉/橙红/翠绿）      | 按训练营主题区分   |
+| 课程       | 各课程独立渐变（青蓝/紫粉/翠绿/橙红/靛蓝）   | 按课程主题区分     |
+| 产业命题   | 各命题独立渐变（青蓝/翠绿/紫粉/橙红）        | 按企业命题区分     |
+
 ***
 
 ## 开发规范
@@ -1854,6 +1896,38 @@ cd backend && flask db upgrade && python seed.py
 > - 不重复记录同一改动（如已在"新增功能"中写了，不再在"功能修改"中重复）
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
+### v4.4.0 - 2026-05-11
+
+> 引导窗口、校外竞赛海报、Live2D 生命周期、登录路由回跳与统一卡片展示修复
+
+#### 新增功能
+
+- **校外竞赛官方海报接入**（`frontend/src/data/externalCompetitions.js`、`frontend/src/views/portal/ExternalCompetitions.vue`、`frontend/src/views/portal/ExternalCompetitionDetail.vue`）：为中国国际大学生创新大赛、挑战杯创业计划竞赛、三创赛新增 `posterImage` 字段，列表卡片和详情 Hero 使用 `src/assets/images/Off-campus_competitions/` 下的真实海报资源展示。
+
+#### 功能修改
+
+- **引导窗口交互强化**（`frontend/src/components/GuideSystem.vue`、`frontend/src/stores/guide.js`）：引导弹窗新增 `role="dialog"`、可聚焦、Esc 跳过、Enter 下一步/完成，弹窗定位钳制在视口内，进度节点可滚动查看，并对 `goToStep` 做边界约束。
+- **统一卡片封面展示调整**（`frontend/src/components/portal/SparkPortalCard.vue`、`frontend/src/views/portal/CompetitionSquare.vue`、`frontend/src/views/portal/TrainingCamps.vue`、`frontend/src/views/portal/Courses.vue`、`frontend/src/views/portal/IndustryTopics.vue`）：封面图片从 `background-image` 改为 `<img>` + `object-fit: contain`，避免真实海报关键文字裁切；有封面图时不再重复显示封面标题，标题仅保留在卡片正文。
+- **平台页布局判定统一**（`frontend/src/router/index.js`、`frontend/src/layouts/MainLayout.vue`）：为门户类路由增加 `meta.platformPage`，`MainLayout.vue` 优先读取路由 meta 判断无侧边栏平台页，减少路由表和布局清单重复维护。
+- **登录后回跳体验完善**（`frontend/src/router/index.js`、`frontend/src/views/login/index.vue`、`frontend/src/api/request.js`）：未登录访问受保护页面时携带 `redirect` 查询参数，登录成功或 401 重新登录后可回到原访问路径。
+- **Live2D 生命周期稳定性增强**（`frontend/src/components/HuahuoAssistant.vue`、`frontend/src/layouts/MainLayout.vue`、`frontend/src/composables/useLive2d.js`）：新增初始化并发锁，重试失败保留错误状态并提示刷新；按用户/角色 key 重挂载 `HuahuoAssistant`；修正 `window.__syncExpressionState(expression)` 字符串参数同步语义。
+
+#### Bug 修复
+
+- **修复引导按钮拖拽监听无法移除**（`frontend/src/components/GuideSystem.vue`）：修正 `stopBtnDragFn` 未定义导致 `mouseup` 监听残留的问题，组件卸载时同步清理弹窗和按钮拖拽监听。
+
+#### 安全与稳定性
+
+- **AI Markdown 安全渲染**（`frontend/src/components/HuahuoAssistant.vue`）：`marked.parse()` 结果改为通过 DOMPurify 净化后再进入 `v-html`，降低 AI 回复或分析结果中恶意 HTML 注入风险。
+
+#### 文档更新
+
+- **README 同步更新至 v4.4.0**（`README.md`）：同步更新 Live2D、全局引导、双模式布局、项目结构、统一卡片设计与版本变更记录。
+
+#### 已知问题
+
+- **校外竞赛数据仍为静态维护**（`frontend/src/data/externalCompetitions.js`）：赛事时间、状态、官网入口和海报仍需随官方通知手动更新，暂未接入后端管理接口。
+
 ### v4.3.0 - 2026-05-04
 
 > 品牌升级：项目全面更名为「火花智创 SparkAI Innovate」+ 动态 Logo 组件 + Live2D 加载修复 + 项目名称统一替换
@@ -1946,7 +2020,7 @@ cd backend && flask db upgrade && python seed.py
 
 - **README.md**：项目结构中移除 `Live2dWidget.vue` 条目；版本变更记录新增 v4.3.3；v4.3.2 移除"当前版本"标记
 
-### v4.3.4 - 2026-05-07（当前版本）
+### v4.3.4 - 2026-05-07
 
 > HuahuoAssistant.vue 构建语法错误修复
 
@@ -1957,6 +2031,86 @@ cd backend && flask db upgrade && python seed.py
 #### 文档更新
 
 - **README.md**：版本变更记录新增 v4.3.4；v4.3.3 移除"当前版本"标记
+
+### v4.4.0 - 2026-05-11
+
+> 竞赛模块拆分：新增校外竞赛独立入口，实现校外/校内竞赛双入口分流架构
+
+#### 新增功能
+
+- **竞赛报名中心页**：新增 [CompetitionCenter.vue](frontend/src/views/portal/CompetitionCenter.vue)，作为竞赛入口分流页，提供「校外竞赛」与「校内竞赛」两张视觉差异化入口卡片。左侧校外竞赛采用蓝紫渐变并聚合国家级赛事资讯，右侧校内竞赛沿用青色主色并支持平台内报名、团队、材料、审核全流程
+- **校外竞赛数据模块**：新增 [externalCompetitions.js](frontend/src/data/externalCompetitions.js) 静态数据文件，包含 3 个真实国家级赛事（中国国际大学生创新大赛、挑战杯创业计划竞赛、三创赛）的完整信息：赛事简介、赛道/类别、时间安排、奖项设置、参赛要求、材料要求、官网链接
+- **校外竞赛列表页**：新增 [ExternalCompetitions.vue](frontend/src/views/portal/ExternalCompetitions.vue)，以卡片式布局展示校外竞赛，包含分类筛选（全部/创新创业/创业计划/电子商务）、赛事封面渐变、标签、主办方、时间、简介，每张卡片提供「查看详情」和「前往官网」按钮
+- **校外竞赛详情页**：新增 [ExternalCompetitionDetail.vue](frontend/src/views/portal/ExternalCompetitionDetail.vue)，复用校内详情页版式，包含 Hero 首屏、面包屑导航、赛事简介、赛道/类别、时间安排时间线、奖项设置、参赛要求、材料要求、官方入口 8 大内容板块。右侧吸附信息卡和操作卡提供「前往官网」按钮及「以官网通知为准」提示。支持 slug 不存在时的友好空状态展示
+- **三个新路由**：注册 `/competition-center`、`/external-competitions`、`/external-competitions/:slug` 路由，均属平台页面不显示侧边栏（[index.js](frontend/src/router/index.js)）
+
+#### 功能修改
+
+- **顶部导航重构**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 中「竞赛」更名为「校内竞赛」，并在其之前新增「校外竞赛」导航项。导航顺序调整为：首页 / 校外竞赛 / 校内竞赛 / 训练营 / 课程 / 产业命题
+- **首页入口变更**：[PortalHome.vue](frontend/src/views/portal/PortalHome.vue) 中「竞赛报名」功能卡片跳转目标从 `/competitions` 改为 `/competition-center`，引导用户先到分流页选择竞赛类型
+- **侧边栏菜单更新**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 侧边栏中「竞赛广场」更名为「校内竞赛」，与顶部导航保持一致
+- **平台页面列表扩展**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 中 `platformPages` 数组新增 `/competition-center` 和 `/external-competitions`，确保新页面不显示侧边栏
+- **导航 active 状态更新**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 中 `isTopNavActive` 函数新增校外竞赛路由判断：访问 `/external-competitions` 及其详情页时高亮「校外竞赛」；访问 `/competitions`、校内详情页、报名页及 `/competition-center` 时高亮「校内竞赛」
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.4.0；v4.3.4 移除"当前版本"标记
+
+### v4.4.1 - 2026-05-11
+
+#### Bug 修复
+
+- **Live2D 切换账户后加载不出来**：修复 `HuahuoAssistant.vue` 中 `loadLive2DLibraries()` 函数的脚本缓存问题。组件 `onBeforeUnmount` 时 `delete window.initWidget`，但重新挂载时因页面上残留旧 `<script>` 标签而跳过加载新脚本，导致 `initWidget` 为 `undefined`。修复方案：加载脚本前先检测并移除旧标签，然后无条件重新创建 `<script type="module">` 加载 `waifu-tips.js`，确保每次组件挂载都能拿到可用的 `initWidget`（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **启动后首页不是登录页**：修复 `router/index.js` 中根路径 `/` 无子路由导致显示空白布局的问题。新增 `{ path: '', redirect: '/portal' }` 重定向规则，使得访问根路径时自动跳转到 `/portal`；`beforeEach` 守卫会检查 token 有效性，无 token 时进一步重定向到 `/login`（[index.js](frontend/src/router/index.js)）
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.4.1；v4.4.0 移除"当前版本"标记
+
+### v4.5.1 - 2026-05-11（当前版本）
+
+> AI 助手窗口全面亮色化改造 + 拖拽缩放交互修复 + 项目智能体面板主题适配
+
+#### 功能修改
+
+- **AI 助手窗口亮色主题改造**（`frontend/src/components/HuahuoAssistant.vue`）：主背景从 `rgba(15, 23, 42, 0.96)` 暗色改为 `#ffffff` 纯白；强调色从 `#06b6d4`（青色）统一替换为 `#3b82f6`（蓝色）；主文字色从 `#e2e8f0`（浅色）改为 `#1e293b`（深色）；次要文字色从 `#94a3b8`/`#cbd5e1` 改为 `#475569`/`#64748b`；用户消息气泡从青色半透明改为蓝色半透明 `rgba(59, 130, 246, 0.12)`；助手消息气泡从深色半透明改为浅灰 `#f1f5f9`；输入区域背景从深色改为 `#f8fafc`；表情面板、分析结果区、markdown 渲染区全部适配亮色主题；所有 Element Plus 组件覆盖样式（表单标签、输入框、单选按钮、下拉菜单、分割线）同步更新为蓝色系亮色风格
+- **项目智能体面板亮色适配**（`frontend/src/views/ai-assistant/AgentPanel.vue`）：能力卡片背景从青色半透明改为蓝色半透明；文字颜色从浅色改为深色；导航结果、能力结果区域背景从深色半透明改为 `#f8fafc`；所有 Element Plus 组件覆盖样式同步更新为蓝色系亮色风格
+
+#### Bug 修复
+
+- **拖拽缩放方向反直觉**：缩放手柄原在左上角，`dx = resizeState.startX - e.clientX` 导致鼠标向右下拖动时窗口变小。修复：手柄移至右下角，`dx = e.clientX - resizeState.startX`，鼠标向右下拖动时窗口自然变大（`frontend/src/components/HuahuoAssistant.vue`）
+- **拖拽与缩放事件冲突**：缩放时拖拽事件同时触发导致窗口位置异常跳动。修复：`startDrag`/`startDragTouch` 增加 `resizeState.resizing` 检查；`onDrag`/`onDragTouch` 增加边界限制（`Math.max(0, Math.min(newX, maxX))`）；`startResize` 添加 `e.stopPropagation()` 阻止事件冒泡（`frontend/src/components/HuahuoAssistant.vue`）
+- **标题栏按钮误触发拖拽**：整个 `panel-header` 区域都可拖拽，导致点击按钮时也触发窗口移动。修复：将拖拽事件从 `panel-header` 移到独立的 `.header-drag-area`（仅标题和标签区域），按钮区域不再触发拖拽（`frontend/src/components/HuahuoAssistant.vue`）
+
+#### 安全与稳定性
+
+- **移动端适配**：新增 `isMobile` 检测（`window.innerWidth <= 768`），移动端自动调整面板尺寸为 `min(360, 屏幕宽-20) × min(520, 屏幕高-100)`，位置固定在屏幕底部；桌面端与移动端状态切换时自动恢复/重置持久化数据（`frontend/src/components/HuahuoAssistant.vue`）
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.5.1；v4.5.0 移除"当前版本"标记
+
+***
+
+### v4.5.0 - 2026-05-11
+
+> UI 统一改版：新增 SparkPortalCard 统一卡片组件，改造校内竞赛/训练营/课程/产业命题 4 个门户列表页，实现与校外竞赛页面一致的圆角渐变卡片风格
+
+#### 新增功能
+
+- **SparkPortalCard 统一卡片组件**：新增 [SparkPortalCard.vue](frontend/src/components/portal/SparkPortalCard.vue)，抽取为全校竞赛/训练营/课程/产业命题 4 个列表页的可复用卡片组件。支持以下 props：`gradient`（动态渐变背景）、`coverImage`（封面图）、`coverTitle`（封面标题）、`level`/`status`（等级/状态角标）、`title`、`description`、`tags`（标签数组，支持 maxTags 控制显示数量）、`metaItems`（元信息列表，含 icon + text）、`primaryActionText`/`primaryActionIcon`（主按钮）、`secondaryActionText`/`secondaryActionIcon`（次按钮）、`clickable`/`onCardClick`（卡片点击）。卡片采用 20px 大圆角、170px 渐变封面区、flex column 布局使按钮固定在底部、hover 上浮 6px + 阴影增强 + 边框变色效果。渐变封面支持 `background-size: 300%` 动态流动动画，且尊重 `prefers-reduced-motion` 用户偏好（[SparkPortalCard.vue](frontend/src/components/portal/SparkPortalCard.vue)）
+
+#### 功能修改
+
+- **CompetitionSquare.vue（校内竞赛）改造**：替换旧 `.competition-card` 卡片为 SparkPortalCard 组件。新增 `competitionGradients` 渐变映射对象（按竞赛分类自动匹配青蓝/紫蓝/翠绿/橙红等 11 种渐变色），数据加载时同步计算 `posterGradient`。原有分页、分类筛选、搜索、状态筛选、路由跳转、报名逻辑全部保留（[CompetitionSquare.vue](frontend/src/views/portal/CompetitionSquare.vue)）
+- **TrainingCamps.vue（训练营）改造**：替换旧训练营卡片为 SparkPortalCard 组件。每个训练营保留独立 `gradient` 配置（蓝青/紫粉/橙红/翠绿 4 色区分），训练营封面图通过 `campCoverMap` 映射到 `coverImage` 属性。原有课程详情弹窗（讲师团队、课程章节展开/折叠、课时播放）全部保留（[TrainingCamps.vue](frontend/src/views/portal/TrainingCamps.vue)）
+- **Courses.vue（课程）改造**：替换旧课程卡片为 SparkPortalCard 组件。每个课程保留独立 `gradient` 配置（青蓝/紫粉/翠绿/橙红/靛蓝 5 色区分），课程封面图通过 `courseCoverMap` 映射。原有课程详情弹窗（课程简介、章节展开/折叠、学习数据统计）全部保留（[Courses.vue](frontend/src/views/portal/Courses.vue)）
+- **IndustryTopics.vue（产业命题）改造**：替换旧命题卡片为 SparkPortalCard 组件。每个命题保留独立 `gradient` 配置（青蓝/翠绿/紫粉/橙红 4 色），新增 `industry` 字段（教育科技/环保双碳/金融科技/企业服务）用于标签展示。原有承接命题 ElMessageBox 确认弹窗、项目创建跳转逻辑全部保留（[IndustryTopics.vue](frontend/src/views/portal/IndustryTopics.vue)）
+- **旧卡片 CSS 清理**：4 个页面中不再使用的旧卡片样式全部移除（CompetitionSquare 移除 `.competition-card` 等 7 条规则、TrainingCamps 移除 `.camp-card` 等 15 条规则 + 孤立的 `.camp-progress` 3 条规则、Courses 移除 `.course-card` 等 10 条规则、IndustryTopics 移除 `.topic-card` 等 8 条规则），共计约 250 行冗余 CSS 被清理
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.5.0；v4.4.1 移除"当前版本"标记
 
 ### v4.2.0 - 2026-05-04
 

@@ -1,8 +1,16 @@
 <template>
   <div class="competition-square">
     <!-- Banner 区域 -->
-    <div class="square-banner">
+    <div class="portal-hero-banner portal-hero-banner--internal">
+      <div class="banner-decoration">
+        <div class="deco-circle c1"></div>
+        <div class="deco-circle c2"></div>
+      </div>
       <div class="banner-content">
+        <div class="banner-badge">
+          <el-icon size="16"><Trophy /></el-icon>
+          <span>校内竞赛</span>
+        </div>
         <h1 class="banner-title">发现适合你的创新创业竞赛</h1>
         <p class="banner-subtitle">覆盖创新创业、人工智能、数字经济、乡村振兴、产业命题等方向</p>
       </div>
@@ -54,65 +62,29 @@
     <!-- 竞赛列表 -->
     <div class="competition-section">
       <div class="competition-grid">
-        <div
+        <SparkPortalCard
           v-for="comp in filteredCompetitions"
           :key="comp.id"
-          class="competition-card"
-          @click="goToDetail(comp.id)"
-        >
-          <div class="card-poster" :style="comp.posterStyle">
-            <img
-              v-if="comp.localImage"
-              :src="comp.localImage"
-              :alt="comp.name"
-              class="poster-img"
-              @error="handleImageError"
-            />
-            <img
-              v-else-if="comp.poster_url"
-              :src="comp.poster_url"
-              :alt="comp.name"
-              class="poster-img"
-              @error="handleImageError"
-            />
-            <div class="poster-content" v-if="!comp.hasImage">
-              <span class="poster-name">{{ comp.name }}</span>
-            </div>
-            <div class="poster-badge">{{ comp.level }}</div>
-          </div>
-          <div class="card-body">
-            <div class="card-tags">
-              <el-tag size="small" :type="comp.levelType">{{ comp.level }}</el-tag>
-              <el-tag size="small" class="category-tag">{{ comp.category }}</el-tag>
-            </div>
-            <h3 class="card-title">{{ comp.name }}</h3>
-            <p class="card-organizer">{{ comp.organizer }}</p>
-            <div class="card-meta">
-              <span class="meta-item">
-                <el-icon><Calendar /></el-icon>
-                报名截止：{{ comp.endDate }}
-              </span>
-              <span class="meta-item">
-                <el-icon><View /></el-icon>
-                {{ comp.viewCount }}
-              </span>
-              <span class="meta-item">
-                <el-icon><User /></el-icon>
-                {{ comp.registrationCount }}人报名
-              </span>
-            </div>
-            <div class="card-footer">
-              <el-tag :type="comp.statusType" size="small">{{ comp.statusText }}</el-tag>
-              <el-button
-                type="primary"
-                size="small"
-                @click.stop="handleRegister(comp)"
-              >
-                {{ canRegister ? '立即报名' : '查看详情' }}
-              </el-button>
-            </div>
-          </div>
-        </div>
+          :gradient="comp.posterGradient || 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'"
+          :cover-image="comp.localImage || comp.poster_url || ''"
+          :level="comp.level"
+          :title="comp.name"
+          :description="comp.organizer"
+          :tags="[comp.level, comp.category]"
+          :max-tags="2"
+          :meta-items="[
+            { icon: Calendar, text: '报名截止：' + comp.endDate },
+            { icon: View, text: comp.viewCount + ' 次浏览' },
+            { icon: User, text: comp.registrationCount + ' 人报名' }
+          ]"
+          :primary-action-text="canRegister ? '立即报名' : '查看详情'"
+          :primary-action-icon="ArrowRight"
+          :secondary-action-text="comp.statusText ? '查看详情' : ''"
+          :secondary-action-icon="ArrowRight"
+          :on-card-click="() => goToDetail(comp.id)"
+          :on-primary-click="() => handleRegister(comp)"
+          :on-secondary-click="() => goToDetail(comp.id)"
+        />
       </div>
 
       <!-- 空状态 -->
@@ -141,8 +113,9 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
-import { Search, Calendar, View, User } from '@element-plus/icons-vue'
+import { Search, Calendar, View, User, ArrowRight, Trophy } from '@element-plus/icons-vue'
 import { getPublicCompetitions } from '@/api/competition'
+import SparkPortalCard from '@/components/portal/SparkPortalCard.vue'
 
 // 导入本地竞赛图片
 import imgAI from '@/assets/images/competitions/2026 AI 应用创新设计大赛.png'
@@ -172,21 +145,30 @@ const competitionImages = {
 
 // 根据竞赛名称匹配本地图片
 const getLocalImage = (name) => {
-  // 去掉 "2026 " 前缀后匹配
   const key = name.replace(/^2026\s*/, '')
   return competitionImages[key] || null
 }
 
-// 图片加载失败时的占位处理
-const handleImageError = (e) => {
-  const img = e.target
-  img.style.display = 'none'
-  const poster = img.closest('.card-poster')
-  if (poster) {
-    poster.style.background = 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'
-    const content = poster.querySelector('.poster-content')
-    if (content) content.style.display = ''
+const competitionGradients = {
+  '创新创业': 'linear-gradient(135deg, #2563eb 0%, #06b6d4 50%, #0891b2 100%)',
+  '人工智能': 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+  '数字经济': 'linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #06b6d4 100%)',
+  '乡村振兴': 'linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)',
+  '电子商务': 'linear-gradient(135deg, #ea580c 0%, #f59e0b 50%, #fbbf24 100%)',
+  '软件开发': 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)',
+  '智能制造': 'linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%)',
+  '职业规划': 'linear-gradient(135deg, #db2777 0%, #ec4899 50%, #f472b6 100%)',
+  '公益实践': 'linear-gradient(135deg, #dc2626 0%, #e11d48 50%, #f43f5e 100%)',
+  '产业命题': 'linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)',
+  'default': 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'
+}
+
+const getGradient = (category) => {
+  if (!category) return competitionGradients['default']
+  for (const [key, gradient] of Object.entries(competitionGradients)) {
+    if (category.includes(key)) return gradient
   }
+  return competitionGradients['default']
 }
 
 const router = useRouter()
@@ -232,18 +214,13 @@ const loadCompetitions = async () => {
     if (res.code === 200) {
       competitions.value = res.data.competitions.map(c => {
         const localImage = getLocalImage(c.name)
-        // 优先使用本地图片，其次后端 poster_url，最后 fallback 渐变色
-        const hasImage = localImage || c.poster_url
         return {
           ...c,
           statusText: getStatusText(c.status),
           statusType: getStatusType(c.status),
           levelType: getLevelType(c.level),
           localImage,
-          hasImage: !!hasImage,
-          posterStyle: hasImage
-            ? {}
-            : { background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)' }
+          posterGradient: getGradient(c.category)
         }
       })
       total.value = res.data.total
@@ -311,58 +288,89 @@ const handlePageChange = (page) => {
 }
 
 /* Banner */
-.square-banner {
-  background: linear-gradient(135deg, #1e3a5f 0%, #0c4a6e 40%, #0ea5e9 100%);
-  padding: 50px 40px;
-  border-radius: 0 0 40px 40px;
+.portal-hero-banner {
   position: relative;
   overflow: hidden;
+  min-height: 260px;
+  padding: 56px 48px;
+  border-radius: 0 0 36px 36px;
+  color: #fff;
 }
 
-.square-banner::before {
+.portal-hero-banner::before,
+.portal-hero-banner::after {
   content: '';
   position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: bannerPulse 6s ease-in-out infinite;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
 }
 
-.square-banner::after {
-  content: '';
-  position: absolute;
-  bottom: -30%;
-  left: -10%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: bannerPulse 8s ease-in-out infinite reverse;
+.portal-hero-banner::before {
+  width: 280px;
+  height: 280px;
+  right: -60px;
+  top: -40px;
+  animation: bannerFloat 8s ease-in-out infinite;
 }
 
-@keyframes bannerPulse {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.15); opacity: 1; }
+.portal-hero-banner::after {
+  width: 180px;
+  height: 180px;
+  left: -40px;
+  bottom: -40px;
+  animation: bannerFloat 10s ease-in-out infinite reverse;
+}
+
+@keyframes bannerFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.05); }
+}
+
+.portal-hero-banner--internal {
+  background: linear-gradient(135deg, #0f4363 0%, #0891b2 100%);
+}
+
+.banner-decoration { position: absolute; right: 48px; top: 0; width: 35%; height: 100%; z-index: 1; }
+
+.deco-circle { position: absolute; border-radius: 50%; opacity: 0.12; }
+.c1 { width: 220px; height: 220px; background: #22d3ee; right: -20px; top: -20px; animation: decoFloat 8s ease-in-out infinite; }
+.c2 { width: 150px; height: 150px; background: #67e8f9; right: 140px; bottom: -20px; animation: decoFloat 10s ease-in-out infinite reverse; }
+
+@keyframes decoFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.05); }
 }
 
 .banner-content {
-  max-width: 1400px;
-  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+}
+
+.banner-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 18px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 24px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .banner-title {
-  font-size: 32px;
-  font-weight: 700;
+  font-size: 40px;
+  font-weight: 800;
   color: #ffffff;
-  margin-bottom: 12px;
+  margin: 0 0 18px;
+  line-height: 1.2;
 }
 
 .banner-subtitle {
-  font-size: 16px;
-  color: #bae6fd;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 720px;
+  line-height: 1.8;
 }
 
 /* 筛选区域 */
@@ -405,118 +413,6 @@ const handlePageChange = (page) => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
-}
-
-.competition-card {
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-}
-
-.competition-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
-}
-
-.card-poster {
-  aspect-ratio: 16 / 9;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  overflow: hidden;
-}
-
-.poster-img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.poster-content {
-  text-align: center;
-}
-
-.poster-name {
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  line-height: 1.4;
-}
-
-.poster-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #1e293b;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.card-body {
-  padding: 20px;
-}
-
-.card-tags {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.category-tag {
-  background-color: #f1f5f9;
-  color: #475569;
-  border: none;
-}
-
-.card-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 8px;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.card-organizer {
-  font-size: 13px;
-  color: #64748b;
-  margin-bottom: 12px;
-}
-
-.card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  color: #64748b;
-}
-
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .pagination-wrapper {

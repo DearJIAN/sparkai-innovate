@@ -4,6 +4,12 @@ import { useUserStore } from '@/stores/user'
 // 公共路由
 const publicRoutes = [
   {
+    path: '/',
+    name: 'Root',
+    redirect: '/login',
+    meta: { public: true }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/login/index.vue'),
@@ -16,6 +22,9 @@ const publicRoutes = [
     meta: { public: true, title: '注册' }
   }
 ]
+
+const platformMeta = { platformPage: true }
+const withPlatformMeta = (meta = {}) => ({ ...meta, ...platformMeta })
 
 // 所有路由配置（不带角色前缀）
 const allRoutes = [
@@ -39,18 +48,21 @@ const allRoutes = [
   { path: '/review-management', name: 'ReviewManagement', component: () => import('@/views/admin/reviews.vue'), meta: { title: '评审管理', icon: 'StarFilled', roles: ['admin'] } },
 
   // 平台页面（所有角色可访问，不显示侧边栏）
-  { path: '/portal', name: 'Portal', component: () => import('@/views/portal/PortalHome.vue'), meta: { title: '平台首页', icon: 'HomeFilled' } },
-  { path: '/competitions', name: 'Competitions', component: () => import('@/views/portal/CompetitionSquare.vue'), meta: { title: '竞赛广场', icon: 'Trophy' } },
-  { path: '/competitions/:id', name: 'CompetitionDetail', component: () => import('@/views/portal/CompetitionDetail.vue'), meta: { title: '竞赛详情', icon: 'Trophy', hidden: true } },
-  { path: '/competitions/:id/register', name: 'CompetitionRegister', component: () => import('@/views/portal/CompetitionRegister.vue'), meta: { title: '竞赛报名', icon: 'Edit', hidden: true, roles: ['student'] } },
-  { path: '/my-registrations', name: 'MyRegistrations', component: () => import('@/views/portal/MyRegistrations.vue'), meta: { title: '我的赛事', icon: 'Medal', roles: ['student'] } },
-  { path: '/training-camps', name: 'TrainingCamps', component: () => import('@/views/portal/TrainingCamps.vue'), meta: { title: '训练营', icon: 'School' } },
-  { path: '/training-camps/:id', name: 'TrainingCampDetail', component: () => import('@/views/portal/TrainingCampDetail.vue'), meta: { title: '训练营详情', icon: 'School', hidden: true } },
-  { path: '/courses', name: 'Courses', component: () => import('@/views/portal/Courses.vue'), meta: { title: '在线课程', icon: 'Collection' } },
-  { path: '/courses/:id', name: 'CourseDetail', component: () => import('@/views/portal/CourseDetail.vue'), meta: { title: '课程详情', icon: 'Collection', hidden: true } },
-  { path: '/industry-topics', name: 'IndustryTopics', component: () => import('@/views/portal/IndustryTopics.vue'), meta: { title: '产业命题', icon: 'Briefcase' } },
-  { path: '/accept-topic/:id', name: 'AcceptTopic', component: () => import('@/views/portal/AcceptTopic.vue'), meta: { title: '承接命题', icon: 'Briefcase', hidden: true, roles: ['student'] } },
-  { path: '/certificates', name: 'Certificates', component: () => import('@/views/portal/Certificates.vue'), meta: { title: '证书成果', icon: 'Medal', roles: ['student'] } },
+  { path: '/portal', name: 'Portal', component: () => import('@/views/portal/PortalHome.vue'), meta: withPlatformMeta({ title: '平台首页', icon: 'HomeFilled' }) },
+  { path: '/competition-center', name: 'CompetitionCenter', component: () => import('@/views/portal/CompetitionCenter.vue'), meta: withPlatformMeta({ title: '竞赛报名中心', icon: 'Trophy' }) },
+  { path: '/external-competitions', name: 'ExternalCompetitions', component: () => import('@/views/portal/ExternalCompetitions.vue'), meta: withPlatformMeta({ title: '校外竞赛', icon: 'Link' }) },
+  { path: '/external-competitions/:slug', name: 'ExternalCompetitionDetail', component: () => import('@/views/portal/ExternalCompetitionDetail.vue'), meta: withPlatformMeta({ title: '校外竞赛详情', icon: 'Link', hidden: true }) },
+  { path: '/competitions', name: 'Competitions', component: () => import('@/views/portal/CompetitionSquare.vue'), meta: withPlatformMeta({ title: '校内竞赛', icon: 'Trophy' }) },
+  { path: '/competitions/:id', name: 'CompetitionDetail', component: () => import('@/views/portal/CompetitionDetail.vue'), meta: withPlatformMeta({ title: '校内竞赛详情', icon: 'Trophy', hidden: true }) },
+  { path: '/competitions/:id/register', name: 'CompetitionRegister', component: () => import('@/views/portal/CompetitionRegister.vue'), meta: withPlatformMeta({ title: '竞赛报名', icon: 'Edit', hidden: true, roles: ['student'] }) },
+  { path: '/my-registrations', name: 'MyRegistrations', component: () => import('@/views/portal/MyRegistrations.vue'), meta: withPlatformMeta({ title: '我的赛事', icon: 'Medal', roles: ['student'] }) },
+  { path: '/training-camps', name: 'TrainingCamps', component: () => import('@/views/portal/TrainingCamps.vue'), meta: withPlatformMeta({ title: '训练营', icon: 'School' }) },
+  { path: '/training-camps/:id', name: 'TrainingCampDetail', component: () => import('@/views/portal/TrainingCampDetail.vue'), meta: withPlatformMeta({ title: '训练营详情', icon: 'School', hidden: true }) },
+  { path: '/courses', name: 'Courses', component: () => import('@/views/portal/Courses.vue'), meta: withPlatformMeta({ title: '在线课程', icon: 'Collection' }) },
+  { path: '/courses/:id', name: 'CourseDetail', component: () => import('@/views/portal/CourseDetail.vue'), meta: withPlatformMeta({ title: '课程详情', icon: 'Collection', hidden: true }) },
+  { path: '/industry-topics', name: 'IndustryTopics', component: () => import('@/views/portal/IndustryTopics.vue'), meta: withPlatformMeta({ title: '产业命题', icon: 'Briefcase' }) },
+  { path: '/accept-topic/:id', name: 'AcceptTopic', component: () => import('@/views/portal/AcceptTopic.vue'), meta: withPlatformMeta({ title: '承接命题', icon: 'Briefcase', hidden: true, roles: ['student'] }) },
+  { path: '/certificates', name: 'Certificates', component: () => import('@/views/portal/Certificates.vue'), meta: withPlatformMeta({ title: '证书成果', icon: 'Medal', roles: ['student'] }) },
 
   // 通用路由（所有角色可访问）
   { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/index.vue'), meta: { title: '工作台', icon: 'HomeFilled' } },
@@ -71,7 +83,11 @@ const router = createRouter({
     {
       path: '/',
       component: () => import('@/layouts/MainLayout.vue'),
-      children: allRoutes
+      meta: { requiresAuth: true },
+      children: [
+        { path: '', redirect: '/portal' },
+        ...allRoutes
+      ]
     },
     {
       path: '/:pathMatch(.*)*',
@@ -90,9 +106,10 @@ router.beforeEach((to, from, next) => {
     document.title = `${to.meta.title} - 火花智创`
   }
 
-  // 公共页面直接放行
+  // 公共页面处理
   if (to.meta.public) {
-    if (userStore.token && (to.path === '/login' || to.path === '/register')) {
+    // 如果用户已登录（有token且有userInfo），访问登录/注册页时重定向到首页
+    if (userStore.token && userStore.userInfo && (to.path === '/login' || to.path === '/register')) {
       next('/portal')
     } else {
       next()
@@ -102,16 +119,21 @@ router.beforeEach((to, from, next) => {
 
   // 未登录跳转到登录页
   if (!userStore.token) {
-    next('/login')
+    next({ path: '/login', query: { redirect: to.fullPath } })
     return
   }
 
   // 等待用户信息加载完成
   if (!userStore.userInfo) {
-    userStore.init().then(() => {
-      checkPermission(to, next, userStore)
+    userStore.init().then((success) => {
+      // 如果初始化失败（token无效），跳转到登录页
+      if (!success && !userStore.userInfo) {
+        next({ path: '/login', query: { redirect: to.fullPath } })
+      } else {
+        checkPermission(to, next, useUserStore())
+      }
     }).catch(() => {
-      next('/login')
+      next({ path: '/login', query: { redirect: to.fullPath } })
     })
     return
   }

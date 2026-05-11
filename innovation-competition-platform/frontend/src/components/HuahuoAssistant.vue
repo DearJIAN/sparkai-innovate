@@ -14,10 +14,10 @@
       <!-- 对话面板（整合版） -->
       <transition name="panel-slide">
         <div v-if="panelOpen" ref="panelRef" class="chat-panel" :style="panelStyle">
-          <div class="panel-header" @mousedown="startDrag" @touchstart="startDragTouch">
-            <div class="header-left">
+          <div class="panel-header">
+            <div class="header-drag-area" @mousedown="startDrag" @touchstart="startDragTouch">
               <span class="panel-title">🤖 火花 AI 助手</span>
-              <el-tag v-if="isListening" type="danger" size="small" effect="dark" class="listening-tag">录音中</el-tag>
+              <el-tag v-if="isListening" type="danger" size="small" effect="light" class="listening-tag">录音中</el-tag>
             </div>
             <div class="header-actions">
               <el-button size="small" text @click.stop="switchToAgent" title="AI 智能体">
@@ -32,9 +32,10 @@
               </el-button>
             </div>
           </div>
+          <!-- 右下角缩放手柄 -->
           <div class="panel-resize-handle" @mousedown.stop="startResize" title="拖拽调整大小">
             <svg class="resize-icon" viewBox="0 0 16 16" width="16" height="16">
-              <path d="M2 14 L14 2 M6 14 L14 6 M10 14 L14 10" stroke="rgba(6, 182, 212, 0.6)" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M2 14 L14 2 M6 14 L14 6 M10 14 L14 10" stroke="rgba(59, 130, 246, 0.6)" stroke-width="2" fill="none" stroke-linecap="round"/>
             </svg>
           </div>
 
@@ -205,6 +206,7 @@
 import { ref, reactive, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import { chatStream, generateAnalysis } from '@/api/ai'
 import { ElMessage } from 'element-plus'
 import { Loading, WarningFilled, MagicStick, ArrowDown, Microphone, Delete, Plus, VideoPause, VideoPlay } from '@element-plus/icons-vue'
@@ -253,12 +255,14 @@ const panelStyle = ref({})
 const panelPos = ref({ x: 0, y: 0 })
 const panelSize = ref({ width: 400, height: 580 })
 let resizeState = { resizing: false, startX: 0, startY: 0, startW: 0, startH: 0 }
+let isMobile = ref(false)
 let recognition = null
 let speechUtterance = null
 let dragState = { dragging: false, startX: 0, startY: 0 }
 let modelDragState = { dragging: false, startX: 0, startY: 0, origLeft: 0, origBottom: 0 }
 let modelPatchLoopId = null
 let autoExpressionTimer = null
+let live2dInitPromise = null
 
 const analysisForm = reactive({ project_name: '', description: '', category: '', track: '', ai_type: 'summary' })
 const analysisLoading = ref(false)
@@ -282,8 +286,13 @@ function renderMarkdown(text) {
     })
     let html = marked.parse(processed, { breaks: true, gfm: true })
     html = html.replace(/#{1,6}\s/g, '')
-    return html
-  } catch { return text }
+    return DOMPurify.sanitize(html, {
+      USE_PROFILES: { html: true },
+      ADD_ATTR: ['target', 'rel']
+    })
+  } catch {
+    return DOMPurify.sanitize(String(text))
+  }
 }
 
 function openPanel() {
@@ -498,8 +507,14 @@ function setupExpressionControls() {
   }
 
   // 同步表情状态：先设置基础表情，再应用 overlay
-  window.__syncExpressionState = function(model) {
+  window.__syncExpressionState = function(modelOrExpression) {
     const state = window.__expressionControlsState
+    let model = modelOrExpression
+    if (typeof modelOrExpression === 'string') {
+      state.currentBaseExpression = modelOrExpression
+      currentBaseExpression.value = modelOrExpression
+      model = getCurrentCubism5Model()
+    }
     if (!model) model = getCurrentCubism5Model()
     if (!model) return
 
@@ -713,11 +728,15 @@ function setupVoiceHooks() {
 // ============================================================
 
 async function loadLive2DLibraries() {
-  if (window.initWidget) return
-
   const live2dPath = '/live2d-widget-dist/'
 
-  // 加载 CSS
+  const oldScripts = document.querySelectorAll('script[src*="live2d-widget-dist"]')
+  oldScripts.forEach(s => s.remove())
+
+  try { delete window.initWidget } catch (_) {}
+  try { delete window.loadlive2d } catch (_) {}
+  try { delete window.__live2dWidgetModelManager } catch (_) {}
+
   if (!document.querySelector('link[href*="waifu.css"]')) {
     const link = document.createElement('link')
     link.rel = 'stylesheet'
@@ -725,39 +744,42 @@ async function loadLive2DLibraries() {
     document.head.appendChild(link)
   }
 
-  // 加载 waifu-tips.js
-  // 注意：waifu-tips.js 末尾有 export 语句，必须使用 type: 'module' 加载
-  // 但 module 脚本中 window.initWidget 赋值仍然有效（显式赋值到 window 对象）
   await new Promise((resolve, reject) => {
-    if (document.querySelector('script[src*="live2d-widget-dist/waifu-tips"]')) {
-      resolve()
-      return
-    }
     const script = document.createElement('script')
-    // waifu-tips.js 包含 export 语句，必须用 module 方式加载
     script.type = 'module'
-    script.src = live2dPath + 'waifu-tips.js'
+    script.src = live2dPath + 'waifu-tips.js?' + Date.now()
     script.onload = () => resolve()
     script.onerror = () => reject(new Error('Failed to load waifu-tips.js'))
     document.head.appendChild(script)
   })
 
-  // 轮询等待 window.initWidget 可用（参考 my_huahuo 的 tryInit 方式）
-  await new Promise((resolve) => {
+  await new Promise((resolve, reject) => {
     let attempts = 0
-    const maxAttempts = 20 // 最多等 10 秒
+    const maxAttempts = 30
     const interval = setInterval(() => {
       attempts++
-      if (typeof window.initWidget === 'function' || attempts >= maxAttempts) {
+      if (typeof window.initWidget === 'function') {
         clearInterval(interval)
         resolve()
+      } else if (attempts >= maxAttempts) {
+        clearInterval(interval)
+        reject(new Error('initWidget not available after loading'))
       }
-    }, 500)
+    }, 300)
   })
 }
 
 async function initLive2D() {
+  if (live2dInitPromise) return live2dInitPromise
+  live2dInitPromise = doInitLive2D().finally(() => {
+    live2dInitPromise = null
+  })
+  return live2dInitPromise
+}
+
+async function doInitLive2D() {
   loadError.value = false
+  loaded.value = false
 
   const oldWaifu = document.getElementById('waifu')
   if (oldWaifu) oldWaifu.remove()
@@ -770,10 +792,30 @@ async function initLive2D() {
   window.localStorage.removeItem('modelId')
   window.localStorage.removeItem('modelTexturesId')
 
-  await loadLive2DLibraries()
+  let initSuccess = false
+  let retries = 0
+  const maxRetries = 2
 
-  if (typeof window.initWidget !== 'function') {
-    console.warn('[Live2D] initWidget not available after loading libraries')
+  while (!initSuccess && retries <= maxRetries) {
+    try {
+      await loadLive2DLibraries()
+
+      if (typeof window.initWidget !== 'function') {
+        throw new Error('initWidget not available')
+      }
+
+      initSuccess = true
+    } catch (error) {
+      console.warn(`[Live2D] Load attempt ${retries + 1} failed:`, error.message)
+      retries++
+      if (retries <= maxRetries) {
+        await new Promise(r => setTimeout(r, 1000 * retries))
+      }
+    }
+  }
+
+  if (!initSuccess) {
+    console.error('[Live2D] Failed to load after all retries')
     loadError.value = true
     return
   }
@@ -842,14 +884,11 @@ async function initLive2D() {
   })
 
   try {
-    const modelPos = localStorage.getItem('huahuoModelPos')
-    if (modelPos) {
-      const pos = JSON.parse(modelPos)
-      waifuEl.style.left = pos.left + 'px'
-      waifuEl.style.right = 'auto'
-      waifuEl.style.bottom = 'auto'
-      waifuEl.style.top = pos.top + 'px'
-    }
+    waifuEl.style.left = '20px'
+    waifuEl.style.bottom = '0'
+    waifuEl.style.right = 'auto'
+    waifuEl.style.top = 'auto'
+    localStorage.removeItem('huahuoModelPos')
 
     waifuEl.style.opacity = '0'
     waifuEl.style.transform = 'translateY(320px)'
@@ -858,11 +897,16 @@ async function initLive2D() {
 
     waifuEl.addEventListener('click', () => { switchExpression(); openPanel() })
     waifuEl.style.cursor = 'pointer'
+
+    const existingHint = waifuEl.querySelector('.waifu-click-hint')
+    if (existingHint) existingHint.remove()
     const hint = document.createElement('div')
     hint.className = 'waifu-click-hint'
     hint.textContent = '点击对话'
     waifuEl.appendChild(hint)
 
+    const existingHandle = document.getElementById('live2d-drag-handle')
+    if (existingHandle) existingHandle.remove()
     const handleEl = document.createElement('div')
     handleEl.id = 'live2d-drag-handle'
     handleEl.className = 'live2d-drag-handle'
@@ -878,9 +922,7 @@ async function initLive2D() {
         waifuEl.style.opacity = '1'
         waifuEl.style.transform = 'translateY(0)'
         waifuEl.style.pointerEvents = 'auto'
-        if (waifuEl.style.bottom !== 'auto') {
-          waifuEl.style.bottom = '0'
-        }
+        waifuEl.style.bottom = '0'
 
         const onTransitionEnd = () => {
           waifuEl.style.transition = 'left 0.3s ease-out, top 0.3s ease-out'
@@ -906,10 +948,17 @@ async function initLive2D() {
     setTimeout(() => {
       const model = getCurrentCubism5Model()
       if (model) {
+        window.__expressionControlsState = window.__expressionControlsState || {
+          initialized: false,
+          currentBaseExpression: null,
+          activeOverlays: new Set(['水印'])
+        }
+        window.__expressionControlsState.activeOverlays.add('水印')
+        activeOverlays.value = new Set(['水印'])
         window.__syncExpressionState(model)
       }
       startAutoExpression()
-    }, 1000)
+    }, 1500)
   } catch (err) {
     console.warn('Live2D init error:', err.message)
     loadError.value = true
@@ -917,11 +966,17 @@ async function initLive2D() {
 }
 
 function retryInit() {
-  if (retryCount >= 3) { loadError.value = false; return }
+  if (retryCount >= 3) {
+    ElMessage.warning('Live2D 连续加载失败，请刷新页面后再试')
+    loadError.value = true
+    return
+  }
   retryCount++
   loadError.value = false
   loaded.value = false
-  initLive2D()
+  initLive2D().catch(() => {
+    loadError.value = true
+  })
 }
 
 function scrollToBottom() {
@@ -1263,8 +1318,23 @@ function stopModelDragTouch() {
   document.removeEventListener('touchend', stopModelDragTouch)
 }
 
-function startDrag(e) { dragState.dragging = true; dragState.startX = e.clientX - (panelPos.value.x || 0); dragState.startY = e.clientY - (panelPos.value.y || 0); document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', stopDrag) }
-function startDragTouch(e) { const t = e.touches[0]; dragState.dragging = true; dragState.startX = t.clientX - (panelPos.value.x || 0); dragState.startY = t.clientY - (panelPos.value.y || 0); document.addEventListener('touchmove', onDragTouch, { passive: false }); document.addEventListener('touchend', stopDragTouch) }
+function startDrag(e) {
+  if (resizeState.resizing) return
+  dragState.dragging = true
+  dragState.startX = e.clientX - (panelPos.value.x || 0)
+  dragState.startY = e.clientY - (panelPos.value.y || 0)
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+}
+function startDragTouch(e) {
+  if (resizeState.resizing) return
+  const t = e.touches[0]
+  dragState.dragging = true
+  dragState.startX = t.clientX - (panelPos.value.x || 0)
+  dragState.startY = t.clientY - (panelPos.value.y || 0)
+  document.addEventListener('touchmove', onDragTouch, { passive: false })
+  document.addEventListener('touchend', stopDragTouch)
+}
 function updatePanelStyle() {
   panelStyle.value = {
     transform: `translate(${panelPos.value.x}px, ${panelPos.value.y}px)`,
@@ -1273,20 +1343,55 @@ function updatePanelStyle() {
   }
 }
 
-function onDrag(e) { if (!dragState.dragging) return; panelPos.value = { x: e.clientX - dragState.startX, y: e.clientY - dragState.startY }; updatePanelStyle() }
-function onDragTouch(e) { if (!dragState.dragging) return; e.preventDefault(); const t = e.touches[0]; panelPos.value = { x: t.clientX - dragState.startX, y: t.clientY - dragState.startY }; updatePanelStyle() }
-function stopDrag() { dragState.dragging = false; document.removeEventListener('mousemove', onDrag); document.removeEventListener('mouseup', stopDrag); try { localStorage.setItem('huahuoPanelPos', JSON.stringify(panelPos.value)) } catch (_e) {} }
-function stopDragTouch() { dragState.dragging = false; document.removeEventListener('touchmove', onDragTouch); document.removeEventListener('touchend', stopDragTouch); try { localStorage.setItem('huahuoPanelPos', JSON.stringify(panelPos.value)) } catch (_e) {} }
+function onDrag(e) {
+  if (!dragState.dragging || resizeState.resizing) return
+  const newX = e.clientX - dragState.startX
+  const newY = e.clientY - dragState.startY
+  const maxX = window.innerWidth - panelSize.value.width
+  const maxY = window.innerHeight - panelSize.value.height
+  panelPos.value = {
+    x: Math.max(0, Math.min(newX, maxX)),
+    y: Math.max(0, Math.min(newY, maxY))
+  }
+  updatePanelStyle()
+}
+function onDragTouch(e) {
+  if (!dragState.dragging || resizeState.resizing) return
+  e.preventDefault()
+  const t = e.touches[0]
+  const newX = t.clientX - dragState.startX
+  const newY = t.clientY - dragState.startY
+  const maxX = window.innerWidth - panelSize.value.width
+  const maxY = window.innerHeight - panelSize.value.height
+  panelPos.value = {
+    x: Math.max(0, Math.min(newX, maxX)),
+    y: Math.max(0, Math.min(newY, maxY))
+  }
+  updatePanelStyle()
+}
+function stopDrag() {
+  dragState.dragging = false
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  try { localStorage.setItem('huahuoPanelPos', JSON.stringify(panelPos.value)) } catch (_e) {}
+}
+function stopDragTouch() {
+  dragState.dragging = false
+  document.removeEventListener('touchmove', onDragTouch)
+  document.removeEventListener('touchend', stopDragTouch)
+  try { localStorage.setItem('huahuoPanelPos', JSON.stringify(panelPos.value)) } catch (_e) {}
+}
 
 function startResize(e) {
   e.preventDefault()
+  e.stopPropagation()
   resizeState = { resizing: true, startX: e.clientX, startY: e.clientY, startW: panelSize.value.width, startH: panelSize.value.height }
   document.addEventListener('mousemove', onResize)
   document.addEventListener('mouseup', stopResize)
 }
 function onResize(e) {
   if (!resizeState.resizing) return
-  const dx = resizeState.startX - e.clientX
+  const dx = e.clientX - resizeState.startX
   const dy = e.clientY - resizeState.startY
   const newW = Math.max(320, Math.min(800, resizeState.startW + dx))
   const newH = Math.max(400, Math.min(900, resizeState.startH + dy))
@@ -1303,15 +1408,40 @@ function stopResize() {
 onMounted(() => {
   setupExpressionControls()
   setupVoiceHooks()
-  initLive2D()
   window.addEventListener('open-huahuo-agent', handleOpenHuahuoAgent)
-  try { const saved = localStorage.getItem('huahuoPanelPos'); if (saved) { panelPos.value = JSON.parse(saved); updatePanelStyle() } } catch (_e) {}
-  try { const savedSize = localStorage.getItem('huahuoPanelSize'); if (savedSize) { panelSize.value = JSON.parse(savedSize); updatePanelStyle() } } catch (_e) {}
+
+  // 检测移动端
+  const checkMobile = () => {
+    const wasMobile = isMobile.value
+    isMobile.value = window.innerWidth <= 768
+    if (isMobile.value) {
+      panelSize.value = { width: Math.min(360, window.innerWidth - 20), height: Math.min(520, window.innerHeight - 100) }
+      panelPos.value = { x: 10, y: window.innerHeight - panelSize.value.height - 80 }
+    } else if (wasMobile !== isMobile.value) {
+      // 从移动端切回桌面端时恢复保存的尺寸
+      try { const savedSize = localStorage.getItem('huahuoPanelSize'); if (savedSize) { panelSize.value = JSON.parse(savedSize) } } catch (_e) {}
+      try { const saved = localStorage.getItem('huahuoPanelPos'); if (saved) { panelPos.value = JSON.parse(saved) } } catch (_e) {}
+    }
+    updatePanelStyle()
+  }
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+
   if (window.speechSynthesis) { window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices() }
+
+  const currentPath = window.location.pathname
+  if (currentPath === '/login' || currentPath === '/register') {
+    return
+  }
+
+  initLive2D().catch(() => {
+    loadError.value = true
+  })
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('open-huahuo-agent', handleOpenHuahuoAgent)
+  window.removeEventListener('resize', checkMobile)
   stopVoiceRecognition()
   stopModelPatchLoop()
   stopAutoExpression()
@@ -1485,16 +1615,16 @@ onBeforeUnmount(() => {
 /* 表情控制面板 */
 .expression-panel {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(6, 182, 212, 0.15);
-  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+  background: #f8fafc;
   max-height: 280px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(6, 182, 212, 0.3) transparent;
+  scrollbar-color: rgba(59, 130, 246, 0.25) transparent;
 }
 
 .expression-panel::-webkit-scrollbar { width: 4px; }
-.expression-panel::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.3); border-radius: 2px; }
+.expression-panel::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.25); border-radius: 2px; }
 
 .expression-section {
   margin-bottom: 10px;
@@ -1506,7 +1636,7 @@ onBeforeUnmount(() => {
 
 .expression-section-title {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
   margin-bottom: 8px;
   font-weight: 600;
 }
@@ -1521,9 +1651,9 @@ onBeforeUnmount(() => {
   padding: 6px 8px;
   border-radius: 8px;
   font-size: 12px;
-  color: #cbd5e1;
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(6, 182, 212, 0.1);
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid rgba(59, 130, 246, 0.1);
   cursor: pointer;
   text-align: center;
   transition: all 0.2s ease;
@@ -1531,15 +1661,15 @@ onBeforeUnmount(() => {
 }
 
 .expression-item:hover {
-  background: rgba(6, 182, 212, 0.15);
-  border-color: rgba(6, 182, 212, 0.3);
-  color: #e2e8f0;
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.25);
+  color: #1e293b;
 }
 
 .expression-item.active {
-  background: rgba(6, 182, 212, 0.25);
-  border-color: rgba(6, 182, 212, 0.5);
-  color: #22d3ee;
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #3b82f6;
   font-weight: 600;
 }
 
@@ -1553,20 +1683,20 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #cbd5e1;
+  color: #475569;
   cursor: pointer;
   user-select: none;
 }
 
 .overlay-item input[type="checkbox"] {
-  accent-color: #06b6d4;
+  accent-color: #3b82f6;
   width: 14px;
   height: 14px;
   cursor: pointer;
 }
 
 .overlay-item:hover {
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .chat-panel {
@@ -1575,11 +1705,11 @@ onBeforeUnmount(() => {
   left: 20px;
   width: 400px;
   max-height: 580px;
-  background: rgba(15, 23, 42, 0.96);
+  background: #ffffff;
   backdrop-filter: blur(20px);
   border-radius: 16px;
-  border: 1px solid rgba(6, 182, 212, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(59, 130, 246, 0.05);
   display: flex;
   flex-direction: column;
   z-index: 10000;
@@ -1588,8 +1718,8 @@ onBeforeUnmount(() => {
 
 .panel-resize-handle {
   position: absolute;
-  top: 0;
-  left: 0;
+  bottom: 0;
+  right: 0;
   width: 20px;
   height: 20px;
   cursor: nwse-resize;
@@ -1603,7 +1733,7 @@ onBeforeUnmount(() => {
   width: 14px;
   height: 14px;
   pointer-events: none;
-  opacity: 0.7;
+  opacity: 0.5;
   transition: opacity 0.2s;
 }
 
@@ -1612,7 +1742,7 @@ onBeforeUnmount(() => {
 }
 
 .panel-resize-handle:hover .resize-icon path {
-  stroke: rgba(6, 182, 212, 1);
+  stroke: rgba(59, 130, 246, 1);
 }
 
 .panel-header {
@@ -1620,22 +1750,24 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: rgba(6, 182, 212, 0.1);
-  border-bottom: 1px solid rgba(6, 182, 212, 0.15);
-  cursor: move;
+  background: rgba(59, 130, 246, 0.08);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.15);
   user-select: none;
 }
 
-.header-left {
+.header-drag-area {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: move;
+  flex: 1;
+  min-width: 0;
 }
 
 .panel-title {
   font-size: 14px;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .listening-tag {
@@ -1677,65 +1809,65 @@ onBeforeUnmount(() => {
   max-height: 520px;
 }
 
-.analysis-mode :deep(.el-form-item) {
+.analysis-mode ::deep(.el-form-item) {
   margin-bottom: 12px;
 }
 
-.analysis-mode :deep(.el-form-item__label) {
-  color: #94a3b8;
+.analysis-mode ::deep(.el-form-item__label) {
+  color: #475569;
   font-size: 12px;
 }
 
-.analysis-mode :deep(.el-input__inner),
-.analysis-mode :deep(.el-textarea__inner) {
+.analysis-mode ::deep(.el-input__inner),
+.analysis-mode ::deep(.el-textarea__inner) {
   color: #1e293b !important;
   background-color: #ffffff !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
 }
 
-.analysis-mode :deep(.el-input__wrapper) {
+.analysis-mode ::deep(.el-input__wrapper) {
   background-color: #ffffff !important;
-  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3) inset !important;
 }
 
-.analysis-mode :deep(.el-textarea__wrapper) {
+.analysis-mode ::deep(.el-textarea__wrapper) {
   background-color: #ffffff !important;
-  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3) inset !important;
 }
 
-.analysis-mode :deep(.el-input__inner::placeholder),
-.analysis-mode :deep(.el-textarea__inner::placeholder) {
+.analysis-mode ::deep(.el-input__inner::placeholder),
+.analysis-mode ::deep(.el-textarea__inner::placeholder) {
   color: #94a3b8 !important;
 }
 
-.analysis-mode :deep(.el-radio-button__inner) {
-  color: #e2e8f0 !important;
-  background-color: rgba(30, 41, 59, 0.6) !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
+.analysis-mode ::deep(.el-radio-button__inner) {
+  color: #475569 !important;
+  background-color: #f1f5f9 !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
 }
 
-.analysis-mode :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+.analysis-mode ::deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
   color: #fff !important;
-  background-color: #06b6d4 !important;
-  border-color: #06b6d4 !important;
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
 }
 
 .analysis-result {
   margin-top: 12px;
-  background: rgba(15, 23, 42, 0.6);
+  background: #f8fafc;
   border-radius: 10px;
   padding: 12px 14px;
-  border: 1px solid rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.12);
 }
 
-.analysis-result :deep(.el-divider__text) {
-  color: #06b6d4;
+.analysis-result ::deep(.el-divider__text) {
+  color: #3b82f6;
   font-size: 13px;
   font-weight: 600;
 }
 
 .analysis-result .markdown-body {
-  color: #e2e8f0;
+  color: #1e293b;
   font-size: 14px;
   line-height: 1.7;
 }
@@ -1746,55 +1878,55 @@ onBeforeUnmount(() => {
 .analysis-result .markdown-body h4,
 .analysis-result .markdown-body h5,
 .analysis-result .markdown-body h6 {
-  color: #e2e8f0;
+  color: #1e293b;
   font-size: 14px;
   font-weight: 600;
   margin: 6px 0 2px;
 }
 
 .analysis-result .markdown-body p {
-  color: #e2e8f0;
+  color: #1e293b;
   margin: 4px 0;
 }
 
 .analysis-result .markdown-body strong {
-  color: #22d3ee;
+  color: #2563eb;
 }
 
 .analysis-result .markdown-body ul,
 .analysis-result .markdown-body ol {
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .analysis-result .markdown-body li {
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .analysis-result .markdown-body table {
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .analysis-result .markdown-body th {
-  color: #06b6d4;
-  background: rgba(6, 182, 212, 0.15);
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .analysis-result .markdown-body td {
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .analysis-result .markdown-body code {
-  color: #22d3ee;
-  background: rgba(6, 182, 212, 0.1);
+  color: #2563eb;
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .analysis-result .markdown-body blockquote {
-  color: rgba(255,255,255,0.7);
-  border-left-color: rgba(6, 182, 212, 0.4);
+  color: #475569;
+  border-left-color: rgba(59, 130, 246, 0.3);
 }
 
 .analysis-result .markdown-body hr {
-  border-top-color: rgba(255,255,255,0.1);
+  border-top-color: rgba(59, 130, 246, 0.1);
 }
 
 .analysis-actions {
@@ -1821,15 +1953,15 @@ onBeforeUnmount(() => {
   max-height: 400px;
   min-height: 200px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(6, 182, 212, 0.3) transparent;
+  scrollbar-color: rgba(59, 130, 246, 0.25) transparent;
 }
 
 .chat-messages::-webkit-scrollbar { width: 4px; }
-.chat-messages::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.3); border-radius: 2px; }
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.25); border-radius: 2px; }
 
 .chat-empty {
   text-align: center;
-  color: #94a3b8;
+  color: #64748b;
   padding: 20px 0;
 }
 
@@ -1872,20 +2004,21 @@ onBeforeUnmount(() => {
 }
 
 .message-item.user .message-content {
-  background: rgba(6, 182, 212, 0.2);
-  color: #e2e8f0;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1e293b;
   border-bottom-right-radius: 4px;
 }
 
 .message-item.assistant .message-content {
-  background: rgba(30, 41, 59, 0.8);
-  color: #e2e8f0;
+  background: #f1f5f9;
+  color: #1e293b;
   border-bottom-left-radius: 4px;
 }
 
 .message-item.assistant .message-content .markdown-body {
   font-size: 14px;
   line-height: 1.6;
+  color: #1e293b;
 }
 
 .message-item.assistant .message-content .markdown-body h1,
@@ -1897,14 +2030,14 @@ onBeforeUnmount(() => {
   font-size: 14px;
   font-weight: 600;
   margin: 6px 0 2px;
-  color: inherit;
+  color: #1e293b;
 }
 
 .message-content.streaming { min-height: 20px; }
 
 .cursor-blink {
   animation: blink 1s step-end infinite;
-  color: #06b6d4;
+  color: #3b82f6;
 }
 
 .message-actions {
@@ -1922,8 +2055,8 @@ onBeforeUnmount(() => {
 
 .chat-input-area {
   padding: 10px 16px;
-  border-top: 1px solid rgba(6, 182, 212, 0.15);
-  background: rgba(15, 23, 42, 0.8);
+  border-top: 1px solid rgba(59, 130, 246, 0.12);
+  background: #f8fafc;
 }
 
 .voice-controls {
@@ -1940,27 +2073,27 @@ onBeforeUnmount(() => {
   word-break: break-word;
 }
 
-.markdown-body :deep(h1), .markdown-body :deep(h2), .markdown-body :deep(h3),
-.markdown-body :deep(h4), .markdown-body :deep(h5), .markdown-body :deep(h6) {
+.markdown-body ::deep(h1), .markdown-body ::deep(h2), .markdown-body ::deep(h3),
+.markdown-body ::deep(h4), .markdown-body ::deep(h5), .markdown-body ::deep(h6) {
   margin: 8px 0 4px;
   font-weight: 600;
   font-size: 14px;
-  color: inherit;
+  color: #1e293b;
 }
-.markdown-body :deep(h1)::before { content: ''; }
-.markdown-body :deep(p) { margin: 4px 0; }
-.markdown-body :deep(ul), .markdown-body :deep(ol) { padding-left: 16px; margin: 4px 0; }
-.markdown-body :deep(li) { margin: 2px 0; }
-.markdown-body :deep(strong) { color: #22d3ee; font-weight: 600; }
-.markdown-body :deep(em) { font-style: italic; }
-.markdown-body :deep(blockquote) { border-left: 3px solid rgba(6, 182, 212, 0.4); padding-left: 10px; margin: 6px 0; color: rgba(255,255,255,0.7); }
-.markdown-body :deep(hr) { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 8px 0; }
-.markdown-body :deep(table) { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 13px; }
-.markdown-body :deep(th), .markdown-body :deep(td) { border: 1px solid rgba(6, 182, 212, 0.2); padding: 4px 8px; text-align: left; }
-.markdown-body :deep(th) { background: rgba(6, 182, 212, 0.15); color: #06b6d4; font-weight: 600; }
-.markdown-body :deep(code) { background: rgba(6, 182, 212, 0.1); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
-.markdown-body :deep(pre) { background: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 6px; overflow-x: auto; margin: 6px 0; }
-.markdown-body :deep(pre code) { background: none; padding: 0; font-size: 13px; }
+.markdown-body ::deep(h1)::before { content: ''; }
+.markdown-body ::deep(p) { margin: 4px 0; color: #1e293b; }
+.markdown-body ::deep(ul), .markdown-body ::deep(ol) { padding-left: 16px; margin: 4px 0; color: #1e293b; }
+.markdown-body ::deep(li) { margin: 2px 0; color: #1e293b; }
+.markdown-body ::deep(strong) { color: #2563eb; font-weight: 600; }
+.markdown-body ::deep(em) { font-style: italic; color: #475569; }
+.markdown-body ::deep(blockquote) { border-left: 3px solid rgba(59, 130, 246, 0.3); padding-left: 10px; margin: 6px 0; color: #475569; }
+.markdown-body ::deep(hr) { border: none; border-top: 1px solid rgba(59, 130, 246, 0.1); margin: 8px 0; }
+.markdown-body ::deep(table) { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 13px; }
+.markdown-body ::deep(th), .markdown-body ::deep(td) { border: 1px solid rgba(59, 130, 246, 0.15); padding: 4px 8px; text-align: left; }
+.markdown-body ::deep(th) { background: rgba(59, 130, 246, 0.08); color: #3b82f6; font-weight: 600; }
+.markdown-body ::deep(code) { background: rgba(59, 130, 246, 0.08); padding: 1px 5px; border-radius: 3px; font-size: 13px; color: #2563eb; }
+.markdown-body ::deep(pre) { background: #f1f5f9; padding: 10px; border-radius: 6px; overflow-x: auto; margin: 6px 0; }
+.markdown-body ::deep(pre code) { background: none; padding: 0; font-size: 13px; }
 
 .panel-slide-enter-active, .panel-slide-leave-active {
   transition: all 0.3s ease;
@@ -1979,7 +2112,7 @@ onBeforeUnmount(() => {
 
 <style>
 .chat-panel .el-form-item__label {
-  color: #94a3b8 !important;
+  color: #475569 !important;
   font-size: 12px !important;
 }
 
@@ -1987,17 +2120,17 @@ onBeforeUnmount(() => {
 .chat-panel .el-textarea__inner {
   color: #1e293b !important;
   background-color: #ffffff !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
 }
 
 .chat-panel .el-input__wrapper {
   background-color: #ffffff !important;
-  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3) inset !important;
 }
 
 .chat-panel .el-textarea__wrapper {
   background-color: #ffffff !important;
-  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.3) inset !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3) inset !important;
 }
 
 .chat-panel .el-input__inner::placeholder,
@@ -2006,52 +2139,52 @@ onBeforeUnmount(() => {
 }
 
 .chat-panel .el-radio-button__inner {
-  color: #e2e8f0 !important;
-  background-color: transparent !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
+  color: #475569 !important;
+  background-color: #f1f5f9 !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
 }
 
 .chat-panel .el-radio-button__original-radio:checked + .el-radio-button__inner {
   color: #fff !important;
-  background-color: #06b6d4 !important;
-  border-color: #06b6d4 !important;
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
 }
 
 .chat-panel .el-select .el-input__inner {
-  color: #e2e8f0 !important;
-  background-color: transparent !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
+  color: #1e293b !important;
+  background-color: #ffffff !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
 }
 
 .chat-panel .el-select-dropdown {
-  background-color: rgba(15, 23, 42, 0.95) !important;
-  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+  background-color: #ffffff !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
 }
 
 .chat-panel .el-select-dropdown__item {
-  color: #e2e8f0 !important;
+  color: #1e293b !important;
 }
 
 .chat-panel .el-select-dropdown__item.hover,
 .chat-panel .el-select-dropdown__item:hover {
-  background-color: rgba(6, 182, 212, 0.15) !important;
+  background-color: rgba(59, 130, 246, 0.08) !important;
 }
 
 .chat-panel .el-select-dropdown__item.selected {
-  color: #06b6d4 !important;
+  color: #3b82f6 !important;
   font-weight: 600;
 }
 
 .chat-panel .el-divider__text {
-  color: #06b6d4 !important;
+  color: #3b82f6 !important;
   font-size: 13px !important;
   font-weight: 600;
 }
 
 .chat-panel .el-input-group__append {
-  background-color: rgba(6, 182, 212, 0.2) !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
-  color: #06b6d4 !important;
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
+  color: #3b82f6 !important;
   box-shadow: none !important;
 }
 </style>

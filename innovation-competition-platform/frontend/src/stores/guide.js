@@ -37,7 +37,9 @@ export const useGuideStore = defineStore('guide', () => {
   }
 
   const goToStep = (step) => {
-    currentStep.value = step
+    const steps = getStepsByRole(currentRole.value)
+    const maxStep = Math.max(0, steps.length - 1)
+    currentStep.value = Math.max(0, Math.min(Number(step) || 0, maxStep))
   }
 
   const setOpacity = (value) => {

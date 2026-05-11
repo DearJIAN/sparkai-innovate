@@ -1,8 +1,16 @@
 <template>
   <div class="courses-page">
     <!-- Banner -->
-    <div class="courses-banner">
+    <div class="portal-hero-banner portal-hero-banner--course">
+      <div class="banner-decoration">
+        <div class="deco-circle c1"></div>
+        <div class="deco-circle c2"></div>
+      </div>
       <div class="banner-content">
+        <div class="banner-badge">
+          <el-icon size="16"><Notebook /></el-icon>
+          <span>在线课程</span>
+        </div>
         <h1 class="banner-title">在线课程</h1>
         <p class="banner-subtitle">系统学习创新创业知识，提升综合能力</p>
       </div>
@@ -11,55 +19,23 @@
     <!-- 课程列表 -->
     <div class="courses-section">
       <div class="courses-grid">
-        <div
+        <SparkPortalCard
           v-for="course in courses"
           :key="course.id"
-          class="course-card"
-        >
-          <div class="course-cover" :style="course.cover ? {} : { background: course.gradient }">
-            <img
-              v-if="course.cover"
-              :src="course.cover"
-              :alt="course.title"
-              class="course-cover-img"
-              :style="{ aspectRatio: '16/9', objectFit: 'cover', width: '100%', display: 'block' }"
-              @error="handleCoverError($event, course)"
-            />
-            <div v-else class="cover-content">
-              <el-icon size="48"><component :is="course.icon" /></el-icon>
-              <span class="cover-title">{{ course.title }}</span>
-            </div>
-          </div>
-          <div class="course-body">
-            <h3 class="course-title">{{ course.title }}</h3>
-            <p class="course-teacher">讲师：{{ course.teacher }}</p>
-            <div class="course-meta">
-              <span class="meta-item">
-                <el-icon><User /></el-icon>
-                {{ course.students }} 人学习
-              </span>
-              <span class="meta-item">
-                <el-icon><Clock /></el-icon>
-                {{ course.duration }}
-              </span>
-            </div>
-            <div class="course-tags">
-              <el-tag
-                v-for="tag in course.tags"
-                :key="tag"
-                size="small"
-                class="course-tag"
-              >
-                {{ tag }}
-              </el-tag>
-            </div>
-            <div class="course-footer">
-              <el-button type="primary" size="small" @click="openCourse(course)">
-                查看课程
-              </el-button>
-            </div>
-          </div>
-        </div>
+          :gradient="course.gradient"
+          :cover-image="course.cover || ''"
+          :title="course.title"
+          :description="'讲师：' + course.teacher"
+          :tags="course.tags"
+          :max-tags="2"
+          :meta-items="[
+            { icon: User, text: course.students + ' 人学习' },
+            { icon: Clock, text: course.duration }
+          ]"
+          :primary-action-text="'查看课程'"
+          :primary-action-icon="VideoPlay"
+          :on-primary-click="() => openCourse(course)"
+        />
       </div>
     </div>
 
@@ -147,8 +123,9 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Clock, Opportunity, TrendCharts, PieChart, ChatDotRound, Collection, ArrowRight, VideoPlay, InfoFilled, Star } from '@element-plus/icons-vue'
+import { User, Clock, Opportunity, TrendCharts, PieChart, ChatDotRound, Collection, ArrowRight, VideoPlay, InfoFilled, Star, Notebook } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import SparkPortalCard from '@/components/portal/SparkPortalCard.vue'
 
 // 导入课程封面图片
 import coverChuangye from '@/assets/images/courses/创业基础.png'
@@ -164,11 +141,6 @@ const courseCoverMap = {
   '商业模式设计': coverShangye,
   '项目路演技巧': coverLuyan,
   '创业法律与知识产权': coverFalv
-}
-
-// 图片加载失败时回退到渐变色
-function handleCoverError(event, course) {
-  course.cover = null
 }
 
 const dialogVisible = ref(false)
@@ -396,58 +368,89 @@ function startCourse() {
   background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
 }
 
-.courses-banner {
-  background: linear-gradient(135deg, #064e3b 0%, #059669 40%, #10b981 100%);
-  padding: 50px 40px;
-  border-radius: 0 0 40px 40px;
+.portal-hero-banner {
   position: relative;
   overflow: hidden;
+  min-height: 260px;
+  padding: 56px 48px;
+  border-radius: 0 0 36px 36px;
+  color: #fff;
 }
 
-.courses-banner::before {
+.portal-hero-banner::before,
+.portal-hero-banner::after {
   content: '';
   position: absolute;
-  top: -30%;
-  right: -10%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(52,211,153,0.2) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: courseFloat 8s ease-in-out infinite;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
 }
 
-.courses-banner::after {
-  content: '';
-  position: absolute;
-  bottom: -30%;
-  left: -10%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(110,231,183,0.15) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: courseFloat 6s ease-in-out infinite reverse;
+.portal-hero-banner::before {
+  width: 280px;
+  height: 280px;
+  right: -60px;
+  top: -40px;
+  animation: bannerFloat 8s ease-in-out infinite;
 }
 
-@keyframes courseFloat {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
-  50% { transform: translateY(-20px) scale(1.1); opacity: 1; }
+.portal-hero-banner::after {
+  width: 180px;
+  height: 180px;
+  left: -40px;
+  bottom: -40px;
+  animation: bannerFloat 10s ease-in-out infinite reverse;
+}
+
+@keyframes bannerFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.05); }
+}
+
+.portal-hero-banner--course {
+  background: linear-gradient(135deg, #047857 0%, #06b6d4 100%);
+}
+
+.banner-decoration { position: absolute; right: 48px; top: 0; width: 35%; height: 100%; z-index: 1; }
+
+.deco-circle { position: absolute; border-radius: 50%; opacity: 0.12; }
+.c1 { width: 220px; height: 220px; background: #34d399; right: -20px; top: -20px; animation: decoFloat 8s ease-in-out infinite; }
+.c2 { width: 150px; height: 150px; background: #6ee7b7; right: 140px; bottom: -20px; animation: decoFloat 10s ease-in-out infinite reverse; }
+
+@keyframes decoFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.05); }
 }
 
 .banner-content {
-  max-width: 1400px;
-  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+}
+
+.banner-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 18px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 24px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .banner-title {
-  font-size: 32px;
-  font-weight: 700;
+  font-size: 40px;
+  font-weight: 800;
   color: #ffffff;
-  margin-bottom: 12px;
+  margin: 0 0 18px;
+  line-height: 1.2;
 }
 
 .banner-subtitle {
-  font-size: 16px;
-  color: #bae6fd;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 720px;
+  line-height: 1.8;
 }
 
 .courses-section {
@@ -460,101 +463,6 @@ function startCourse() {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
-}
-
-.course-card {
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.course-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
-}
-
-.course-cover {
-  height: 160px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.course-cover-img {
-  width: 100%;
-  display: block;
-  object-fit: cover;
-  aspect-ratio: 16/9;
-}
-
-.cover-content {
-  text-align: center;
-  color: #ffffff;
-}
-
-.cover-content .el-icon {
-  margin-bottom: 8px;
-}
-
-.cover-title {
-  display: block;
-  font-size: 16px;
-  font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.course-body {
-  padding: 20px;
-}
-
-.course-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 8px;
-}
-
-.course-teacher {
-  font-size: 13px;
-  color: #64748b;
-  margin-bottom: 12px;
-}
-
-.course-meta {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  color: #64748b;
-}
-
-.course-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.course-tag {
-  background-color: #f1f5f9;
-  color: #475569;
-  border: none;
-}
-
-.course-footer {
-  padding-top: 12px;
-  border-top: 1px solid #e2e8f0;
 }
 
 /* Dialog styles */

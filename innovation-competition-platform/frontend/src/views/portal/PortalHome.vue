@@ -495,7 +495,7 @@ const allCards = [
     title: '竞赛报名',
     desc: '浏览并报名各类创新创业竞赛',
     icon: Trophy,
-    path: '/competitions',
+    path: '/competition-center',
     color: 'blue',
     roles: ['student', 'teacher', 'judge', 'admin']
   },
