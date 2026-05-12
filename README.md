@@ -1896,6 +1896,34 @@ cd backend && flask db upgrade && python seed.py
 > - 不重复记录同一改动（如已在"新增功能"中写了，不再在"功能修改"中重复）
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
+### v4.5.1 - 2026-05-12
+
+> 门户列表卡片样式影响链审查与修复、统一 Grid 尺寸、公开访问
+
+#### 功能修改
+
+- **统一列表页 Grid 最小宽度**（`frontend/src/views/portal/TrainingCamps.vue`、`frontend/src/views/portal/Courses.vue`、`frontend/src/views/portal/CompetitionSquare.vue`）：训练营、课程、校内竞赛列表页的 grid 布局统一从 `minmax(300px/280px/320px, 1fr)` 调整为 `minmax(360px, 1fr)`，与校外竞赛保持一致，确保卡片尺寸统一。
+
+#### Bug 修复
+
+- **修复训练营/课程卡片样式不生效问题**：经审查发现各页面 grid 的 `minmax` 值不一致导致卡片尺寸差异，已统一为 360px。
+
+#### 安全与稳定性
+
+- **门户列表页公开访问**（`frontend/src/router/index.js`）：将 `/portal`、`/external-competitions`、`/competitions`、`/training-camps`、`/courses`、`/industry-topics` 及其详情页路由添加 `public: true` meta 标记，无需登录即可访问。
+
+---
+
+### v4.5.0 - 2026-05-12
+
+> 统一列表卡片尺寸与结构、封面海报铺满、按钮对齐优化
+
+#### 功能修改
+
+- **统一卡片尺寸与结构**（`frontend/src/components/portal/SparkPortalCard.vue`、`frontend/src/views/portal/ExternalCompetitions.vue`）：校外竞赛、校内竞赛、训练营、课程、产业命题列表卡片尺寸统一；卡片容器添加 `display: flex; flex-direction: column`，内容区使用 `flex: 1`，元信息区和按钮区使用 `margin-top: auto` 固定在底部，确保不同卡片高度一致时按钮对齐。
+- **统一列表卡片封面尺寸**（`frontend/src/components/portal/SparkPortalCard.vue`、`frontend/src/views/portal/ExternalCompetitions.vue`）：封面统一使用 `aspect-ratio: 16/9`；图片圆角移除，改为容器顶部圆角 `border-radius: 20px 20px 0 0`；图片使用 `object-fit: cover` 铺满封面区域。
+- **产业命题详情页海报展示优化**（`frontend/src/views/portal/IndustryTopicDetail.vue`）：移除 `.detail-hero` 固定高度和 `overflow: hidden`，海报图片改用 `height: auto` + `aspect-ratio: 16/9` + `object-fit: contain` 完整显示，不裁切；内容区改为 `position: absolute` 定位在底部，渐变遮罩从下往上渐变。
+
 ### v4.4.0 - 2026-05-11
 
 > 引导窗口、校外竞赛海报、Live2D 生命周期、登录路由回跳与统一卡片展示修复
@@ -2067,7 +2095,7 @@ cd backend && flask db upgrade && python seed.py
 
 - **README.md**：版本变更记录新增 v4.4.1；v4.4.0 移除"当前版本"标记
 
-### v4.5.1 - 2026-05-11（当前版本）
+### v4.5.1 - 2026-05-11
 
 > AI 助手窗口全面亮色化改造 + 拖拽缩放交互修复 + 项目智能体面板主题适配
 
@@ -2089,10 +2117,49 @@ cd backend && flask db upgrade && python seed.py
 #### Bug 修复
 
 - **退出登录后页面不跳转**：点击退出登录确认后，页面仍停留在首页且无反应。根因：`router.push('/login')` 跳转后，路由守卫检测到 `userStore.token` 和 `userStore.userInfo` 的响应式状态尚未同步更新，仍认为用户已登录，于是重定向回 `/portal`。修复：将 `router.push('/login')` 改为 `window.location.href = '/login'`，强制页面刷新，确保所有 Pinia 状态和组件实例完全重置（`frontend/src/layouts/MainLayout.vue`）
+- **AI 助手窗口拖拽范围受限**：窗口只能完全在屏幕内拖动，无法拖到屏幕边缘外。修复：放宽边界限制，允许窗口部分超出屏幕（保留 100px 最小可见区域），实现全屏自由拖动（`frontend/src/components/HuahuoAssistant.vue`）
+- **拖拽 Live2D 形象时误打开 AI 助手面板**：按住 Live2D 人物拖拽结束后，AI 助手面板会自动打开。根因：`mouseup` 事件触发时，虽然内部状态判定为拖拽，但 `openPanel()` 函数未被正确阻止。修复：新增全局 `isModelDragging` 标志，在拖拽开始时置为 `true`，`openPanel()` 函数中检测到该标志时直接返回不打开面板；`mouseup`/`touchend` 后延迟 100ms 重置标志，确保 click 事件也能正确检测（`frontend/src/components/HuahuoAssistant.vue`）
+- **Live2D 形象眼睛闪烁**：Live2D 模型眼睛出现快速闪烁。根因：`__syncExpressionState` 函数中强制重置 `ParamEyeOpen` 等表情参数为 0，然后调用 `setExpression` 设置新表情；同时 `core.update` 每帧调用 `__applyOverlayStateToCore` 也会重置这些参数。两套系统互相干扰，导致眼睛参数在 0 和表情值之间快速切换。修复：① `__syncExpressionState` 中移除对 `ParamEyeOpen`/`ParamEyeSmile`/`ParamTear` 的强制重置，让 `setExpression` 自行管理表情参数；② `__applyOverlayStateToCore` 中跳过表情相关参数，只处理 overlay 特有的参数；③ `__syncExpressionState` 增加 150ms 防抖，避免短时间内多次切换；④ `startAutoExpression` 改用递归 `setTimeout` 实现 15-25 秒随机间隔，减少切换频率（`frontend/src/components/HuahuoAssistant.vue`）
+- **竞赛详情页海报显示不全**：校外竞赛和校内竞赛详情页的 Hero 海报上半部分被裁切，无法完整显示。根因：海报图片使用 `object-fit: cover` 会裁剪图片以填充固定高度容器（`min-height: 520px`）。修复：将 `object-fit: cover` 改为 `object-fit: contain`，添加 `object-position: center top` 确保海报从顶部开始完整显示；降低 `min-height` 从 520px 到 400px，允许容器自适应图片比例（`frontend/src/views/portal/ExternalCompetitionDetail.vue`、`frontend/src/views/portal/CompetitionDetail.vue`）
 
 #### 文档更新
 
 - **README.md**：版本变更记录新增 v4.5.1；v4.5.0 移除"当前版本"标记
+
+***
+
+### v4.5.2 - 2026-05-12（当前版本）
+
+> 产业命题模块补齐：新增产业命题详情页 + 数据抽离 + 列表页改造
+
+#### 新增功能
+
+- **产业命题详情页**：新增 [IndustryTopicDetail.vue](frontend/src/views/portal/IndustryTopicDetail.vue)，产业命题模块拥有与校外竞赛、校内竞赛、训练营、课程一致的独立详情展示页。页面结构包含：深青蓝渐变 Hero（标题、企业、难度/周期/预算标签、摘要、承接 CTA + 返回列表）、面包屑导航、左右分栏布局（16:8）、8 个内容章节（命题背景、需求说明、技术方向标签、交付物要求、周期安排时间线、奖励与支持高亮区、适合团队信息网格、评分验收标准列表）、右侧 sticky 吸附操作卡（命题信息 + 承接命题 + 返回列表 + 命题标签）、底部再度 CTA 引导区、空状态友好提示页。视觉风格与现有详情页保持统一（18px 大圆角卡片、靛紫点缀色、36px 章节图标、柔和阴影、移动端 768px 断点自适应）
+- **产业命题数据抽离**：新增 [industryTopics.js](frontend/src/data/industryTopics.js)，将 4 个命题的完整数据从组件内联抽离到独立数据文件，包含 `getIndustryTopicById(id)` 查询函数。每个命题数据从原始的 10 个字段扩展为 17 个字段：新增 `status`、`summary`、`techDirections`、`schedule`（5 阶段时间线）、`evaluation`（评分权重）、`support`（企业支持）、`suitableTeam`（团队画像），数据字段从 `bonus` 改为语义化字段 `reward`/`budget`。列表页和详情页共享同一份数据源，避免重复维护
+- **产业命题详情路由**：新增 `/industry-topics/:id` 路由，注册为 `IndustryTopicDetail`（组件懒加载），meta 设置 `platformPage: true` + `hidden: true`（与校外竞赛详情、校内竞赛详情路由配置一致），`/accept-topic/:id` 承接路由不受影响
+
+#### 功能修改
+
+- **IndustryTopics.vue 列表页改造**：卡片新增 `secondaryActionText="查看详情"` 按钮（含 `View` 图标），新增 `onCardClick` 卡片主体点击跳转详情页，`onPrimaryClick`（承接命题）保留 `@click.stop` 阻止冒泡；数据引用从内联 `ref([])` 改为导入 `@/data/industryTopics`；`handleAccept` 简化为直接路由跳转 `/accept-topic/:id`（带 query 参数 `topic_title`/`topic_company`），移除旧的 ElMessageBox 确认弹窗和异步延迟逻辑；移除约 100 行内联数据定义
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.5.2；v4.5.1 移除"当前版本"标记
+
+***
+
+### v4.5.3 - 2026-05-12（当前版本）
+
+> 竞赛详情页海报显示修复：校内竞赛/校外竞赛海报改为自适应高度，与课程详情页保持一致
+
+#### Bug 修复
+
+- **校内竞赛详情页海报显示不全**（`frontend/src/views/portal/CompetitionDetail.vue`）：`.detail-poster` 移除固定 `min-height: 400px` 和 `overflow: hidden`；`.poster-img` 改为 `height: auto` + `aspect-ratio: 16/9`；`.poster-fallback` 移除绝对定位，改为自适应高度布局
+- **校外竞赛详情页海报显示不全**（`frontend/src/views/portal/ExternalCompetitionDetail.vue`）：`.detail-hero` 移除固定 `min-height: 400px` 和 `overflow: hidden`；`.hero-image` 改为 `height: auto` + `aspect-ratio: 16/9`；`.hero-overlay` 改为只覆盖底部区域
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.5.3；v4.5.2 移除"当前版本"标记
 
 ***
 

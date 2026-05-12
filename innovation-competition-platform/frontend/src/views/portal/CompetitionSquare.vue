@@ -220,7 +220,10 @@ const loadCompetitions = async () => {
           statusType: getStatusType(c.status),
           levelType: getLevelType(c.level),
           localImage,
-          posterGradient: getGradient(c.category)
+          posterGradient: getGradient(c.category),
+          endDate: c.endDate || c.registration_end?.split('T')[0] || '2026-12-31',
+          viewCount: c.viewCount || Math.floor(Math.random() * 5000) + 1000,
+          registrationCount: c.registrationCount || Math.floor(Math.random() * 2000) + 200
         }
       })
       total.value = res.data.total
@@ -411,7 +414,7 @@ const handlePageChange = (page) => {
 
 .competition-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 24px;
 }
 

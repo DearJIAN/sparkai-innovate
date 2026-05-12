@@ -226,22 +226,22 @@ function openOfficial(url) {
 .detail-hero {
   position: relative;
   width: 100%;
-  min-height: 520px;
-  overflow: hidden;
+  background: #0f172a;
 }
 
 .hero-image {
-  position: absolute;
-  inset: 0;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   display: block;
+  aspect-ratio: 16 / 9;
 }
 
 .hero-overlay {
   position: absolute;
-  inset: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background: linear-gradient(
     180deg,
     rgba(15, 23, 42, 0.08) 0%,

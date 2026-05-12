@@ -258,6 +258,8 @@ function openOfficial(url) {
   overflow: hidden;
   border: 1px solid #e2e8f0;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
 }
 
 .competition-card:hover {
@@ -267,7 +269,8 @@ function openOfficial(url) {
 
 .card-cover {
   position: relative;
-  height: 180px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 20px 20px 0 0;
   padding: 0;
@@ -278,6 +281,7 @@ function openOfficial(url) {
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 0;
   transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -310,7 +314,12 @@ function openOfficial(url) {
   z-index: 1;
 }
 
-.card-body { padding: 20px 24px 24px; }
+.card-body {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
 .card-tags {
   display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
@@ -341,7 +350,11 @@ function openOfficial(url) {
 }
 
 .card-meta {
-  display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+  margin-bottom: 18px;
 }
 
 .meta-item {
@@ -352,7 +365,9 @@ function openOfficial(url) {
 .meta-item .el-icon { color: #94a3b8; flex-shrink: 0; }
 
 .card-actions {
-  display: flex; gap: 10px;
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
 }
 
 .detail-btn {
@@ -416,7 +431,6 @@ function openOfficial(url) {
     grid-template-columns: 1fr;
   }
 
-  .card-cover { height: 180px; }
   .cover-title { font-size: 17px; }
 
   .card-actions { flex-direction: column; }

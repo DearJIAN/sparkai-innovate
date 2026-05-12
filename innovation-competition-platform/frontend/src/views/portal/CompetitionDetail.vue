@@ -512,8 +512,6 @@ const goToMyRegistrations = () => {
 .detail-poster {
   position: relative;
   width: 100%;
-  min-height: 520px;
-  overflow: hidden;
   background: linear-gradient(135deg, #0c4a6e 0%, #075985 50%, #0ea5e9 100%);
   border: none;
   padding: 0;
@@ -524,19 +522,16 @@ const goToMyRegistrations = () => {
 }
 
 .poster-img {
-  position: absolute;
-  inset: 0;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   display: block;
+  aspect-ratio: 16 / 9;
 }
 
 .poster-fallback {
-  position: absolute;
-  inset: 0;
   width: 100%;
-  height: 100%;
+  min-height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;

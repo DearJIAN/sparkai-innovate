@@ -296,6 +296,8 @@ function renderMarkdown(text) {
 }
 
 function openPanel() {
+  // 如果正在拖拽 Live2D 模型，不打开面板
+  if (isModelDragging) return
   panelOpen.value = true
 }
 
@@ -306,11 +308,18 @@ function closePanel() {
 
 function startAutoExpression() {
   stopAutoExpression()
-  autoExpressionTimer = window.setInterval(() => {
-    if (!isStreaming.value && !isSpeaking.value) {
-      switchExpression()
-    }
-  }, 10000)
+  // 使用递归 setTimeout 代替 setInterval，实现随机间隔（15-25秒）
+  // 避免固定间隔导致的机械感，减少表情切换频率
+  const scheduleNextExpression = () => {
+    const randomDelay = 15000 + Math.random() * 10000 // 15-25秒随机间隔
+    autoExpressionTimer = window.setTimeout(() => {
+      if (!isStreaming.value && !isSpeaking.value) {
+        switchExpression()
+      }
+      scheduleNextExpression()
+    }, randomDelay)
+  }
+  scheduleNextExpression()
 }
 
 function stopAutoExpression() {
@@ -453,6 +462,9 @@ function setupExpressionControls() {
   }
 
   // 应用 overlay 状态到 core model
+  // 注意：只处理 overlay 特有的参数，不触碰表情参数（ParamEyeSmile, ParamEyeOpen, ParamTear）
+  // 避免与表情系统冲突导致眼睛闪烁
+  const __expressionParamNames = new Set(['ParamEyeSmile', 'ParamEyeOpen', 'ParamTear'])
   window.__applyOverlayStateToCore = function(core) {
     const state = window.__expressionControlsState
     if (!core) return
@@ -470,6 +482,9 @@ function setupExpressionControls() {
     }
 
     for (const parameterId of allParameterIds) {
+      // 跳过表情相关参数，避免与 setExpression 冲突
+      if (__expressionParamNames.has(parameterId)) continue
+
       const shouldEnable = [...activeOv].some((overlayName) => {
         return overlayRules[overlayName]?.parameters?.includes(parameterId)
       })
@@ -507,7 +522,18 @@ function setupExpressionControls() {
   }
 
   // 同步表情状态：先设置基础表情，再应用 overlay
+  // 增加防抖，避免短时间内多次切换导致闪烁
+  let __syncExpressionDebounceTimer = null
   window.__syncExpressionState = function(modelOrExpression) {
+    if (__syncExpressionDebounceTimer) {
+      clearTimeout(__syncExpressionDebounceTimer)
+    }
+    __syncExpressionDebounceTimer = setTimeout(() => {
+      _doSyncExpressionState(modelOrExpression)
+    }, 150)
+  }
+
+  function _doSyncExpressionState(modelOrExpression) {
     const state = window.__expressionControlsState
     let model = modelOrExpression
     if (typeof modelOrExpression === 'string') {
@@ -519,20 +545,8 @@ function setupExpressionControls() {
     if (!model) return
 
     try {
-      // 先重置核心模型的表情相关参数
-      const core = getCubismCoreModel(model)
-      if (core) {
-        const expressionParams = ['ParamEyeSmile', 'ParamEyeOpen', 'ParamTear']
-        expressionParams.forEach(paramName => {
-          const paramId = resolveParamIdObject(core, paramName)
-          if (paramId) {
-            const idx = core.getParameterIndex(paramId)
-            if (idx >= 0) {
-              core.setParameterValueByIndex(idx, 0, 1)
-            }
-          }
-        })
-      }
+      // 不再强制重置表情参数，让 setExpression 自行管理
+      // 避免与 core.update 中的 overlay 应用冲突导致闪烁
 
       if (state.currentBaseExpression) {
         model.setExpression?.(state.currentBaseExpression)
@@ -905,17 +919,13 @@ async function doInitLive2D() {
     hint.textContent = '点击对话'
     waifuEl.appendChild(hint)
 
+    // 移除旧的拖拽按钮（如果存在）
     const existingHandle = document.getElementById('live2d-drag-handle')
     if (existingHandle) existingHandle.remove()
-    const handleEl = document.createElement('div')
-    handleEl.id = 'live2d-drag-handle'
-    handleEl.className = 'live2d-drag-handle'
-    handleEl.title = '拖拽移动'
-    handleEl.innerHTML = `<svg class="drag-icon" viewBox="0 0 24 24" width="16" height="16"><path d="M8 6h8M8 12h8M8 18h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`
-    handleEl.addEventListener('mousedown', (e) => startModelDrag(e))
-    handleEl.addEventListener('touchstart', (e) => startModelDragTouch(e))
-    handleEl.addEventListener('click', (e) => e.stopPropagation())
-    waifuEl.appendChild(handleEl)
+
+    // 将拖拽事件绑定到 waifu 元素本身，按住人物即可拖拽
+    waifuEl.addEventListener('mousedown', onWaifuMouseDown)
+    waifuEl.addEventListener('touchstart', onWaifuTouchStart, { passive: false })
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -986,14 +996,7 @@ function scrollToBottom() {
 watch(messages, () => scrollToBottom(), { deep: true })
 watch(streamingText, () => scrollToBottom())
 watch(panelOpen, (val) => {
-  const handleEl = document.getElementById('live2d-drag-handle')
-  if (handleEl) {
-    if (val) {
-      handleEl.classList.add('panel-open')
-    } else {
-      handleEl.classList.remove('panel-open')
-    }
-  }
+  // 面板打开/关闭时的处理（拖拽按钮已移除，此 watch 保留用于后续扩展）
 })
 
 async function sendMessage() {
@@ -1236,57 +1239,133 @@ function speakAnalysisResult() {
   toggleSpeech()
 }
 
-function startModelDrag(e) {
-  e.preventDefault()
-  e.stopPropagation()
+// 点击/拖拽区分状态
+let modelClickState = { isDragging: false, startX: 0, startY: 0, moveThreshold: 5 }
+// 全局标志：是否正在拖拽 Live2D 模型，用于阻止面板误打开
+let isModelDragging = false
+
+function onWaifuMouseDown(e) {
+  // 如果点击的是面板内部元素，不触发拖拽
+  if (e.target.closest('.chat-panel') || e.target.closest('.panel-resize-handle')) return
+
+  modelClickState.isDragging = false
+  modelClickState.startX = e.clientX
+  modelClickState.startY = e.clientY
+  isModelDragging = false
+
   const waifuEl = document.getElementById('waifu')
   if (!waifuEl) return
   const rect = waifuEl.getBoundingClientRect()
   modelDragState = {
-    dragging: true,
+    dragging: false,
     startX: e.clientX,
     startY: e.clientY,
     origLeft: rect.left,
     origTop: rect.top
   }
-  document.addEventListener('mousemove', onModelDrag)
-  document.addEventListener('mouseup', stopModelDrag)
+
+  document.addEventListener('mousemove', onWaifuMouseMove)
+  document.addEventListener('mouseup', onWaifuMouseUp)
 }
 
-function startModelDragTouch(e) {
+function onWaifuMouseMove(e) {
+  const dx = e.clientX - modelClickState.startX
+  const dy = e.clientY - modelClickState.startY
+  const distance = Math.sqrt(dx * dx + dy * dy)
+
+  // 移动超过阈值，判定为拖拽
+  if (!modelDragState.dragging && distance > modelClickState.moveThreshold) {
+    modelDragState.dragging = true
+    modelClickState.isDragging = true
+    isModelDragging = true
+  }
+
+  if (modelDragState.dragging) {
+    e.preventDefault()
+    const newLeft = modelDragState.origLeft + (e.clientX - modelDragState.startX)
+    const newTop = modelDragState.origTop + (e.clientY - modelDragState.startY)
+    applyModelPosition(newLeft, newTop)
+  }
+}
+
+function onWaifuMouseUp(e) {
+  document.removeEventListener('mousemove', onWaifuMouseMove)
+  document.removeEventListener('mouseup', onWaifuMouseUp)
+
+  if (!modelClickState.isDragging) {
+    // 判定为点击，打开面板
+    openPanel()
+  }
+
+  // 延迟重置拖拽标志，确保 click 事件能检测到拖拽状态
+  setTimeout(() => {
+    isModelDragging = false
+  }, 100)
+  modelDragState.dragging = false
+  modelClickState.isDragging = false
+}
+
+function onWaifuTouchStart(e) {
+  // 如果触摸的是面板内部元素，不触发拖拽
+  if (e.target.closest('.chat-panel') || e.target.closest('.panel-resize-handle')) return
+
   const t = e.touches[0]
+  modelClickState.isDragging = false
+  modelClickState.startX = t.clientX
+  modelClickState.startY = t.clientY
+  isModelDragging = false
+
   const waifuEl = document.getElementById('waifu')
   if (!waifuEl) return
   const rect = waifuEl.getBoundingClientRect()
   modelDragState = {
-    dragging: true,
+    dragging: false,
     startX: t.clientX,
     startY: t.clientY,
     origLeft: rect.left,
     origTop: rect.top
   }
-  document.addEventListener('touchmove', onModelDragTouch, { passive: false })
-  document.addEventListener('touchend', stopModelDragTouch)
+
+  document.addEventListener('touchmove', onWaifuTouchMove, { passive: false })
+  document.addEventListener('touchend', onWaifuTouchEnd)
 }
 
-function onModelDrag(e) {
-  if (!modelDragState.dragging) return
-  const dx = e.clientX - modelDragState.startX
-  const dy = e.clientY - modelDragState.startY
-  const newLeft = modelDragState.origLeft + dx
-  const newTop = modelDragState.origTop + dy
-  applyModelPosition(newLeft, newTop)
-}
-
-function onModelDragTouch(e) {
-  if (!modelDragState.dragging) return
-  e.preventDefault()
+function onWaifuTouchMove(e) {
   const t = e.touches[0]
-  const dx = t.clientX - modelDragState.startX
-  const dy = t.clientY - modelDragState.startY
-  const newLeft = modelDragState.origLeft + dx
-  const newTop = modelDragState.origTop + dy
-  applyModelPosition(newLeft, newTop)
+  const dx = t.clientX - modelClickState.startX
+  const dy = t.clientY - modelClickState.startY
+  const distance = Math.sqrt(dx * dx + dy * dy)
+
+  // 移动超过阈值，判定为拖拽
+  if (!modelDragState.dragging && distance > modelClickState.moveThreshold) {
+    modelDragState.dragging = true
+    modelClickState.isDragging = true
+    isModelDragging = true
+  }
+
+  if (modelDragState.dragging) {
+    e.preventDefault()
+    const newLeft = modelDragState.origLeft + (t.clientX - modelDragState.startX)
+    const newTop = modelDragState.origTop + (t.clientY - modelDragState.startY)
+    applyModelPosition(newLeft, newTop)
+  }
+}
+
+function onWaifuTouchEnd(e) {
+  document.removeEventListener('touchmove', onWaifuTouchMove)
+  document.removeEventListener('touchend', onWaifuTouchEnd)
+
+  if (!modelClickState.isDragging) {
+    // 判定为点击，打开面板
+    openPanel()
+  }
+
+  // 延迟重置拖拽标志，确保 click 事件能检测到拖拽状态
+  setTimeout(() => {
+    isModelDragging = false
+  }, 100)
+  modelDragState.dragging = false
+  modelClickState.isDragging = false
 }
 
 function applyModelPosition(left, top) {
@@ -1304,18 +1383,6 @@ function applyModelPosition(left, top) {
   try {
     localStorage.setItem('huahuoModelPos', JSON.stringify({ left: clampedLeft, top: clampedTop }))
   } catch (_e) {}
-}
-
-function stopModelDrag() {
-  modelDragState.dragging = false
-  document.removeEventListener('mousemove', onModelDrag)
-  document.removeEventListener('mouseup', stopModelDrag)
-}
-
-function stopModelDragTouch() {
-  modelDragState.dragging = false
-  document.removeEventListener('touchmove', onModelDragTouch)
-  document.removeEventListener('touchend', stopModelDragTouch)
 }
 
 function startDrag(e) {
@@ -1347,11 +1414,15 @@ function onDrag(e) {
   if (!dragState.dragging || resizeState.resizing) return
   const newX = e.clientX - dragState.startX
   const newY = e.clientY - dragState.startY
-  const maxX = window.innerWidth - panelSize.value.width
-  const maxY = window.innerHeight - panelSize.value.height
+  // 允许窗口部分超出屏幕，只限制不能完全移出屏幕（保留100px可见区域）
+  const minVisible = 100
+  const maxX = window.innerWidth - minVisible
+  const maxY = window.innerHeight - minVisible
+  const minX = minVisible - panelSize.value.width
+  const minY = minVisible - panelSize.value.height
   panelPos.value = {
-    x: Math.max(0, Math.min(newX, maxX)),
-    y: Math.max(0, Math.min(newY, maxY))
+    x: Math.max(minX, Math.min(newX, maxX)),
+    y: Math.max(minY, Math.min(newY, maxY))
   }
   updatePanelStyle()
 }
@@ -1361,11 +1432,15 @@ function onDragTouch(e) {
   const t = e.touches[0]
   const newX = t.clientX - dragState.startX
   const newY = t.clientY - dragState.startY
-  const maxX = window.innerWidth - panelSize.value.width
-  const maxY = window.innerHeight - panelSize.value.height
+  // 允许窗口部分超出屏幕，只限制不能完全移出屏幕（保留100px可见区域）
+  const minVisible = 100
+  const maxX = window.innerWidth - minVisible
+  const maxY = window.innerHeight - minVisible
+  const minX = minVisible - panelSize.value.width
+  const minY = minVisible - panelSize.value.height
   panelPos.value = {
-    x: Math.max(0, Math.min(newX, maxX)),
-    y: Math.max(0, Math.min(newY, maxY))
+    x: Math.max(minX, Math.min(newX, maxX)),
+    y: Math.max(minY, Math.min(newY, maxY))
   }
   updatePanelStyle()
 }
@@ -1535,55 +1610,6 @@ onBeforeUnmount(() => {
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-}
-
-.live2d-drag-handle {
-  position: absolute;
-  right: -16px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: rgba(15, 23, 42, 0.95);
-  border-radius: 50%;
-  color: #94a3b8;
-  font-size: 11px;
-  cursor: grab;
-  user-select: none;
-  white-space: nowrap;
-  z-index: 10001;
-  border: 1px solid rgba(6, 182, 212, 0.5);
-  transition: color 0.2s, background 0.2s, opacity 0.3s, visibility 0.3s;
-  box-shadow: 0 0 8px rgba(6, 182, 212, 0.2), 0 2px 12px rgba(0, 0, 0, 0.25);
-  visibility: visible;
-  opacity: 1;
-}
-
-.live2d-drag-handle.panel-open {
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.live2d-drag-handle:hover {
-  color: #e2e8f0;
-  background: rgba(30, 41, 59, 0.98);
-  border-color: rgba(6, 182, 212, 0.6);
-}
-
-.live2d-drag-handle:active {
-  cursor: grabbing;
-}
-
-.drag-icon {
-  width: 16px;
-  height: 16px;
-  pointer-events: none;
-  opacity: 0.9;
-  stroke: currentColor;
 }
 
 .live2d-loading {

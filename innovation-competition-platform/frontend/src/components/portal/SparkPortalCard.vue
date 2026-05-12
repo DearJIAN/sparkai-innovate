@@ -113,7 +113,8 @@ const visibleTags = computed(() => props.tags.slice(0, props.maxTags))
 
 .spark-card__cover {
   position: relative;
-  height: 180px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 20px 20px 0 0;
   padding: 0;
@@ -126,6 +127,7 @@ const visibleTags = computed(() => props.tags.slice(0, props.maxTags))
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 0;
   transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
