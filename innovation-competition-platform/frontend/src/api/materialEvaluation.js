@@ -19,7 +19,8 @@ export const getReport = (taskId) =>
 
 export const downloadReportPdf = (taskId) =>
   request.get(`/material-evaluation/reports/${taskId}/pdf`, {
-    responseType: 'blob'
+    responseType: 'blob',
+    timeout: 300000
   })
 
 export const getDownloadUrl = (taskId) =>

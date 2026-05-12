@@ -89,58 +89,85 @@ class CoverFlowable(Flowable):
         c.rect(0, 0, w, h, fill=1, stroke=0)
         cx = w / 2
 
-        top_deco_y = h - 8
-        c.setFillColor(HexColor("#1E293B"))
-        c.rect(0, top_deco_y, w, 8, fill=1, stroke=0)
+        score_value = self._e.total_score or 0
+        advantages = json.loads(self._e.advantages_json) if self._e.advantages_json else []
+        problems = json.loads(self._e.problems_json) if self._e.problems_json else []
+        suggestions = json.loads(self._e.suggestions_json) if self._e.suggestions_json else []
+        lvl = self._e.level or _level_text(score_value)
+
+        cur = h
+
+        # === TOP DECO BAR (10pt) ===
+        cur -= 10
+        c.setFillColor(DARK_BG)
+        c.rect(0, cur, w, 10, fill=1, stroke=0)
         c.setStrokeColor(HexColor("#334155"))
         c.setLineWidth(0.5)
-        c.line(0, top_deco_y, w, top_deco_y)
+        c.line(0, cur, w, cur)
 
-        self._draw_spark_logo(c, cx, h - 24)
+        # === SPARK LOGO ===
+        cur -= 18
+        self._draw_spark_logo(c, cx, cur)
 
+        # === BRAND NAME (11pt) ===
+        cur -= 16
         c.setFillColor(WHITE)
-        c.setFont(_font_bold, 9)
-        c.drawCentredString(cx, h - 36, "火花智创  SparkAI Innovate")
+        c.setFont(_font_bold, 11)
+        c.drawCentredString(cx, cur, "火花智创  SparkAI Innovate")
 
-        self._draw_accent_line(c, cx, h - 44, 60)
+        # === ACCENT LINE ===
+        cur -= 12
+        self._draw_accent_line(c, cx, cur, 70)
 
+        # === REPORT TYPE (28pt) ===
+        cur -= 30
         type_label = "路演PPT评估报告" if self._e.evaluation_type == "ppt" else "项目报告评估报告"
         c.setFillColor(WHITE)
-        c.setFont(_font_bold, 24)
-        c.drawCentredString(cx, h - 70, type_label)
+        c.setFont(_font_bold, 28)
+        c.drawCentredString(cx, cur, type_label)
 
-        c.setFont(_font_name, 10)
+        # === SUBTITLE (11pt) ===
+        cur -= 24
+        c.setFont(_font_name, 11)
         c.setFillColor(HexColor("#CBD5E1"))
-        c.drawCentredString(cx, h - 86, "数据驱动  \u00b7  智能分析  \u00b7  精准优化")
+        c.drawCentredString(cx, cur, "数据驱动  ·  智能分析  ·  精准优化")
 
-        box_y_start = h - 130
-        box_h = 82
-        c.setFillColor(HexColor("#1E293B"))
-        c.roundRect(cx - 110, box_y_start, 220, box_h, 8, fill=1, stroke=0)
+        # === SCORE CARD BOX (110pt high, 192pt wide) ===
+        box_bottom = cur - 18 - 110
+        card_w = 192
+        c.setFillColor(DARK_BG)
+        c.roundRect(cx - card_w / 2, box_bottom, card_w, 110, 10, fill=1, stroke=0)
         c.setStrokeColor(HexColor("#334155"))
         c.setLineWidth(0.5)
-        c.roundRect(cx - 110, box_y_start, 220, box_h, 8, fill=0, stroke=1)
+        c.roundRect(cx - card_w / 2, box_bottom, card_w, 110, 10, fill=0, stroke=1)
 
-        score_value = self._e.total_score or 0
-        c.setFont(_font_bold, 48)
+        box_top = box_bottom + 110
+
+        # Score number (56pt)
+        score_cy = box_bottom + 68
+        c.setFont(_font_bold, 56)
         c.setFillColor(WHITE)
-        c.drawCentredString(cx, box_y_start + 28, str(score_value))
+        c.drawCentredString(cx, score_cy, str(score_value))
 
-        c.setFont(_font_name, 8)
+        # Score label (11pt)
+        c.setFont(_font_name, 11)
         c.setFillColor(MUTED)
-        c.drawCentredString(cx, box_y_start + 12, "综合评分")
+        c.drawCentredString(cx, score_cy - 24, "综合评分")
 
-        lvl = self._e.level or _level_text(score_value)
+        # Level badge
         lvl_color = _level_color(score_value)
-        badge_w, badge_h_val = 52, 18
+        badge_w = 60
+        badge_h_val = 22
+        badge_y = box_bottom - badge_h_val - 6
         c.setFillColor(lvl_color)
-        c.roundRect(cx - badge_w / 2, box_y_start - 24, badge_w, badge_h_val, 5, fill=1, stroke=0)
+        c.roundRect(cx - badge_w / 2, badge_y, badge_w, badge_h_val, 6, fill=1, stroke=0)
         c.setFillColor(WHITE)
-        c.setFont(_font_bold, 9)
-        c.drawCentredString(cx, box_y_start - 18, lvl)
+        c.setFont(_font_bold, 11)
+        c.drawCentredString(cx, badge_y + 4, lvl)
 
-        meta_y = box_y_start - 52
-        c.setFont(_font_name, 8)
+        # === META INFO (10pt, 4 lines) ===
+        cur = badge_y - 18
+        c.setFont(_font_name, 10)
         c.setFillColor(MUTED)
         meta_lines = [
             f"文件：{self._e.file_name or '未知'}",
@@ -149,48 +176,76 @@ class CoverFlowable(Flowable):
             f"报告编号：REP-{self._e.id}-{datetime.utcnow().strftime('%Y%m')}"
         ]
         for i, line in enumerate(meta_lines):
-            c.drawCentredString(cx, meta_y - i * 10, line)
+            c.drawCentredString(cx, cur - i * 14, line)
 
-        sep_y = meta_y - 6 * 10 - 6
-        self._draw_accent_line(c, cx, sep_y, 180)
+        # === SEPARATOR LINE ===
+        cur = cur - 4 * 14 - 12
+        self._draw_accent_line(c, cx, cur, 200)
 
-        c.setFont(_font_name, 9)
+        # === 综合评价 (12pt) ===
+        cur -= 18
+        c.setFont(_font_bold, 12)
         c.setFillColor(WHITE)
-        c.drawCentredString(cx, sep_y - 16, "综 合 评 价")
-
+        c.drawCentredString(cx, cur, "综 合 评 价")
         one_liner = _get_one_liner(score_value)
-        c.setFont(_font_name, 8)
+        cur -= 18
+        c.setFont(_font_name, 10)
         c.setFillColor(HexColor("#CBD5E1"))
-        c.drawCentredString(cx, sep_y - 30, one_liner)
+        c.drawCentredString(cx, cur, one_liner)
 
-        bottom_y = sep_y - 48
-        advantages = json.loads(self._e.advantages_json) if self._e.advantages_json else []
-        problems = json.loads(self._e.problems_json) if self._e.problems_json else []
-        suggestions = json.loads(self._e.suggestions_json) if self._e.suggestions_json else []
+        # === THREE VERTICAL CARDS ===
+        cur -= 22
+        card_h = 56
+        card_w_3 = 320
+        card_gap = 16
 
-        col_w = w / 3 - 8
-        col_start_x = [4, col_w + 10, col_w * 2 + 16]
+        card_data = [
+            (GREEN, "核 心 优 势", advantages[:2]),
+            (ORANGE, "主 要 风 险", problems[:2]),
+            (ACCENT, "优 化 方 向", suggestions[:2])
+        ]
 
-        labels = ["核心优势", "主要风险", "优化方向"]
-        colors_list = [GREEN, ORANGE, ACCENT]
-        data_sets = [advantages[:2], problems[:2], suggestions[:2]]
+        for idx, (color, label, items) in enumerate(card_data):
+            cy = cur - idx * (card_h + card_gap)
 
-        for ci in range(3):
-            lx = col_start_x[ci]
-            c.setFillColor(colors_list[ci])
-            c.setFont(_font_bold, 8)
-            c.drawString(lx, bottom_y, labels[ci])
-            c.setFont(_font_name, 7)
-            c.setFillColor(HexColor("#CBD5E1"))
-            for di, item in enumerate(data_sets[ci]):
-                text = item[:50] + "..." if len(item) > 50 else item
-                c.drawString(lx + 2, bottom_y - 12 - di * 10, f"\u2022 {text}")
+            c.setFillColor(HexColor("#1E293B"))
+            c.roundRect(cx - card_w_3 / 2, cy, card_w_3, card_h, 8, fill=1, stroke=0)
+            c.setStrokeColor(HexColor("#334155"))
+            c.setLineWidth(0.3)
+            c.roundRect(cx - card_w_3 / 2, cy, card_w_3, card_h, 8, fill=0, stroke=1)
 
-        footer_y = 12
-        c.setFont(_font_name, 6.5)
+            card_mid = cy + card_h / 2
+
+            if items:
+                if len(items) == 1:
+                    first_item = items[0][:60] + "..." if len(items[0]) > 60 else items[0]
+                    c.setFont(_font_name, 10)
+                    c.setFillColor(HexColor("#CBD5E1"))
+                    c.drawCentredString(cx, card_mid - 4, f"• {first_item}")
+                else:
+                    for di in range(2):
+                        item_text = items[di][:60] + "..." if len(items[di]) > 60 else items[di]
+                        c.setFont(_font_name, 10)
+                        c.setFillColor(HexColor("#CBD5E1"))
+                        c.drawCentredString(cx, card_mid - 2 - di * 16, f"• {item_text}")
+            else:
+                c.setFont(_font_name, 10)
+                c.setFillColor(MUTED)
+                c.drawCentredString(cx, card_mid - 4, "暂无数据")
+
+            badge_lx = cx - card_w_3 / 2 + 8
+            badge_cy_label = cy + card_h - 12
+            c.setFillColor(color)
+            c.setFont(_font_bold, 11)
+            c.drawString(badge_lx, badge_cy_label, label)
+
+        # === FOOTER (8pt) ===
+        cur = cur - 2 * (card_h + card_gap) + card_gap - 30
+        c.setFont(_font_name, 8)
         c.setFillColor(HexColor("#475569"))
-        c.drawCentredString(cx, footer_y, "本报告由火花智创 SparkAI Innovate \u00b7 AI材料评估系统自动生成")
-        c.drawCentredString(cx, footer_y - 9, "报告仅供学习和参赛参考，不构成任何形式的法律或专业建议")
+        c.drawCentredString(cx, cur, "本报告由火花智创 SparkAI Innovate · AI材料评估系统自动生成")
+        cur -= 12
+        c.drawCentredString(cx, cur, "报告仅供学习和参赛参考，不构成任何形式的法律或专业建议")
 
 
 def _get_one_liner(score):

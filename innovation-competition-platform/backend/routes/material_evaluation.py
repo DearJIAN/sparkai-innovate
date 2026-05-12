@@ -230,7 +230,18 @@ def download_report_pdf(task_id):
     if evaluation.status != 'completed':
         return error('评估尚未完成', 400)
 
-    if evaluation.pdf_path and os.path.exists(evaluation.pdf_path):
+    force_refresh = request.args.get('refresh', '').lower() in ('1', 'true', 'yes')
+
+    if force_refresh and evaluation.pdf_path:
+        try:
+            if os.path.exists(evaluation.pdf_path):
+                os.remove(evaluation.pdf_path)
+        except Exception:
+            pass
+        evaluation.pdf_path = None
+        db.session.commit()
+
+    if not force_refresh and evaluation.pdf_path and os.path.exists(evaluation.pdf_path):
         file_size = os.path.getsize(evaluation.pdf_path)
         if file_size > 0:
             resp = send_file(evaluation.pdf_path, as_attachment=True,
