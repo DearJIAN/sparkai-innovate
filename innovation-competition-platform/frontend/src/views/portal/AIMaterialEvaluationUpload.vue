@@ -15,9 +15,10 @@
     </div>
 
     <div class="upload-main">
+      <input ref="fileInput" type="file" accept=".pdf,application/pdf" @change="handleFileSelect" class="hidden-input" />
+
       <div class="upload-card" :class="{ 'has-file': uploadedFile }">
         <div v-if="!uploadedFile" class="upload-area" @click="triggerUpload" @dragover.prevent @drop.prevent="handleDrop">
-          <input ref="fileInput" type="file" accept=".pdf,application/pdf" @change="handleFileSelect" />
           <div class="upload-icon-wrapper">
             <el-icon size="40"><UploadFilled /></el-icon>
           </div>
@@ -31,7 +32,7 @@
           </div>
         </div>
 
-        <div v-else class="file-info">
+        <div v-else class="file-info" @click="triggerUpload">
           <div class="file-icon-box">
             <el-icon size="36"><Document /></el-icon>
           </div>
@@ -43,7 +44,7 @@
               <span>PDF 文件</span>
             </p>
           </div>
-          <el-button circle class="remove-btn" @click="removeFile">
+          <el-button circle class="remove-btn" @click.stop="removeFile">
             <el-icon size="18"><Close /></el-icon>
           </el-button>
         </div>
@@ -94,7 +95,10 @@ const uploading = ref(false)
 const uploadError = ref('')
 
 function triggerUpload() {
-  fileInput.value?.click()
+  if (fileInput.value) {
+    fileInput.value.value = ''
+    fileInput.value.click()
+  }
 }
 
 function validateFile(file) {
@@ -177,7 +181,7 @@ function goBack() {
 .upload-hero {
   position: relative;
   background: linear-gradient(135deg, #2563eb, #7c3aed);
-  padding: 40px 24px;
+  padding: 36px 24px 28px;
   overflow: hidden;
 }
 
@@ -222,10 +226,8 @@ function goBack() {
 
 .upload-main {
   max-width: 600px;
-  margin: -24px auto 0;
-  padding: 0 24px 60px;
-  position: relative;
-  z-index: 3;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
 }
 
 .upload-card {
@@ -245,19 +247,15 @@ function goBack() {
   padding: 48px 32px;
   text-align: center;
   cursor: pointer;
-  position: relative;
-}
-
-.upload-area input[type="file"] {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
 }
 
 .upload-area:hover .upload-icon-wrapper {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(37,99,235,0.15);
+}
+
+.hidden-input {
+  display: none;
 }
 
 .upload-icon-wrapper {
@@ -318,6 +316,7 @@ function goBack() {
   align-items: center;
   padding: 28px 32px;
   gap: 20px;
+  cursor: pointer;
 }
 
 .file-icon-box {

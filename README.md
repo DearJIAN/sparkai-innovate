@@ -1897,7 +1897,43 @@ cd backend && flask db upgrade && python seed.py
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
 
-### v4.7.0 - 2026-05-12（当前版本）
+### v4.7.2 - 2026-05-12（当前版本）
+
+> AI材料评估 PDF 下载修复与报告视觉重构：修复下载误报"内容为空"错误，彻底重写 PDF 报告排版
+
+- **Bug 修复**
+  - 修复 PDF 下载误报"PDF报告内容为空"错误（[AIMaterialEvaluationReport.vue](innovation-competition-platform/frontend/src/views/portal/AIMaterialEvaluationReport.vue)：简化 Blob 校验逻辑，去除导致误判的 `blob.size === 0` 和 `blob.type` 检查，仅在 blob 为 null/undefined 时报错）
+  - 修复下载按钮导致 0KB 空文件问题（[AIMaterialEvaluationReport.vue](innovation-competition-platform/frontend/src/views/portal/AIMaterialEvaluationReport.vue)：两个下载按钮添加 `:disabled="downloadingPDF"` 禁用状态 + `downloadPDF()` 首行 `if (downloadingPDF.value) return` 防重复触发，避免同一函数并行执行两次产生空 blob）
+  - 修复 PDF 封面顶部内容被截断问题（[material_report_pdf.py](innovation-competition-platform/backend/services/material_report_pdf.py)：移除 `ColorBlock` + 无效的负间距 `Spacer(1, -92*mm)`，改用自绘 `CoverFlowable` 在 240pt 高的单一 Flowable 内完成封面全内容渲染，避免 reportlab 不支持负 Spacer 导致的布局偏移）
+
+- **功能修改**
+  - SparkAI 品牌 Logo 嵌入封面（[material_report_pdf.py](innovation-competition-platform/backend/services/material_report_pdf.py)：`CoverFlowable` 使用 canvas 路径绘制 8 角火花图标，紫色 #A78BFA）
+  - 封面全幅 Navy 色块 + Logo + 标题 + 大号总分 + 色块等级标签 + 文件元信息 + 品牌落款，一次性渲染不截断
+  - 完全重写 PDF 报告生成模块（[material_report_pdf.py](innovation-competition-platform/backend/services/material_report_pdf.py)：基于 ui-ux-pro-max 专业设计系统重构）
+  - 深蓝配色封面页（#0F172A 全幅色块标题区 + 大白字报告标题 + SUBTITLE + 大号总分 + 色块分级标签 + 文件信息 + SparkAI 品牌落款）
+  - 专业评分维度表（#0369A1 蓝色表头 + 交替行背景色 + 分数按阈值绿/橙/红三色显示）
+  - 核心评价卡片（浅灰背景 #F8FAFC + 蓝色左边框强调）
+  - 四色分点列表：绿色圆点「主要优势」+ 橙色圆点「待改进项」+ 蓝色圆点「优化建议」+ 蓝色序号「下一步行动」
+  - 章节标题带蓝色短横线（18mm * 3pt）可识别分隔
+  - 统一使用 A4 标准纸张尺寸 + 18mm 舒展边距
+
+### v4.7.1 - 2026-05-12
+
+> AI材料评估 Bug 修复与体验优化：修复 PDF 下载失败、上传状态不同步问题，优化评估中心、上传页、报告页布局
+
+- **Bug 修复**
+  - 修复 PDF 下载失败问题（[AIMaterialEvaluationReport.vue](innovation-competition-platform/frontend/src/views/portal/AIMaterialEvaluationReport.vue)：前端 Blob 错误检测增强；[material_evaluation.py](innovation-competition-platform/backend/routes/material_evaluation.py)：下载接口增加目录创建和文件存在性检查）
+  - 修复第一次上传不生效问题（[AIMaterialEvaluationUpload.vue](innovation-competition-platform/frontend/src/views/portal/AIMaterialEvaluationUpload.vue)：重构文件输入方式，隐藏 input → 程序化触发 click，清除 value 以支持同一文件重复选择）
+
+- **功能修改**
+  - 优化 AI材料评估中心布局（[AIMaterialEvaluation.vue](innovation-competition-platform/frontend/src/views/portal/AIMaterialEvaluation.vue)：移除负边距重叠，Cards 区域 padding 48px 与 Hero 自然分离）
+  - 优化上传页布局（[AIMaterialEvaluationUpload.vue](innovation-competition-platform/frontend/src/views/portal/AIMaterialEvaluationUpload.vue)：移除负边距，padding 48px 上下间距，上传卡片成为视觉中心）
+  - 优化报告页总分摘要区域布局（[AIMaterialEvaluationReport.vue](innovation-competition-platform/frontend/src/views/portal/AIMaterialEvaluationReport.vue)：移除 report-body 负边距，Hero 底部 padding 增加至 32px）
+
+- **安全与稳定性**
+  - PDF 下载接口增加 `os.makedirs(output_dir, exist_ok=True)` 确保输出目录存在
+
+### v4.7.0 - 2026-05-12
 
 > 新增 AI材料评估功能：支持路演PPT和项目报告的PDF智能评估，含进度动画、飞入式报告页、PDF报告下载
 

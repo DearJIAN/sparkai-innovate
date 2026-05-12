@@ -192,9 +192,10 @@ def complete_analysis(task_id):
         output_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads', 'material_evaluation', 'reports')
         pdf_path = generate_report_pdf(evaluation, output_dir)
         evaluation.pdf_path = pdf_path
+        print(f"PDF report generated successfully: {pdf_path}")
     except Exception as e:
         import traceback
-        print(f"PDF generation warning: {e}")
+        print(f"PDF generation error (will retry on download): {e}")
         traceback.print_exc()
 
     db.session.commit()
@@ -236,14 +237,19 @@ def download_report_pdf(task_id):
 
     output_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads', 'material_evaluation', 'reports')
     try:
+        os.makedirs(output_dir, exist_ok=True)
         pdf_path = generate_report_pdf(evaluation, output_dir)
+        if not pdf_path or not os.path.exists(pdf_path):
+            return error('PDF生成失败，请稍后重试', 500, 500)
         evaluation.pdf_path = pdf_path
         db.session.commit()
         return send_file(pdf_path, as_attachment=True,
                          download_name=f"AI评估报告_{evaluation.evaluation_type}_{evaluation.id}.pdf",
                          mimetype='application/pdf')
-    except Exception:
-        return error('PDF生成失败，请稍后重试', 500, 500)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return error(f'PDF生成失败: {str(e)}', 500, 500)
 
 
 @material_evaluation_bp.route('/tasks', methods=['GET'])

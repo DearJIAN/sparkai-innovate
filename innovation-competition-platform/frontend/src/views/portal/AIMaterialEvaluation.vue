@@ -137,7 +137,7 @@ function goUpload(type) {
 .me-hero {
   position: relative;
   background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 40%, #7c3aed 100%);
-  padding: 60px 24px;
+  padding: 56px 24px 48px;
   overflow: hidden;
 }
 
@@ -245,10 +245,8 @@ function goUpload(type) {
 
 .me-cards-section {
   max-width: 960px;
-  margin: -40px auto 0;
-  padding: 0 24px 60px;
-  position: relative;
-  z-index: 3;
+  margin: 0 auto;
+  padding: 48px 24px 60px;
 }
 
 .me-section-title {
@@ -263,7 +261,8 @@ function goUpload(type) {
   font-size: 14px;
   color: #64748b;
   text-align: center;
-  margin: 0 0 32px;
+  margin: 0 0 40px;
+  line-height: 1.6;
 }
 
 .me-cards {
@@ -422,7 +421,8 @@ function goUpload(type) {
   }
 
   .me-cards-section {
-    margin-top: -24px;
+    margin-top: 0;
+    padding: 32px 16px 40px;
   }
 
   .me-card {

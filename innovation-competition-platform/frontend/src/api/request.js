@@ -27,6 +27,10 @@ request.interceptors.request.use(
 
 request.interceptors.response.use(
   async (response) => {
+    if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
+      return response.data
+    }
+
     if (response.status >= 300 && response.status < 400) {
       const redirectUrl = response.headers.location
       if (redirectUrl) {

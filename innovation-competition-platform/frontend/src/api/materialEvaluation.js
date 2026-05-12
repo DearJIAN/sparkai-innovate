@@ -23,7 +23,7 @@ export const downloadReportPdf = (taskId) =>
   })
 
 export const getDownloadUrl = (taskId) =>
-  `/api/material-evaluation/reports/${taskId}/pdf`
+  `/material-evaluation/reports/${taskId}/pdf`
 
 export const getMyTasks = (params = {}) =>
   request.get('/material-evaluation/tasks', { params })

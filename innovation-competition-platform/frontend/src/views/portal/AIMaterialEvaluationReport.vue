@@ -5,7 +5,7 @@
       <div class="report-hero-content">
         <h1 class="report-hero-title">{{ isPPT ? '路演PPT评估报告' : '项目报告评估报告' }}</h1>
         <p class="report-hero-subtitle">数据驱动 · 智能分析 · 精准优化</p>
-        <el-button class="download-btn-top" @click="downloadPDF" :loading="downloadingPDF">
+        <el-button class="download-btn-top" @click="downloadPDF" :loading="downloadingPDF" :disabled="downloadingPDF">
           <el-icon><Download /></el-icon>
           下载PDF
         </el-button>
@@ -170,7 +170,7 @@
     </div>
 
     <div class="report-footer">
-      <el-button type="primary" size="large" class="download-btn-bottom" @click="downloadPDF" :loading="downloadingPDF">
+      <el-button type="primary" size="large" class="download-btn-bottom" @click="downloadPDF" :loading="downloadingPDF" :disabled="downloadingPDF">
         <el-icon><Download /></el-icon>
         下载完整评估报告 (PDF)
       </el-button>
@@ -190,7 +190,7 @@ import {
   Download, TrendCharts, List, ChatDotSquare, Star, Warning,
   InfoFilled, Opportunity, Pointer, Check, ArrowLeft
 } from '@element-plus/icons-vue'
-import { getReport, getDownloadUrl } from '@/api/materialEvaluation'
+import { getReport, downloadReportPdf } from '@/api/materialEvaluation'
 import * as echarts from 'echarts'
 
 const route = useRoute()
@@ -326,18 +326,14 @@ function startAnimation() {
 }
 
 async function downloadPDF() {
+  if (downloadingPDF.value) return
   downloadingPDF.value = true
   try {
-    const url = getDownloadUrl(taskId.value)
-    const token = localStorage.getItem('token')
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    if (!response.ok) {
-      ElMessage.error('PDF下载失败，请稍后重试')
+    const blob = await downloadReportPdf(taskId.value)
+    if (!blob) {
+      ElMessage.error('PDF报告内容为空，请稍后重试')
       return
     }
-    const blob = await response.blob()
     const blobUrl = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = blobUrl
@@ -345,7 +341,7 @@ async function downloadPDF() {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-    URL.revokeObjectURL(blobUrl)
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
     ElMessage.success('PDF报告下载成功')
   } catch (e) {
     ElMessage.error('PDF下载失败，请稍后重试')
@@ -390,7 +386,7 @@ onMounted(async () => {
   background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 40%, #7c3aed 100%);
   position: relative;
   overflow: hidden;
-  padding: 48px 24px;
+  padding: 40px 24px 32px;
 }
 
 .report-hero-bg {
@@ -439,10 +435,8 @@ onMounted(async () => {
 
 .report-body {
   max-width: 860px;
-  margin: -24px auto 0;
-  padding: 0 24px;
-  position: relative;
-  z-index: 3;
+  margin: 0 auto;
+  padding: 40px 24px;
 }
 
 .report-section {
