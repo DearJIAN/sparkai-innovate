@@ -1896,6 +1896,91 @@ cd backend && flask db upgrade && python seed.py
 > - 不重复记录同一改动（如已在"新增功能"中写了，不再在"功能修改"中重复）
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
+
+### v4.6.0 - 2026-05-12（当前版本）
+
+> 在线测评问卷重构：题库结构改为 10 题 × 4 选项 A/B/C/D，评分满分调整为 40，卡片封面添加艺术字，简化展示元素
+
+#### 新增功能
+
+- **独立题库文件**：新增 [assessmentQuestionnaires.js](frontend/src/data/assessmentQuestionnaires.js)，5 个真实问卷（创业精神/创业性格/创业兴趣/创业能力/团队合作），每个严格 10 题 × 4 选项 A/B/C/D，选项分数 1-4，含自动校验函数 `validateAllQuestionnaires()`
+- **独立评分工具**：新增 [assessmentScoring.js](frontend/src/utils/assessmentScoring.js)，满分 40 分计分体系，4 级等级（优秀 35+ / 良好 28+ / 发展中 19+ / 待提升 10+）、维度分析（动态百分比柱状图）、智能综合评价生成、改进建议自动生成、sessionStorage 存取 API（`saveResult/getResult/clearResult`）+ 临时答题进度暂存（`persistTempAnswers/getTempAnswers`）
+- **卡片封面艺术字**：卡片渐变封面居中显示测评关键词艺术字（28px 字号 font-weight 900，大字符间距 0.12em，白色半透明 + 双重文字阴影，采用中空留白字间距样式如"创 业 精 神"），替代旧右上角标签模式
+
+#### 功能修改
+
+- **OnlineAssessment.vue** 界面简化：删除 Banner 统计数据区（真实测评数/即将开放数/总题目数），删除卡片底部"真实可测/即将开放"标签和标签容器，卡片按钮改为右对齐（`justify-content: flex-end`），封面区域改为居中对齐（`align-items: center; justify-content: center`），移除 `card-cover-pattern` 装饰层
+- **AssessmentDetail.vue** 答题交互重构：5 点量表改为 4 选项 A/B/C/D（圆形 radio 按钮 + 字母 key + 选项文本），必须选择后才能点下一题（未选时显示黄色提醒 + fadeIn 动画），第 10 题自动显示"提交测评"，slide-fade 方向动画（切入从右 +30px，切出向左 -20px），提升到 0.23s/0.18s 手感，选项 hover scale(1.01) / active scale(0.99) 微交互
+- **AssessmentResult.vue** 评分体系更新：适配满分 40 分，等级改为优秀/良好/发展中/待提升（35+/28+/19+/10+），维度分值 75%/50% 色阶分界，移除旧"优势突出""需要重点培养"等 5 级术语
+- **assessmentBank.js** 数据层重构：移除内联 `questions` 数组和旧评分导出，改为导入 `getQuestionnaireById` / `validateQuestionnaire`（来自 `assessmentQuestionnaires.js`）+ `calculateScore` / `saveResult` / `getResult` / `clearResult` / `getLevel`（来自 `assessmentScoring.js`），纯卡片元数据文件
+- **路由配置** / **MainLayout.vue** / **PortalHome.vue** 保持不变（路由仍为 /assessment 系列 4 条）
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.6.0；v4.5.x 系列版本标记整理，旧版本"当前版本"标记清理
+
+***
+
+
+### v4.5.4 - 2026-05-12
+
+> 在线测评功能上线：新增在线测评中心、答题页、结果页、建设中页面，支持 5 个真实测评（各 10 题）
+
+#### 新增功能
+
+- **在线测评模块**：在现有项目中新增「在线测评」完整产品功能，首页顶部导航和功能卡片区同时新增入口，点击进入 `/assessment` 测评中心
+- **在线测评中心页**：新增 [OnlineAssessment.vue](frontend/src/views/portal/OnlineAssessment.vue)，包含蓝色渐变大 Banner（标题 + 统计数据）、左侧分类侧栏（全部分类/创业测评/就业测评/能力测评）、右侧双列卡片网格（带渐变封面、元信息、标签、搜索框），支持分类筛选和关键词搜索，响应式适配移动端
+- **答题页**：新增 [AssessmentDetail.vue](frontend/src/views/portal/AssessmentDetail.vue)，真实测评进入逐题答题模式。包含 sticky 顶部导航（题目进度条 + 计时器）、题目卡片（第 N 题标签 + 维度标签 + 5 点量表选项）、右侧信息面板（测评信息 + 题目导航网格 + 图例）、底部操作栏（上一题/下一题/提交/返回）
+- **测评结果页**：新增 [AssessmentResult.vue](frontend/src/views/portal/AssessmentResult.vue)，提交后展示完整分析报告。包含蓝色渐变 Header（标题 + 副标题）、综合评估卡片（SVG 环形分数图 + count-up 动画 + 等级标签 + 得分/完成率统计）、综合评价、改进建议（编号列表）、维度分析（条形图带动态填充 + 颜色分级）
+- **建设中页面**：新增 [AssessmentComingSoon.vue](frontend/src/views/portal/AssessmentComingSoon.vue)，非真实测评进入，展示测评名称、所属分类、预计开放方向、即将开放标签、返回中心和查看已开放按钮
+- **测评数据与评分引擎**：新增 [assessmentBank.js](frontend/src/data/assessmentBank.js)，集中管理 12 个测评卡片、3 个分类、5 套真实题库（各 10 题含维度/反向标识）、统一的评分逻辑和 sessionStorage 存取 API
+
+#### 功能修改
+
+- **路由配置**（`frontend/src/router/index.js`）：新增 4 条路由——`/assessment`（测评中心，`public: true`）、`/assessment/:id`（答题页，hidden + public）、`/assessment/:id/result`（结果页，hidden + public）、`/assessment/:id/coming-soon`（建设中，hidden + public），全部设置 `platformPage: true` 无侧边栏
+- **MainLayout.vue**：顶部导航 `topNavConfig` 新增「在线测评」入口（所有角色可见，位于产业命题之后），`isTopNavActive` 新增 `/assessment` 匹配规则，`platformPages` 数组新增 `/assessment` 以支持平台布局
+- **PortalHome.vue**：功能入口卡片 `allCards` 数组新增「在线测评」卡片（indigo 色，TrendCharts 图标，描述"获取创业能力、团队协作等能力画像"），所有角色可见
+
+***
+
+
+### v4.5.3 - 2026-05-12
+
+> 竞赛详情页海报显示修复：校内竞赛/校外竞赛海报改为自适应高度，与课程详情页保持一致
+
+#### Bug 修复
+
+- **校内竞赛详情页海报显示不全**（`frontend/src/views/portal/CompetitionDetail.vue`）：`.detail-poster` 移除固定 `min-height: 400px` 和 `overflow: hidden`；`.poster-img` 改为 `height: auto` + `aspect-ratio: 16/9`；`.poster-fallback` 移除绝对定位，改为自适应高度布局
+- **校外竞赛详情页海报显示不全**（`frontend/src/views/portal/ExternalCompetitionDetail.vue`）：`.detail-hero` 移除固定 `min-height: 400px` 和 `overflow: hidden`；`.hero-image` 改为 `height: auto` + `aspect-ratio: 16/9`；`.hero-overlay` 改为只覆盖底部区域
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.5.3；v4.5.2 移除"当前版本"标记
+
+***
+
+
+### v4.5.2 - 2026-05-12
+
+> 产业命题模块补齐：新增产业命题详情页 + 数据抽离 + 列表页改造
+
+#### 新增功能
+
+- **产业命题详情页**：新增 [IndustryTopicDetail.vue](frontend/src/views/portal/IndustryTopicDetail.vue)，产业命题模块拥有与校外竞赛、校内竞赛、训练营、课程一致的独立详情展示页。页面结构包含：深青蓝渐变 Hero（标题、企业、难度/周期/预算标签、摘要、承接 CTA + 返回列表）、面包屑导航、左右分栏布局（16:8）、8 个内容章节（命题背景、需求说明、技术方向标签、交付物要求、周期安排时间线、奖励与支持高亮区、适合团队信息网格、评分验收标准列表）、右侧 sticky 吸附操作卡（命题信息 + 承接命题 + 返回列表 + 命题标签）、底部再度 CTA 引导区、空状态友好提示页。视觉风格与现有详情页保持统一（18px 大圆角卡片、靛紫点缀色、36px 章节图标、柔和阴影、移动端 768px 断点自适应）
+- **产业命题数据抽离**：新增 [industryTopics.js](frontend/src/data/industryTopics.js)，将 4 个命题的完整数据从组件内联抽离到独立数据文件，包含 `getIndustryTopicById(id)` 查询函数。每个命题数据从原始的 10 个字段扩展为 17 个字段：新增 `status`、`summary`、`techDirections`、`schedule`（5 阶段时间线）、`evaluation`（评分权重）、`support`（企业支持）、`suitableTeam`（团队画像），数据字段从 `bonus` 改为语义化字段 `reward`/`budget`。列表页和详情页共享同一份数据源，避免重复维护
+- **产业命题详情路由**：新增 `/industry-topics/:id` 路由，注册为 `IndustryTopicDetail`（组件懒加载），meta 设置 `platformPage: true` + `hidden: true`（与校外竞赛详情、校内竞赛详情路由配置一致），`/accept-topic/:id` 承接路由不受影响
+
+#### 功能修改
+
+- **IndustryTopics.vue 列表页改造**：卡片新增 `secondaryActionText="查看详情"` 按钮（含 `View` 图标），新增 `onCardClick` 卡片主体点击跳转详情页，`onPrimaryClick`（承接命题）保留 `@click.stop` 阻止冒泡；数据引用从内联 `ref([])` 改为导入 `@/data/industryTopics`；`handleAccept` 简化为直接路由跳转 `/accept-topic/:id`（带 query 参数 `topic_title`/`topic_company`），移除旧的 ElMessageBox 确认弹窗和异步延迟逻辑；移除约 100 行内联数据定义
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.5.2；v4.5.1 移除"当前版本"标记
+
+***
+
+
 ### v4.5.1 - 2026-05-12
 
 > 门户列表卡片样式影响链审查与修复、统一 Grid 尺寸、公开访问
@@ -1914,6 +1999,41 @@ cd backend && flask db upgrade && python seed.py
 
 ---
 
+
+### v4.5.1 - 2026-05-11
+
+> AI 助手窗口全面亮色化改造 + 拖拽缩放交互修复 + 项目智能体面板主题适配
+
+#### 功能修改
+
+- **AI 助手窗口亮色主题改造**（`frontend/src/components/HuahuoAssistant.vue`）：主背景从 `rgba(15, 23, 42, 0.96)` 暗色改为 `#ffffff` 纯白；强调色从 `#06b6d4`（青色）统一替换为 `#3b82f6`（蓝色）；主文字色从 `#e2e8f0`（浅色）改为 `#1e293b`（深色）；次要文字色从 `#94a3b8`/`#cbd5e1` 改为 `#475569`/`#64748b`；用户消息气泡从青色半透明改为蓝色半透明 `rgba(59, 130, 246, 0.12)`；助手消息气泡从深色半透明改为浅灰 `#f1f5f9`；输入区域背景从深色改为 `#f8fafc`；表情面板、分析结果区、markdown 渲染区全部适配亮色主题；所有 Element Plus 组件覆盖样式（表单标签、输入框、单选按钮、下拉菜单、分割线）同步更新为蓝色系亮色风格
+- **项目智能体面板亮色适配**（`frontend/src/views/ai-assistant/AgentPanel.vue`）：能力卡片背景从青色半透明改为蓝色半透明；文字颜色从浅色改为深色；导航结果、能力结果区域背景从深色半透明改为 `#f8fafc`；所有 Element Plus 组件覆盖样式同步更新为蓝色系亮色风格
+
+#### Bug 修复
+
+- **拖拽缩放方向反直觉**：缩放手柄原在左上角，`dx = resizeState.startX - e.clientX` 导致鼠标向右下拖动时窗口变小。修复：手柄移至右下角，`dx = e.clientX - resizeState.startX`，鼠标向右下拖动时窗口自然变大（`frontend/src/components/HuahuoAssistant.vue`）
+- **拖拽与缩放事件冲突**：缩放时拖拽事件同时触发导致窗口位置异常跳动。修复：`startDrag`/`startDragTouch` 增加 `resizeState.resizing` 检查；`onDrag`/`onDragTouch` 增加边界限制（`Math.max(0, Math.min(newX, maxX))`）；`startResize` 添加 `e.stopPropagation()` 阻止事件冒泡（`frontend/src/components/HuahuoAssistant.vue`）
+- **标题栏按钮误触发拖拽**：整个 `panel-header` 区域都可拖拽，导致点击按钮时也触发窗口移动。修复：将拖拽事件从 `panel-header` 移到独立的 `.header-drag-area`（仅标题和标签区域），按钮区域不再触发拖拽（`frontend/src/components/HuahuoAssistant.vue`）
+
+#### 安全与稳定性
+
+- **移动端适配**：新增 `isMobile` 检测（`window.innerWidth <= 768`），移动端自动调整面板尺寸为 `min(360, 屏幕宽-20) × min(520, 屏幕高-100)`，位置固定在屏幕底部；桌面端与移动端状态切换时自动恢复/重置持久化数据（`frontend/src/components/HuahuoAssistant.vue`）
+
+#### Bug 修复
+
+- **退出登录后页面不跳转**：点击退出登录确认后，页面仍停留在首页且无反应。根因：`router.push('/login')` 跳转后，路由守卫检测到 `userStore.token` 和 `userStore.userInfo` 的响应式状态尚未同步更新，仍认为用户已登录，于是重定向回 `/portal`。修复：将 `router.push('/login')` 改为 `window.location.href = '/login'`，强制页面刷新，确保所有 Pinia 状态和组件实例完全重置（`frontend/src/layouts/MainLayout.vue`）
+- **AI 助手窗口拖拽范围受限**：窗口只能完全在屏幕内拖动，无法拖到屏幕边缘外。修复：放宽边界限制，允许窗口部分超出屏幕（保留 100px 最小可见区域），实现全屏自由拖动（`frontend/src/components/HuahuoAssistant.vue`）
+- **拖拽 Live2D 形象时误打开 AI 助手面板**：按住 Live2D 人物拖拽结束后，AI 助手面板会自动打开。根因：`mouseup` 事件触发时，虽然内部状态判定为拖拽，但 `openPanel()` 函数未被正确阻止。修复：新增全局 `isModelDragging` 标志，在拖拽开始时置为 `true`，`openPanel()` 函数中检测到该标志时直接返回不打开面板；`mouseup`/`touchend` 后延迟 100ms 重置标志，确保 click 事件也能正确检测（`frontend/src/components/HuahuoAssistant.vue`）
+- **Live2D 形象眼睛闪烁**：Live2D 模型眼睛出现快速闪烁。根因：`__syncExpressionState` 函数中强制重置 `ParamEyeOpen` 等表情参数为 0，然后调用 `setExpression` 设置新表情；同时 `core.update` 每帧调用 `__applyOverlayStateToCore` 也会重置这些参数。两套系统互相干扰，导致眼睛参数在 0 和表情值之间快速切换。修复：① `__syncExpressionState` 中移除对 `ParamEyeOpen`/`ParamEyeSmile`/`ParamTear` 的强制重置，让 `setExpression` 自行管理表情参数；② `__applyOverlayStateToCore` 中跳过表情相关参数，只处理 overlay 特有的参数；③ `__syncExpressionState` 增加 150ms 防抖，避免短时间内多次切换；④ `startAutoExpression` 改用递归 `setTimeout` 实现 15-25 秒随机间隔，减少切换频率（`frontend/src/components/HuahuoAssistant.vue`）
+- **竞赛详情页海报显示不全**：校外竞赛和校内竞赛详情页的 Hero 海报上半部分被裁切，无法完整显示。根因：海报图片使用 `object-fit: cover` 会裁剪图片以填充固定高度容器（`min-height: 520px`）。修复：将 `object-fit: cover` 改为 `object-fit: contain`，添加 `object-position: center top` 确保海报从顶部开始完整显示；降低 `min-height` 从 520px 到 400px，允许容器自适应图片比例（`frontend/src/views/portal/ExternalCompetitionDetail.vue`、`frontend/src/views/portal/CompetitionDetail.vue`）
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.5.1；v4.5.0 移除"当前版本"标记
+
+***
+
+
 ### v4.5.0 - 2026-05-12
 
 > 统一列表卡片尺寸与结构、封面海报铺满、按钮对齐优化
@@ -1923,6 +2043,40 @@ cd backend && flask db upgrade && python seed.py
 - **统一卡片尺寸与结构**（`frontend/src/components/portal/SparkPortalCard.vue`、`frontend/src/views/portal/ExternalCompetitions.vue`）：校外竞赛、校内竞赛、训练营、课程、产业命题列表卡片尺寸统一；卡片容器添加 `display: flex; flex-direction: column`，内容区使用 `flex: 1`，元信息区和按钮区使用 `margin-top: auto` 固定在底部，确保不同卡片高度一致时按钮对齐。
 - **统一列表卡片封面尺寸**（`frontend/src/components/portal/SparkPortalCard.vue`、`frontend/src/views/portal/ExternalCompetitions.vue`）：封面统一使用 `aspect-ratio: 16/9`；图片圆角移除，改为容器顶部圆角 `border-radius: 20px 20px 0 0`；图片使用 `object-fit: cover` 铺满封面区域。
 - **产业命题详情页海报展示优化**（`frontend/src/views/portal/IndustryTopicDetail.vue`）：移除 `.detail-hero` 固定高度和 `overflow: hidden`，海报图片改用 `height: auto` + `aspect-ratio: 16/9` + `object-fit: contain` 完整显示，不裁切；内容区改为 `position: absolute` 定位在底部，渐变遮罩从下往上渐变。
+
+
+### v4.5.0 - 2026-05-11
+
+> UI 统一改版：新增 SparkPortalCard 统一卡片组件，改造校内竞赛/训练营/课程/产业命题 4 个门户列表页，实现与校外竞赛页面一致的圆角渐变卡片风格
+
+#### 新增功能
+
+- **SparkPortalCard 统一卡片组件**：新增 [SparkPortalCard.vue](frontend/src/components/portal/SparkPortalCard.vue)，抽取为全校竞赛/训练营/课程/产业命题 4 个列表页的可复用卡片组件。支持以下 props：`gradient`（动态渐变背景）、`coverImage`（封面图）、`coverTitle`（封面标题）、`level`/`status`（等级/状态角标）、`title`、`description`、`tags`（标签数组，支持 maxTags 控制显示数量）、`metaItems`（元信息列表，含 icon + text）、`primaryActionText`/`primaryActionIcon`（主按钮）、`secondaryActionText`/`secondaryActionIcon`（次按钮）、`clickable`/`onCardClick`（卡片点击）。卡片采用 20px 大圆角、170px 渐变封面区、flex column 布局使按钮固定在底部、hover 上浮 6px + 阴影增强 + 边框变色效果。渐变封面支持 `background-size: 300%` 动态流动动画，且尊重 `prefers-reduced-motion` 用户偏好（[SparkPortalCard.vue](frontend/src/components/portal/SparkPortalCard.vue)）
+
+#### 功能修改
+
+- **CompetitionSquare.vue（校内竞赛）改造**：替换旧 `.competition-card` 卡片为 SparkPortalCard 组件。新增 `competitionGradients` 渐变映射对象（按竞赛分类自动匹配青蓝/紫蓝/翠绿/橙红等 11 种渐变色），数据加载时同步计算 `posterGradient`。原有分页、分类筛选、搜索、状态筛选、路由跳转、报名逻辑全部保留（[CompetitionSquare.vue](frontend/src/views/portal/CompetitionSquare.vue)）
+- **TrainingCamps.vue（训练营）改造**：替换旧训练营卡片为 SparkPortalCard 组件。每个训练营保留独立 `gradient` 配置（蓝青/紫粉/橙红/翠绿 4 色区分），训练营封面图通过 `campCoverMap` 映射到 `coverImage` 属性。原有课程详情弹窗（讲师团队、课程章节展开/折叠、课时播放）全部保留（[TrainingCamps.vue](frontend/src/views/portal/TrainingCamps.vue)）
+- **Courses.vue（课程）改造**：替换旧课程卡片为 SparkPortalCard 组件。每个课程保留独立 `gradient` 配置（青蓝/紫粉/翠绿/橙红/靛蓝 5 色区分），课程封面图通过 `courseCoverMap` 映射。原有课程详情弹窗（课程简介、章节展开/折叠、学习数据统计）全部保留（[Courses.vue](frontend/src/views/portal/Courses.vue)）
+- **IndustryTopics.vue（产业命题）改造**：替换旧命题卡片为 SparkPortalCard 组件。每个命题保留独立 `gradient` 配置（青蓝/翠绿/紫粉/橙红 4 色），新增 `industry` 字段（教育科技/环保双碳/金融科技/企业服务）用于标签展示。原有承接命题 ElMessageBox 确认弹窗、项目创建跳转逻辑全部保留（[IndustryTopics.vue](frontend/src/views/portal/IndustryTopics.vue)）
+- **旧卡片 CSS 清理**：4 个页面中不再使用的旧卡片样式全部移除（CompetitionSquare 移除 `.competition-card` 等 7 条规则、TrainingCamps 移除 `.camp-card` 等 15 条规则 + 孤立的 `.camp-progress` 3 条规则、Courses 移除 `.course-card` 等 10 条规则、IndustryTopics 移除 `.topic-card` 等 8 条规则），共计约 250 行冗余 CSS 被清理
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.5.0；v4.4.1 移除"当前版本"标记
+
+
+### v4.4.1 - 2026-05-11
+
+#### Bug 修复
+
+- **Live2D 切换账户后加载不出来**：修复 `HuahuoAssistant.vue` 中 `loadLive2DLibraries()` 函数的脚本缓存问题。组件 `onBeforeUnmount` 时 `delete window.initWidget`，但重新挂载时因页面上残留旧 `<script>` 标签而跳过加载新脚本，导致 `initWidget` 为 `undefined`。修复方案：加载脚本前先检测并移除旧标签，然后无条件重新创建 `<script type="module">` 加载 `waifu-tips.js`，确保每次组件挂载都能拿到可用的 `initWidget`（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **启动后首页不是登录页**：修复 `router/index.js` 中根路径 `/` 无子路由导致显示空白布局的问题。新增 `{ path: '', redirect: '/portal' }` 重定向规则，使得访问根路径时自动跳转到 `/portal`；`beforeEach` 守卫会检查 token 有效性，无 token 时进一步重定向到 `/login`（[index.js](frontend/src/router/index.js)）
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.4.1；v4.4.0 移除"当前版本"标记
+
 
 ### v4.4.0 - 2026-05-11
 
@@ -1955,6 +2109,104 @@ cd backend && flask db upgrade && python seed.py
 #### 已知问题
 
 - **校外竞赛数据仍为静态维护**（`frontend/src/data/externalCompetitions.js`）：赛事时间、状态、官网入口和海报仍需随官方通知手动更新，暂未接入后端管理接口。
+
+
+### v4.4.0 - 2026-05-11
+
+> 竞赛模块拆分：新增校外竞赛独立入口，实现校外/校内竞赛双入口分流架构
+
+#### 新增功能
+
+- **竞赛报名中心页**：新增 [CompetitionCenter.vue](frontend/src/views/portal/CompetitionCenter.vue)，作为竞赛入口分流页，提供「校外竞赛」与「校内竞赛」两张视觉差异化入口卡片。左侧校外竞赛采用蓝紫渐变并聚合国家级赛事资讯，右侧校内竞赛沿用青色主色并支持平台内报名、团队、材料、审核全流程
+- **校外竞赛数据模块**：新增 [externalCompetitions.js](frontend/src/data/externalCompetitions.js) 静态数据文件，包含 3 个真实国家级赛事（中国国际大学生创新大赛、挑战杯创业计划竞赛、三创赛）的完整信息：赛事简介、赛道/类别、时间安排、奖项设置、参赛要求、材料要求、官网链接
+- **校外竞赛列表页**：新增 [ExternalCompetitions.vue](frontend/src/views/portal/ExternalCompetitions.vue)，以卡片式布局展示校外竞赛，包含分类筛选（全部/创新创业/创业计划/电子商务）、赛事封面渐变、标签、主办方、时间、简介，每张卡片提供「查看详情」和「前往官网」按钮
+- **校外竞赛详情页**：新增 [ExternalCompetitionDetail.vue](frontend/src/views/portal/ExternalCompetitionDetail.vue)，复用校内详情页版式，包含 Hero 首屏、面包屑导航、赛事简介、赛道/类别、时间安排时间线、奖项设置、参赛要求、材料要求、官方入口 8 大内容板块。右侧吸附信息卡和操作卡提供「前往官网」按钮及「以官网通知为准」提示。支持 slug 不存在时的友好空状态展示
+- **三个新路由**：注册 `/competition-center`、`/external-competitions`、`/external-competitions/:slug` 路由，均属平台页面不显示侧边栏（[index.js](frontend/src/router/index.js)）
+
+#### 功能修改
+
+- **顶部导航重构**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 中「竞赛」更名为「校内竞赛」，并在其之前新增「校外竞赛」导航项。导航顺序调整为：首页 / 校外竞赛 / 校内竞赛 / 训练营 / 课程 / 产业命题
+- **首页入口变更**：[PortalHome.vue](frontend/src/views/portal/PortalHome.vue) 中「竞赛报名」功能卡片跳转目标从 `/competitions` 改为 `/competition-center`，引导用户先到分流页选择竞赛类型
+- **侧边栏菜单更新**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 侧边栏中「竞赛广场」更名为「校内竞赛」，与顶部导航保持一致
+- **平台页面列表扩展**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 中 `platformPages` 数组新增 `/competition-center` 和 `/external-competitions`，确保新页面不显示侧边栏
+- **导航 active 状态更新**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 中 `isTopNavActive` 函数新增校外竞赛路由判断：访问 `/external-competitions` 及其详情页时高亮「校外竞赛」；访问 `/competitions`、校内详情页、报名页及 `/competition-center` 时高亮「校内竞赛」
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.4.0；v4.3.4 移除"当前版本"标记
+
+
+### v4.3.4 - 2026-05-07
+
+> HuahuoAssistant.vue 构建语法错误修复
+
+#### Bug 修复
+
+- **HuahuoAssistant.vue 构建失败**：`initLive2D` 函数存在不完整的嵌套 `try` 语句结构，外层 `try` 缺少对应的 `catch` 或 `finally` 子句，导致 Vue 编译器报错 "Missing catch or finally clause"。修复：移除外层多余的 `try`，保留内层 `try...catch` 用于捕获初始化错误（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.3.4；v4.3.3 移除"当前版本"标记
+
+
+### v4.3.3 - 2026-05-04
+
+> 全项目死代码大清理：删除未使用组件/常量/空函数/调试日志/未使用导入
+
+#### 代码清理
+
+- **删除 `Live2dWidget.vue`**：该组件已被 `HuahuoAssistant.vue` 完全替代，项目中无任何导入引用。删除文件（[Live2dWidget.vue](frontend/src/components/Live2dWidget.vue)——已删除）
+- **删除 `useLive2d.js` 中 3 个死常量**：`META_LINE_PREFIXES`（14 项）、`META_LINE_KEYWORDS`（7 项）、`ANSWER_MARKERS`（7 项）三个数组常量定义后从未被任何代码引用，为旧的回答清洗逻辑残留（[useLive2d.js](frontend/src/composables/useLive2d.js)）
+- **删除 `HuahuoAssistant.vue` 中 6 项死代码**：① 空函数 `startStreamMouthPulse()` ② 空函数 `stopStreamMouthPulse()` ③ 空函数 `startSpeechMouthPulse()` ④ 空函数 `stopSpeechMouthPulse()`（v4.3.2 中改为空函数，现直接删除定义和所有调用点）；⑤ 未使用变量 `speechPulseInterval` ⑥ 未使用变量 `streamMouthPulseId`（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **删除 `VoiceChat.vue` 中 3 项口型脉冲死代码**：① 函数 `startSpeechMouthPulse()` ② 函数 `stopSpeechMouthPulse()` ③ 变量 `speechPulseInterval`。v4.3.2 将 Live2D 语音钩子改为空操作后，`notifyLive2dHook('onSpeechPulse', ...)` 不再生效，口型正弦波驱动完全废弃。删除函数定义、变量声明、以及 `utterance.onstart/onend/onerror` 和 `onBeforeUnmount` 中的全部调用点（[VoiceChat.vue](frontend/src/components/VoiceChat.vue)）
+- **删除 3 处调试日志**：`console.log('[Live2D] initWidget found...')`（HuahuoAssistant.vue）、`console.log('[CreateProject] Submitting data:...')`（projects/create.vue）、`console.log('[AgentPanel] fetchProjects got...')`（ai-assistant/AgentPanel.vue）
+- **删除 `HuahuoAssistant.vue` 中未使用导入 `Rank`**：从 `@element-plus/icons-vue` 导入但模板/脚本均未使用
+
+#### 文档更新
+
+- **README.md**：项目结构中移除 `Live2dWidget.vue` 条目；版本变更记录新增 v4.3.3；v4.3.2 移除"当前版本"标记
+
+
+### v4.3.2 - 2026-05-04
+
+> 浏览器兼容性统一（Firefox 滚动条）+ 口型动画系统全量禁用（移除诡异眼部动画）+ 关键字表情切换恢复（仅 onDelta 关键词驱动）
+
+#### Bug 修复
+
+- **Firefox 浏览器兼容性修复**：`-webkit-scrollbar` 伪元素在 Firefox 中无效，导致 `.expression-panel` 和 `.chat-messages` 滚动条样式丢失。修复：新增 Firefox 标准属性 `scrollbar-width: thin` 和 `scrollbar-color: rgba(6, 182, 212, 0.3) transparent`，与 Chrome 保持视觉一致（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Live2D 朗读时眼部异常一开一合**：三重根因叠加——① `onStreamStart` 和 `onSpeechStart` 强制设置 `setBaseExpression('07 星星眼')`，每次流式对话/语音朗读开始时将眼睛切换为星星眼；② `startStreamMouthPulse` / `startSpeechMouthPulse` 以正弦波驱动 `ParamMouthOpenY`（幅度 0.3-0.8，60-80ms 间隔），但模型不具备口型素材，参数值泄漏到眼部参数导致眼睛不自然开合；③ `onStreamEnd` 和 `onSpeechEnd` 强制重置为 `setBaseExpression('06 0.0')`，与入场时的星星眼形成反复切换。修复：全量禁用口型脉冲函数（改为空函数）；移除 monkey-patch `core.update` 中 `__applySpeechStateToCore` 调用；移除流式/语音开始结束的强制表情设置（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+
+#### 功能修改
+
+- **关键字驱动表情切换恢复**：`onDelta` 钩子恢复情绪关键词检测逻辑，AI 流式输出时根据文本内容自动匹配表情——开心/高兴/棒 →「02 脸红爱心」、生气/愤怒 →「03 生气」、难过/伤心 →「08 流泪」、晕/困惑 →「04 晕」、惊讶/震惊 →「07 星星眼」。不再在流式开始/结束时强制切换表情，仅通过文本关键词自然触发（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)、[useLive2d.js](frontend/src/composables/useLive2d.js)）
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.3.2；v4.3.1 移除"当前版本"标记
+
+***
+
+
+### v4.3.1 - 2026-05-04
+
+> Live2D 拖拽按钮彻底修复（坐标系统 + 事件冒泡）+ Chrome 跳动根因修复（残留 CSS + 异步时序）+ MCP 浏览器自动化回归验证
+
+#### Bug 修复
+
+- **Live2D 拖拽按钮点击后消失（第二轮彻底修复）**：三重根因——① `applyModelPosition()` 和 `restorePos()` 将视口坐标的 `left`/`top` 写入拖拽按钮（`#waifu` 子元素，`position: absolute`），导致按钮定位到视口外；② 按钮 click 事件冒泡到 `#waifu` 触发 `openPanel()` → 添加 `panel-open` class → 按钮被隐藏；③ 第 ① 点导致按钮仅在 CSS 默认位置短暂可见，一点击就被冒泡隐藏。修复：完全移除 JS 对拖拽按钮的手动定位（按钮作为 `#waifu` 子元素自动跟随）；为按钮添加 `stopPropagation()` 阻止事件冒泡（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Chrome Live2D 滑入后跳动（第二轮根因修复）**：三重根因——① `onMounted()` 中 `setTimeout(restorePos, 2000)` 在入场动画结束后 2 秒强制将 waifu 跳回保存位置；② 残留 CSS 规则 `#wafu, #waifu { transform: translateY(320px); opacity: 0; transition: ... }` 永久生效——JS 设 `transform: ''` 后 CSS cascade 的 `translateY(320px)` 重新接管，导致 waifu 瞬间偏移；③ `initWidget` 内部的 `r()` 函数异步添加 `waifu-active` class，重新触发 CSS `bottom: 0` 3 秒过渡，与 JS 动画竞争。修复：移除 `setTimeout`，将位置恢复到入场动画之前执行；移除 `#wafu, #waifu` 规则中残留的 `opacity` / `transform` / `transition` 声明；添加 `MutationObserver` 监听 `waifu-active` class，确保 JS inline 样式在所有 CSS 过渡之后作为最终样式生效（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+- **Chrome 跳动辅助修复**：`applyModelPosition()` 中 `bottom: 0` 设置增加条件判断——当保存位置使用 `top` 定位时跳过 `bottom: 0`，避免 `top`/`bottom` 同时生效导致布局冲突（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
+
+#### 安全与稳定性
+
+- **MCP 浏览器自动化回归验证**：使用 chrome-devtools MCP 工具在真实浏览器环境中完成 6 项验证——初始加载位置正确 ✓ / 拖拽按钮可见 ✓ / 拖拽保存位置成功 ✓ / 刷新后位置恢复无跳动 ✓ / 面板开关按钮显隐正确 ✓ / 按钮点击不触发面板打开 ✓
+
+#### 文档更新
+
+- **README.md**：版本变更记录新增 v4.3.1；v4.3.0 移除"当前版本"标记
+
+***
+
 
 ### v4.3.0 - 2026-05-04
 
@@ -1992,196 +2244,6 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
-### v4.3.1 - 2026-05-04
-
-> Live2D 拖拽按钮彻底修复（坐标系统 + 事件冒泡）+ Chrome 跳动根因修复（残留 CSS + 异步时序）+ MCP 浏览器自动化回归验证
-
-#### Bug 修复
-
-- **Live2D 拖拽按钮点击后消失（第二轮彻底修复）**：三重根因——① `applyModelPosition()` 和 `restorePos()` 将视口坐标的 `left`/`top` 写入拖拽按钮（`#waifu` 子元素，`position: absolute`），导致按钮定位到视口外；② 按钮 click 事件冒泡到 `#waifu` 触发 `openPanel()` → 添加 `panel-open` class → 按钮被隐藏；③ 第 ① 点导致按钮仅在 CSS 默认位置短暂可见，一点击就被冒泡隐藏。修复：完全移除 JS 对拖拽按钮的手动定位（按钮作为 `#waifu` 子元素自动跟随）；为按钮添加 `stopPropagation()` 阻止事件冒泡（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
-- **Chrome Live2D 滑入后跳动（第二轮根因修复）**：三重根因——① `onMounted()` 中 `setTimeout(restorePos, 2000)` 在入场动画结束后 2 秒强制将 waifu 跳回保存位置；② 残留 CSS 规则 `#wafu, #waifu { transform: translateY(320px); opacity: 0; transition: ... }` 永久生效——JS 设 `transform: ''` 后 CSS cascade 的 `translateY(320px)` 重新接管，导致 waifu 瞬间偏移；③ `initWidget` 内部的 `r()` 函数异步添加 `waifu-active` class，重新触发 CSS `bottom: 0` 3 秒过渡，与 JS 动画竞争。修复：移除 `setTimeout`，将位置恢复到入场动画之前执行；移除 `#wafu, #waifu` 规则中残留的 `opacity` / `transform` / `transition` 声明；添加 `MutationObserver` 监听 `waifu-active` class，确保 JS inline 样式在所有 CSS 过渡之后作为最终样式生效（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
-- **Chrome 跳动辅助修复**：`applyModelPosition()` 中 `bottom: 0` 设置增加条件判断——当保存位置使用 `top` 定位时跳过 `bottom: 0`，避免 `top`/`bottom` 同时生效导致布局冲突（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
-
-#### 安全与稳定性
-
-- **MCP 浏览器自动化回归验证**：使用 chrome-devtools MCP 工具在真实浏览器环境中完成 6 项验证——初始加载位置正确 ✓ / 拖拽按钮可见 ✓ / 拖拽保存位置成功 ✓ / 刷新后位置恢复无跳动 ✓ / 面板开关按钮显隐正确 ✓ / 按钮点击不触发面板打开 ✓
-
-#### 文档更新
-
-- **README.md**：版本变更记录新增 v4.3.1；v4.3.0 移除"当前版本"标记
-
-***
-
-### v4.3.2 - 2026-05-04
-
-> 浏览器兼容性统一（Firefox 滚动条）+ 口型动画系统全量禁用（移除诡异眼部动画）+ 关键字表情切换恢复（仅 onDelta 关键词驱动）
-
-#### Bug 修复
-
-- **Firefox 浏览器兼容性修复**：`-webkit-scrollbar` 伪元素在 Firefox 中无效，导致 `.expression-panel` 和 `.chat-messages` 滚动条样式丢失。修复：新增 Firefox 标准属性 `scrollbar-width: thin` 和 `scrollbar-color: rgba(6, 182, 212, 0.3) transparent`，与 Chrome 保持视觉一致（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
-- **Live2D 朗读时眼部异常一开一合**：三重根因叠加——① `onStreamStart` 和 `onSpeechStart` 强制设置 `setBaseExpression('07 星星眼')`，每次流式对话/语音朗读开始时将眼睛切换为星星眼；② `startStreamMouthPulse` / `startSpeechMouthPulse` 以正弦波驱动 `ParamMouthOpenY`（幅度 0.3-0.8，60-80ms 间隔），但模型不具备口型素材，参数值泄漏到眼部参数导致眼睛不自然开合；③ `onStreamEnd` 和 `onSpeechEnd` 强制重置为 `setBaseExpression('06 0.0')`，与入场时的星星眼形成反复切换。修复：全量禁用口型脉冲函数（改为空函数）；移除 monkey-patch `core.update` 中 `__applySpeechStateToCore` 调用；移除流式/语音开始结束的强制表情设置（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
-
-#### 功能修改
-
-- **关键字驱动表情切换恢复**：`onDelta` 钩子恢复情绪关键词检测逻辑，AI 流式输出时根据文本内容自动匹配表情——开心/高兴/棒 →「02 脸红爱心」、生气/愤怒 →「03 生气」、难过/伤心 →「08 流泪」、晕/困惑 →「04 晕」、惊讶/震惊 →「07 星星眼」。不再在流式开始/结束时强制切换表情，仅通过文本关键词自然触发（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)、[useLive2d.js](frontend/src/composables/useLive2d.js)）
-
-#### 文档更新
-
-- **README.md**：版本变更记录新增 v4.3.2；v4.3.1 移除"当前版本"标记
-
-***
-
-### v4.3.3 - 2026-05-04
-
-> 全项目死代码大清理：删除未使用组件/常量/空函数/调试日志/未使用导入
-
-#### 代码清理
-
-- **删除 `Live2dWidget.vue`**：该组件已被 `HuahuoAssistant.vue` 完全替代，项目中无任何导入引用。删除文件（[Live2dWidget.vue](frontend/src/components/Live2dWidget.vue)——已删除）
-- **删除 `useLive2d.js` 中 3 个死常量**：`META_LINE_PREFIXES`（14 项）、`META_LINE_KEYWORDS`（7 项）、`ANSWER_MARKERS`（7 项）三个数组常量定义后从未被任何代码引用，为旧的回答清洗逻辑残留（[useLive2d.js](frontend/src/composables/useLive2d.js)）
-- **删除 `HuahuoAssistant.vue` 中 6 项死代码**：① 空函数 `startStreamMouthPulse()` ② 空函数 `stopStreamMouthPulse()` ③ 空函数 `startSpeechMouthPulse()` ④ 空函数 `stopSpeechMouthPulse()`（v4.3.2 中改为空函数，现直接删除定义和所有调用点）；⑤ 未使用变量 `speechPulseInterval` ⑥ 未使用变量 `streamMouthPulseId`（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
-- **删除 `VoiceChat.vue` 中 3 项口型脉冲死代码**：① 函数 `startSpeechMouthPulse()` ② 函数 `stopSpeechMouthPulse()` ③ 变量 `speechPulseInterval`。v4.3.2 将 Live2D 语音钩子改为空操作后，`notifyLive2dHook('onSpeechPulse', ...)` 不再生效，口型正弦波驱动完全废弃。删除函数定义、变量声明、以及 `utterance.onstart/onend/onerror` 和 `onBeforeUnmount` 中的全部调用点（[VoiceChat.vue](frontend/src/components/VoiceChat.vue)）
-- **删除 3 处调试日志**：`console.log('[Live2D] initWidget found...')`（HuahuoAssistant.vue）、`console.log('[CreateProject] Submitting data:...')`（projects/create.vue）、`console.log('[AgentPanel] fetchProjects got...')`（ai-assistant/AgentPanel.vue）
-- **删除 `HuahuoAssistant.vue` 中未使用导入 `Rank`**：从 `@element-plus/icons-vue` 导入但模板/脚本均未使用
-
-#### 文档更新
-
-- **README.md**：项目结构中移除 `Live2dWidget.vue` 条目；版本变更记录新增 v4.3.3；v4.3.2 移除"当前版本"标记
-
-### v4.3.4 - 2026-05-07
-
-> HuahuoAssistant.vue 构建语法错误修复
-
-#### Bug 修复
-
-- **HuahuoAssistant.vue 构建失败**：`initLive2D` 函数存在不完整的嵌套 `try` 语句结构，外层 `try` 缺少对应的 `catch` 或 `finally` 子句，导致 Vue 编译器报错 "Missing catch or finally clause"。修复：移除外层多余的 `try`，保留内层 `try...catch` 用于捕获初始化错误（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
-
-#### 文档更新
-
-- **README.md**：版本变更记录新增 v4.3.4；v4.3.3 移除"当前版本"标记
-
-### v4.4.0 - 2026-05-11
-
-> 竞赛模块拆分：新增校外竞赛独立入口，实现校外/校内竞赛双入口分流架构
-
-#### 新增功能
-
-- **竞赛报名中心页**：新增 [CompetitionCenter.vue](frontend/src/views/portal/CompetitionCenter.vue)，作为竞赛入口分流页，提供「校外竞赛」与「校内竞赛」两张视觉差异化入口卡片。左侧校外竞赛采用蓝紫渐变并聚合国家级赛事资讯，右侧校内竞赛沿用青色主色并支持平台内报名、团队、材料、审核全流程
-- **校外竞赛数据模块**：新增 [externalCompetitions.js](frontend/src/data/externalCompetitions.js) 静态数据文件，包含 3 个真实国家级赛事（中国国际大学生创新大赛、挑战杯创业计划竞赛、三创赛）的完整信息：赛事简介、赛道/类别、时间安排、奖项设置、参赛要求、材料要求、官网链接
-- **校外竞赛列表页**：新增 [ExternalCompetitions.vue](frontend/src/views/portal/ExternalCompetitions.vue)，以卡片式布局展示校外竞赛，包含分类筛选（全部/创新创业/创业计划/电子商务）、赛事封面渐变、标签、主办方、时间、简介，每张卡片提供「查看详情」和「前往官网」按钮
-- **校外竞赛详情页**：新增 [ExternalCompetitionDetail.vue](frontend/src/views/portal/ExternalCompetitionDetail.vue)，复用校内详情页版式，包含 Hero 首屏、面包屑导航、赛事简介、赛道/类别、时间安排时间线、奖项设置、参赛要求、材料要求、官方入口 8 大内容板块。右侧吸附信息卡和操作卡提供「前往官网」按钮及「以官网通知为准」提示。支持 slug 不存在时的友好空状态展示
-- **三个新路由**：注册 `/competition-center`、`/external-competitions`、`/external-competitions/:slug` 路由，均属平台页面不显示侧边栏（[index.js](frontend/src/router/index.js)）
-
-#### 功能修改
-
-- **顶部导航重构**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 中「竞赛」更名为「校内竞赛」，并在其之前新增「校外竞赛」导航项。导航顺序调整为：首页 / 校外竞赛 / 校内竞赛 / 训练营 / 课程 / 产业命题
-- **首页入口变更**：[PortalHome.vue](frontend/src/views/portal/PortalHome.vue) 中「竞赛报名」功能卡片跳转目标从 `/competitions` 改为 `/competition-center`，引导用户先到分流页选择竞赛类型
-- **侧边栏菜单更新**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 侧边栏中「竞赛广场」更名为「校内竞赛」，与顶部导航保持一致
-- **平台页面列表扩展**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 中 `platformPages` 数组新增 `/competition-center` 和 `/external-competitions`，确保新页面不显示侧边栏
-- **导航 active 状态更新**：[MainLayout.vue](frontend/src/layouts/MainLayout.vue) 中 `isTopNavActive` 函数新增校外竞赛路由判断：访问 `/external-competitions` 及其详情页时高亮「校外竞赛」；访问 `/competitions`、校内详情页、报名页及 `/competition-center` 时高亮「校内竞赛」
-
-#### 文档更新
-
-- **README.md**：版本变更记录新增 v4.4.0；v4.3.4 移除"当前版本"标记
-
-### v4.4.1 - 2026-05-11
-
-#### Bug 修复
-
-- **Live2D 切换账户后加载不出来**：修复 `HuahuoAssistant.vue` 中 `loadLive2DLibraries()` 函数的脚本缓存问题。组件 `onBeforeUnmount` 时 `delete window.initWidget`，但重新挂载时因页面上残留旧 `<script>` 标签而跳过加载新脚本，导致 `initWidget` 为 `undefined`。修复方案：加载脚本前先检测并移除旧标签，然后无条件重新创建 `<script type="module">` 加载 `waifu-tips.js`，确保每次组件挂载都能拿到可用的 `initWidget`（[HuahuoAssistant.vue](frontend/src/components/HuahuoAssistant.vue)）
-- **启动后首页不是登录页**：修复 `router/index.js` 中根路径 `/` 无子路由导致显示空白布局的问题。新增 `{ path: '', redirect: '/portal' }` 重定向规则，使得访问根路径时自动跳转到 `/portal`；`beforeEach` 守卫会检查 token 有效性，无 token 时进一步重定向到 `/login`（[index.js](frontend/src/router/index.js)）
-
-#### 文档更新
-
-- **README.md**：版本变更记录新增 v4.4.1；v4.4.0 移除"当前版本"标记
-
-### v4.5.1 - 2026-05-11
-
-> AI 助手窗口全面亮色化改造 + 拖拽缩放交互修复 + 项目智能体面板主题适配
-
-#### 功能修改
-
-- **AI 助手窗口亮色主题改造**（`frontend/src/components/HuahuoAssistant.vue`）：主背景从 `rgba(15, 23, 42, 0.96)` 暗色改为 `#ffffff` 纯白；强调色从 `#06b6d4`（青色）统一替换为 `#3b82f6`（蓝色）；主文字色从 `#e2e8f0`（浅色）改为 `#1e293b`（深色）；次要文字色从 `#94a3b8`/`#cbd5e1` 改为 `#475569`/`#64748b`；用户消息气泡从青色半透明改为蓝色半透明 `rgba(59, 130, 246, 0.12)`；助手消息气泡从深色半透明改为浅灰 `#f1f5f9`；输入区域背景从深色改为 `#f8fafc`；表情面板、分析结果区、markdown 渲染区全部适配亮色主题；所有 Element Plus 组件覆盖样式（表单标签、输入框、单选按钮、下拉菜单、分割线）同步更新为蓝色系亮色风格
-- **项目智能体面板亮色适配**（`frontend/src/views/ai-assistant/AgentPanel.vue`）：能力卡片背景从青色半透明改为蓝色半透明；文字颜色从浅色改为深色；导航结果、能力结果区域背景从深色半透明改为 `#f8fafc`；所有 Element Plus 组件覆盖样式同步更新为蓝色系亮色风格
-
-#### Bug 修复
-
-- **拖拽缩放方向反直觉**：缩放手柄原在左上角，`dx = resizeState.startX - e.clientX` 导致鼠标向右下拖动时窗口变小。修复：手柄移至右下角，`dx = e.clientX - resizeState.startX`，鼠标向右下拖动时窗口自然变大（`frontend/src/components/HuahuoAssistant.vue`）
-- **拖拽与缩放事件冲突**：缩放时拖拽事件同时触发导致窗口位置异常跳动。修复：`startDrag`/`startDragTouch` 增加 `resizeState.resizing` 检查；`onDrag`/`onDragTouch` 增加边界限制（`Math.max(0, Math.min(newX, maxX))`）；`startResize` 添加 `e.stopPropagation()` 阻止事件冒泡（`frontend/src/components/HuahuoAssistant.vue`）
-- **标题栏按钮误触发拖拽**：整个 `panel-header` 区域都可拖拽，导致点击按钮时也触发窗口移动。修复：将拖拽事件从 `panel-header` 移到独立的 `.header-drag-area`（仅标题和标签区域），按钮区域不再触发拖拽（`frontend/src/components/HuahuoAssistant.vue`）
-
-#### 安全与稳定性
-
-- **移动端适配**：新增 `isMobile` 检测（`window.innerWidth <= 768`），移动端自动调整面板尺寸为 `min(360, 屏幕宽-20) × min(520, 屏幕高-100)`，位置固定在屏幕底部；桌面端与移动端状态切换时自动恢复/重置持久化数据（`frontend/src/components/HuahuoAssistant.vue`）
-
-#### Bug 修复
-
-- **退出登录后页面不跳转**：点击退出登录确认后，页面仍停留在首页且无反应。根因：`router.push('/login')` 跳转后，路由守卫检测到 `userStore.token` 和 `userStore.userInfo` 的响应式状态尚未同步更新，仍认为用户已登录，于是重定向回 `/portal`。修复：将 `router.push('/login')` 改为 `window.location.href = '/login'`，强制页面刷新，确保所有 Pinia 状态和组件实例完全重置（`frontend/src/layouts/MainLayout.vue`）
-- **AI 助手窗口拖拽范围受限**：窗口只能完全在屏幕内拖动，无法拖到屏幕边缘外。修复：放宽边界限制，允许窗口部分超出屏幕（保留 100px 最小可见区域），实现全屏自由拖动（`frontend/src/components/HuahuoAssistant.vue`）
-- **拖拽 Live2D 形象时误打开 AI 助手面板**：按住 Live2D 人物拖拽结束后，AI 助手面板会自动打开。根因：`mouseup` 事件触发时，虽然内部状态判定为拖拽，但 `openPanel()` 函数未被正确阻止。修复：新增全局 `isModelDragging` 标志，在拖拽开始时置为 `true`，`openPanel()` 函数中检测到该标志时直接返回不打开面板；`mouseup`/`touchend` 后延迟 100ms 重置标志，确保 click 事件也能正确检测（`frontend/src/components/HuahuoAssistant.vue`）
-- **Live2D 形象眼睛闪烁**：Live2D 模型眼睛出现快速闪烁。根因：`__syncExpressionState` 函数中强制重置 `ParamEyeOpen` 等表情参数为 0，然后调用 `setExpression` 设置新表情；同时 `core.update` 每帧调用 `__applyOverlayStateToCore` 也会重置这些参数。两套系统互相干扰，导致眼睛参数在 0 和表情值之间快速切换。修复：① `__syncExpressionState` 中移除对 `ParamEyeOpen`/`ParamEyeSmile`/`ParamTear` 的强制重置，让 `setExpression` 自行管理表情参数；② `__applyOverlayStateToCore` 中跳过表情相关参数，只处理 overlay 特有的参数；③ `__syncExpressionState` 增加 150ms 防抖，避免短时间内多次切换；④ `startAutoExpression` 改用递归 `setTimeout` 实现 15-25 秒随机间隔，减少切换频率（`frontend/src/components/HuahuoAssistant.vue`）
-- **竞赛详情页海报显示不全**：校外竞赛和校内竞赛详情页的 Hero 海报上半部分被裁切，无法完整显示。根因：海报图片使用 `object-fit: cover` 会裁剪图片以填充固定高度容器（`min-height: 520px`）。修复：将 `object-fit: cover` 改为 `object-fit: contain`，添加 `object-position: center top` 确保海报从顶部开始完整显示；降低 `min-height` 从 520px 到 400px，允许容器自适应图片比例（`frontend/src/views/portal/ExternalCompetitionDetail.vue`、`frontend/src/views/portal/CompetitionDetail.vue`）
-
-#### 文档更新
-
-- **README.md**：版本变更记录新增 v4.5.1；v4.5.0 移除"当前版本"标记
-
-***
-
-### v4.5.2 - 2026-05-12（当前版本）
-
-> 产业命题模块补齐：新增产业命题详情页 + 数据抽离 + 列表页改造
-
-#### 新增功能
-
-- **产业命题详情页**：新增 [IndustryTopicDetail.vue](frontend/src/views/portal/IndustryTopicDetail.vue)，产业命题模块拥有与校外竞赛、校内竞赛、训练营、课程一致的独立详情展示页。页面结构包含：深青蓝渐变 Hero（标题、企业、难度/周期/预算标签、摘要、承接 CTA + 返回列表）、面包屑导航、左右分栏布局（16:8）、8 个内容章节（命题背景、需求说明、技术方向标签、交付物要求、周期安排时间线、奖励与支持高亮区、适合团队信息网格、评分验收标准列表）、右侧 sticky 吸附操作卡（命题信息 + 承接命题 + 返回列表 + 命题标签）、底部再度 CTA 引导区、空状态友好提示页。视觉风格与现有详情页保持统一（18px 大圆角卡片、靛紫点缀色、36px 章节图标、柔和阴影、移动端 768px 断点自适应）
-- **产业命题数据抽离**：新增 [industryTopics.js](frontend/src/data/industryTopics.js)，将 4 个命题的完整数据从组件内联抽离到独立数据文件，包含 `getIndustryTopicById(id)` 查询函数。每个命题数据从原始的 10 个字段扩展为 17 个字段：新增 `status`、`summary`、`techDirections`、`schedule`（5 阶段时间线）、`evaluation`（评分权重）、`support`（企业支持）、`suitableTeam`（团队画像），数据字段从 `bonus` 改为语义化字段 `reward`/`budget`。列表页和详情页共享同一份数据源，避免重复维护
-- **产业命题详情路由**：新增 `/industry-topics/:id` 路由，注册为 `IndustryTopicDetail`（组件懒加载），meta 设置 `platformPage: true` + `hidden: true`（与校外竞赛详情、校内竞赛详情路由配置一致），`/accept-topic/:id` 承接路由不受影响
-
-#### 功能修改
-
-- **IndustryTopics.vue 列表页改造**：卡片新增 `secondaryActionText="查看详情"` 按钮（含 `View` 图标），新增 `onCardClick` 卡片主体点击跳转详情页，`onPrimaryClick`（承接命题）保留 `@click.stop` 阻止冒泡；数据引用从内联 `ref([])` 改为导入 `@/data/industryTopics`；`handleAccept` 简化为直接路由跳转 `/accept-topic/:id`（带 query 参数 `topic_title`/`topic_company`），移除旧的 ElMessageBox 确认弹窗和异步延迟逻辑；移除约 100 行内联数据定义
-
-#### 文档更新
-
-- **README.md**：版本变更记录新增 v4.5.2；v4.5.1 移除"当前版本"标记
-
-***
-
-### v4.5.3 - 2026-05-12（当前版本）
-
-> 竞赛详情页海报显示修复：校内竞赛/校外竞赛海报改为自适应高度，与课程详情页保持一致
-
-#### Bug 修复
-
-- **校内竞赛详情页海报显示不全**（`frontend/src/views/portal/CompetitionDetail.vue`）：`.detail-poster` 移除固定 `min-height: 400px` 和 `overflow: hidden`；`.poster-img` 改为 `height: auto` + `aspect-ratio: 16/9`；`.poster-fallback` 移除绝对定位，改为自适应高度布局
-- **校外竞赛详情页海报显示不全**（`frontend/src/views/portal/ExternalCompetitionDetail.vue`）：`.detail-hero` 移除固定 `min-height: 400px` 和 `overflow: hidden`；`.hero-image` 改为 `height: auto` + `aspect-ratio: 16/9`；`.hero-overlay` 改为只覆盖底部区域
-
-#### 文档更新
-
-- **README.md**：版本变更记录新增 v4.5.3；v4.5.2 移除"当前版本"标记
-
-***
-
-### v4.5.0 - 2026-05-11
-
-> UI 统一改版：新增 SparkPortalCard 统一卡片组件，改造校内竞赛/训练营/课程/产业命题 4 个门户列表页，实现与校外竞赛页面一致的圆角渐变卡片风格
-
-#### 新增功能
-
-- **SparkPortalCard 统一卡片组件**：新增 [SparkPortalCard.vue](frontend/src/components/portal/SparkPortalCard.vue)，抽取为全校竞赛/训练营/课程/产业命题 4 个列表页的可复用卡片组件。支持以下 props：`gradient`（动态渐变背景）、`coverImage`（封面图）、`coverTitle`（封面标题）、`level`/`status`（等级/状态角标）、`title`、`description`、`tags`（标签数组，支持 maxTags 控制显示数量）、`metaItems`（元信息列表，含 icon + text）、`primaryActionText`/`primaryActionIcon`（主按钮）、`secondaryActionText`/`secondaryActionIcon`（次按钮）、`clickable`/`onCardClick`（卡片点击）。卡片采用 20px 大圆角、170px 渐变封面区、flex column 布局使按钮固定在底部、hover 上浮 6px + 阴影增强 + 边框变色效果。渐变封面支持 `background-size: 300%` 动态流动动画，且尊重 `prefers-reduced-motion` 用户偏好（[SparkPortalCard.vue](frontend/src/components/portal/SparkPortalCard.vue)）
-
-#### 功能修改
-
-- **CompetitionSquare.vue（校内竞赛）改造**：替换旧 `.competition-card` 卡片为 SparkPortalCard 组件。新增 `competitionGradients` 渐变映射对象（按竞赛分类自动匹配青蓝/紫蓝/翠绿/橙红等 11 种渐变色），数据加载时同步计算 `posterGradient`。原有分页、分类筛选、搜索、状态筛选、路由跳转、报名逻辑全部保留（[CompetitionSquare.vue](frontend/src/views/portal/CompetitionSquare.vue)）
-- **TrainingCamps.vue（训练营）改造**：替换旧训练营卡片为 SparkPortalCard 组件。每个训练营保留独立 `gradient` 配置（蓝青/紫粉/橙红/翠绿 4 色区分），训练营封面图通过 `campCoverMap` 映射到 `coverImage` 属性。原有课程详情弹窗（讲师团队、课程章节展开/折叠、课时播放）全部保留（[TrainingCamps.vue](frontend/src/views/portal/TrainingCamps.vue)）
-- **Courses.vue（课程）改造**：替换旧课程卡片为 SparkPortalCard 组件。每个课程保留独立 `gradient` 配置（青蓝/紫粉/翠绿/橙红/靛蓝 5 色区分），课程封面图通过 `courseCoverMap` 映射。原有课程详情弹窗（课程简介、章节展开/折叠、学习数据统计）全部保留（[Courses.vue](frontend/src/views/portal/Courses.vue)）
-- **IndustryTopics.vue（产业命题）改造**：替换旧命题卡片为 SparkPortalCard 组件。每个命题保留独立 `gradient` 配置（青蓝/翠绿/紫粉/橙红 4 色），新增 `industry` 字段（教育科技/环保双碳/金融科技/企业服务）用于标签展示。原有承接命题 ElMessageBox 确认弹窗、项目创建跳转逻辑全部保留（[IndustryTopics.vue](frontend/src/views/portal/IndustryTopics.vue)）
-- **旧卡片 CSS 清理**：4 个页面中不再使用的旧卡片样式全部移除（CompetitionSquare 移除 `.competition-card` 等 7 条规则、TrainingCamps 移除 `.camp-card` 等 15 条规则 + 孤立的 `.camp-progress` 3 条规则、Courses 移除 `.course-card` 等 10 条规则、IndustryTopics 移除 `.topic-card` 等 8 条规则），共计约 250 行冗余 CSS 被清理
-
-#### 文档更新
-
-- **README.md**：版本变更记录新增 v4.5.0；v4.4.1 移除"当前版本"标记
 
 ### v4.2.0 - 2026-05-04
 
@@ -2208,6 +2270,7 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
+
 ### v4.1.1 - 2026-05-03
 
 > AI 智能体前后端参数校验一致性修复 + Live2D 表情自动切换 + 权限矩阵/API 文档补全
@@ -2230,6 +2293,7 @@ cd backend && flask db upgrade && python seed.py
 - **AI 项目智能体特色功能描述更新**：从"5 大 AI 能力"更新为"12 大 AI 能力"
 
 ***
+
 
 ### v4.1.0 - 2026-05-03
 
@@ -2265,6 +2329,34 @@ cd backend && flask db upgrade && python seed.py
 - **README 更新**：AI 智能对话章节补充 qwen-plus 模型和统一对话路由说明；后端技术栈新增通义千问 qwen-plus；环境变量配置新增 GLM\_API\_KEY / GLM\_BASE\_URL / GLM\_MODEL；环境变量检查清单新增 3 项；常见问题更新 AI 对话失败排查步骤；版本变更记录新增 v4.1.0
 
 ***
+
+
+### v4.0.1 - 2026-05-02（引导系统全面修订）
+
+> 四角色引导系统 Bug 修复 + AI 智能体能力接入 + routePath 补全
+
+#### Bug 修复
+
+- **学生引导第 2 步路由指向空白页**：`routePath: '/'` 改为 `routePath: '/portal'`，导航到 `/` 只渲染空白的 MainLayout 不显示首页内容（[guide.js](file:///E:/LEAR-CODE-NEW/软件工程/my-keshe/innovation-competition-platform/frontend/src/stores/guide.js) 第 2 步）
+- **所有角色引导欢迎标题版本号过时**：学生写 v3.0、教师/评委/管理员写 v2.0，全部移除版本号统一为「欢迎使用创新创业平台」
+
+#### 功能修改
+
+- **四角色引导全部接入 AI 智能体能力**：学生新增"AI 项目智能体"步骤（介绍 5 大能力 + 快捷入口提示）；教师新增 AI 智能体步骤（评审辅助/BP 体检/材料问答）；评委新增 AI 智能体步骤（带"评审辅助仅返回定性分析"提示）；管理员新增 AI 智能体步骤（全部 5 大能力）
+- **教师第 4 步「项目审核」补充** **`routePath: '/project-review'`**：引导不再停在空中心步骤，自动导航到审核页
+- **评委第 5 步「评审记录」补充** **`routePath: '/review-history'`**：引导自动跳转到评审记录页
+- **管理员第 5/7 步补充** **`routePath`**：报名管理和评审管理步骤补充导航路径
+- **引导步骤总数重新统计**：学生 12 步 / 教师 9 步 / 评委 8 步 / 管理员 11 步
+
+#### 文档更新
+
+- **README 变更记录撰写规范**：在版本变更记录板块顶部新增 6 分类标准 + 版本号规则 + 撰写原则
+- 全局引导系统描述从"学生 14 步"更新为实际步数
+- `.gitignore` 新增 `frontend/dist/` 和 `backend/vector_stores/` 忽略规则
+- `start.bat` 每次启动强制 `npm install` 确保依赖最新
+
+***
+
 
 ### v4.0.0 - 2026-05-02
 
@@ -2334,31 +2426,6 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
-### v4.0.1 - 2026-05-02（引导系统全面修订）
-
-> 四角色引导系统 Bug 修复 + AI 智能体能力接入 + routePath 补全
-
-#### Bug 修复
-
-- **学生引导第 2 步路由指向空白页**：`routePath: '/'` 改为 `routePath: '/portal'`，导航到 `/` 只渲染空白的 MainLayout 不显示首页内容（[guide.js](file:///E:/LEAR-CODE-NEW/软件工程/my-keshe/innovation-competition-platform/frontend/src/stores/guide.js) 第 2 步）
-- **所有角色引导欢迎标题版本号过时**：学生写 v3.0、教师/评委/管理员写 v2.0，全部移除版本号统一为「欢迎使用创新创业平台」
-
-#### 功能修改
-
-- **四角色引导全部接入 AI 智能体能力**：学生新增"AI 项目智能体"步骤（介绍 5 大能力 + 快捷入口提示）；教师新增 AI 智能体步骤（评审辅助/BP 体检/材料问答）；评委新增 AI 智能体步骤（带"评审辅助仅返回定性分析"提示）；管理员新增 AI 智能体步骤（全部 5 大能力）
-- **教师第 4 步「项目审核」补充** **`routePath: '/project-review'`**：引导不再停在空中心步骤，自动导航到审核页
-- **评委第 5 步「评审记录」补充** **`routePath: '/review-history'`**：引导自动跳转到评审记录页
-- **管理员第 5/7 步补充** **`routePath`**：报名管理和评审管理步骤补充导航路径
-- **引导步骤总数重新统计**：学生 12 步 / 教师 9 步 / 评委 8 步 / 管理员 11 步
-
-#### 文档更新
-
-- **README 变更记录撰写规范**：在版本变更记录板块顶部新增 6 分类标准 + 版本号规则 + 撰写原则
-- 全局引导系统描述从"学生 14 步"更新为实际步数
-- `.gitignore` 新增 `frontend/dist/` 和 `backend/vector_stores/` 忽略规则
-- `start.bat` 每次启动强制 `npm install` 确保依赖最新
-
-***
 
 ### v3.0.0 - 2026-05-01
 
@@ -2413,6 +2480,7 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
+
 ### v2.10.0 - 2026-05-01
 
 > Live2D拖拽按钮常驻、侧边栏选中状态修复、创建项目快速填充、产业命题承接功能
@@ -2433,6 +2501,7 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
+
 ### v2.9.0 - 2026-05-01
 
 > 训练营/课程海报修复、数字雨全屏铺满、速度加快
@@ -2448,6 +2517,7 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
+
 ### v2.8.0 - 2026-05-01
 
 > 首页数据流动画改为科幻数字雨风格
@@ -2457,6 +2527,7 @@ cd backend && flask db upgrade && python seed.py
 - **数字雨风格重设计**：《黑客帝国》风格数字雨（十六进制字符 + 编程符号 + 头部高亮 + 拖尾残影 + 水平扫描线），替代原粒子动画
 
 ***
+
 
 ### v2.7.0 - 2026-05-01
 
@@ -2474,6 +2545,7 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
+
 ### v2.6.0 - 2026-05-01
 
 > 竞赛详情数据强制生成、海报裁切修复、Live2D全屏拖拽优化、我的赛事海报图、证书查看详情弹窗、首页烟花数据流
@@ -2489,6 +2561,7 @@ cd backend && flask db upgrade && python seed.py
 - **竞赛海报裁切**：`object-fit: cover` → `contain`，移除 `overflow: hidden`
 - **Live2D 全屏拖拽坐标系修复**：`bottom` 定位改为 `top` 定位
 - **我的赛事卡片图片**：导入本地竞赛图片映射
+
 
 ### v2.4.0 - 2026-05-01
 
@@ -2511,6 +2584,7 @@ cd backend && flask db upgrade && python seed.py
 - **竞赛详情页封面海报缺失**：使用本地竞赛海报图片替代渐变色占位
 
 ***
+
 
 ### v2.3.0 - 2026-05-01
 
@@ -2538,6 +2612,7 @@ cd backend && flask db upgrade && python seed.py
 
 ***
 
+
 ### v2.2.0 - 2026-05-01
 
 > AI 助手与 Live2D 形象整合为全局浮动组件，CSP 修复，四角色引导更新
@@ -2557,6 +2632,7 @@ cd backend && flask db upgrade && python seed.py
 - **AI 对话和 Live2D 功能重复**：原来 AI 对话独立页面 + Live2D 独立浮动组件 + VoiceChat 又是另一个组件，三者功能重叠，整合为 `HuahuoAssistant.vue`
 
 ***
+
 
 ### v2.1.0 - 2026-05-01
 
@@ -2581,6 +2657,7 @@ cd backend && flask db upgrade && python seed.py
 - **评委"开始评审"按钮无响应**：`pending.vue` 缺少 `@click` 绑定
 
 ***
+
 
 ### v2.0.0 - 2026-04-30
 

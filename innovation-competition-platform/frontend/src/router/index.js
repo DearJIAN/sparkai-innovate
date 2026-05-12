@@ -65,6 +65,10 @@ const allRoutes = [
   { path: '/industry-topics/:id', name: 'IndustryTopicDetail', component: () => import('@/views/portal/IndustryTopicDetail.vue'), meta: withPlatformMeta({ title: '产业命题详情', icon: 'Briefcase', hidden: true, public: true }) },
   { path: '/accept-topic/:id', name: 'AcceptTopic', component: () => import('@/views/portal/AcceptTopic.vue'), meta: withPlatformMeta({ title: '承接命题', icon: 'Briefcase', hidden: true, roles: ['student'] }) },
   { path: '/certificates', name: 'Certificates', component: () => import('@/views/portal/Certificates.vue'), meta: withPlatformMeta({ title: '证书成果', icon: 'Medal', roles: ['student'] }) },
+  { path: '/assessment', name: 'OnlineAssessment', component: () => import('@/views/portal/OnlineAssessment.vue'), meta: withPlatformMeta({ title: '在线测评', icon: 'TrendCharts', public: true }) },
+  { path: '/assessment/:id', name: 'AssessmentDetail', component: () => import('@/views/portal/AssessmentDetail.vue'), meta: withPlatformMeta({ title: '开始测评', icon: 'TrendCharts', hidden: true, public: true }) },
+  { path: '/assessment/:id/result', name: 'AssessmentResult', component: () => import('@/views/portal/AssessmentResult.vue'), meta: withPlatformMeta({ title: '测评结果', icon: 'TrendCharts', hidden: true, public: true }) },
+  { path: '/assessment/:id/coming-soon', name: 'AssessmentComingSoon', component: () => import('@/views/portal/AssessmentComingSoon.vue'), meta: withPlatformMeta({ title: '建设中', icon: 'TrendCharts', hidden: true, public: true }) },
 
   // 通用路由（所有角色可访问）
   { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/index.vue'), meta: { title: '工作台', icon: 'HomeFilled' } },

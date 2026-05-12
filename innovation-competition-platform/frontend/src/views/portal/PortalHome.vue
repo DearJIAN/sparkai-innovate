@@ -643,6 +643,15 @@ const allCards = [
     path: '/certificates',
     color: 'red',
     roles: ['student']
+  },
+  {
+    key: 'assessment',
+    title: '在线测评',
+    desc: '获取创业能力、团队协作等能力画像',
+    icon: TrendCharts,
+    path: '/assessment',
+    color: 'indigo',
+    roles: ['student', 'teacher', 'judge', 'admin']
   }
 ]
 
