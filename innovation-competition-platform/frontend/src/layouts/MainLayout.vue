@@ -169,7 +169,7 @@ const platformPages = [
   '/portal', '/competition-center', '/external-competitions',
   '/competitions', '/training-camps', '/courses',
   '/industry-topics', '/my-registrations', '/certificates',
-  '/assessment'
+  '/assessment', '/ai-material-evaluation'
 ]
 
 const isPlatformPage = computed(() => {
@@ -196,6 +196,7 @@ const topNavConfig = [
   { path: '/courses', title: '课程', roles: ['student', 'teacher', 'judge', 'admin'] },
   { path: '/industry-topics', title: '产业命题', roles: ['student', 'teacher', 'judge', 'admin'] },
   { path: '/assessment', title: '在线测评', roles: ['student', 'teacher', 'judge', 'admin'] },
+  { path: '/ai-material-evaluation', title: 'AI材料评估', roles: ['student', 'teacher', 'judge', 'admin'] },
   { path: '/my-projects', title: '我的项目', roles: ['student'] },
   { path: '/guide-projects', title: '指导项目', roles: ['teacher'] },
   { path: '/pending-reviews', title: '评审', roles: ['judge'] },
@@ -217,6 +218,7 @@ const isTopNavActive = (path) => {
   if (path === '/courses') return route.path.startsWith('/courses')
   if (path === '/industry-topics') return route.path.startsWith('/industry-topics')
   if (path === '/assessment') return route.path.startsWith('/assessment')
+  if (path === '/ai-material-evaluation') return route.path.startsWith('/ai-material-evaluation')
   if (path === '/my-projects') return route.path.startsWith('/my-projects') || route.path.startsWith('/create-project') || route.path.startsWith('/projects/')
   if (path === '/guide-projects') return route.path.startsWith('/guide-projects') || route.path.startsWith('/project-review')
   if (path === '/pending-reviews') return route.path.startsWith('/pending-reviews') || route.path.startsWith('/review-history')

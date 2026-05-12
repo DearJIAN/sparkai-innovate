@@ -1897,7 +1897,34 @@ cd backend && flask db upgrade && python seed.py
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
 
-### v4.6.0 - 2026-05-12（当前版本）
+### v4.7.0 - 2026-05-12（当前版本）
+
+> 新增 AI材料评估功能：支持路演PPT和项目报告的PDF智能评估，含进度动画、飞入式报告页、PDF报告下载
+
+- **新增功能**
+  - 新增 AI材料评估功能入口（PortalHome 新增 AI材料评估卡片）
+  - 新增 PPT评估流程：上传PDF → AI分析进度页 → 评分报告页
+  - 新增 报告评估流程：上传PDF → AI分析进度页 → 评分报告页
+  - 新增 评分报告页飞入动画：各模块从上下左右四个方向飞入组合成完整报告
+  - 新增 PDF 报告下载（后端 reportlab 生成含封面、维度表、建议、行动计划的标准报告）
+  - 新增 MaterialEvaluation 数据模型（backend/models/material_evaluation.py）
+  - 新增 material_evaluation 蓝图路由（backend/routes/material_evaluation.py，7 个端点）
+  - 新增 material_evaluation_service 评分服务（backend/services/material_evaluation_service.py，PPT/报告不同的 8 维度评分体系）
+  - 新增 material_report_pdf 报告生成服务（backend/services/material_report_pdf.py）
+
+- **功能修改**
+  - MainLayout 顶栏和 platformPages 新增 AI材料评估入口
+  - PortalHome allCards 新增 material-evaluation 卡片（violet 配色）
+
+- **安全与稳定性**
+  - 仅允许上传 PDF 文件（扩展名 + MIME type 双重校验，最大 50MB）
+  - 用户只能查看和下载自己的评估报告（JWT 身份校验）
+
+- **已知问题**
+  - PPT评估和报告评估的评分结果基于规则模拟生成，非真实 AI 模型输出
+  - PDF 关键词命中统计需要 PyPDF 或 PyMuPDF 库支持
+
+### v4.6.0 - 2026-05-12
 
 > 在线测评问卷重构：题库结构改为 10 题 × 4 选项 A/B/C/D，评分满分调整为 40，卡片封面添加艺术字，简化展示元素
 

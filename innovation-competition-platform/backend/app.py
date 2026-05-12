@@ -10,7 +10,7 @@ from models import (
     User, Competition, CompetitionTrack, CompetitionRegistration,
     RegistrationMember, RegistrationMaterial,
     Project, ProjectMember, ProjectFile, ProjectTask, Review, AiRecord,
-    AgentTask, AgentMaterialIndex
+    AgentTask, AgentMaterialIndex, MaterialEvaluation
 )
 
 
@@ -83,6 +83,7 @@ def register_blueprints(app):
     from routes.competition import competition_bp
     from routes.registration import registration_bp
     from routes.agent import agent_bp
+    from routes.material_evaluation import material_evaluation_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api/users')
@@ -98,6 +99,7 @@ def register_blueprints(app):
     app.register_blueprint(competition_bp, url_prefix='/api')
     app.register_blueprint(registration_bp, url_prefix='/api')
     app.register_blueprint(agent_bp, url_prefix='/api/agent')
+    app.register_blueprint(material_evaluation_bp, url_prefix='/api/material-evaluation')
 
 
 def register_error_handlers(app):

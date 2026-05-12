@@ -13,6 +13,8 @@ from models.ai_record import AiRecord
 from models.agent_task import AgentTask
 from models.agent_material_index import AgentMaterialIndex
 
+from models.material_evaluation import MaterialEvaluation
+
 __all__ = [
     'User',
     'Competition',
@@ -27,5 +29,6 @@ __all__ = [
     'Review',
     'AiRecord',
     'AgentTask',
-    'AgentMaterialIndex'
+    'AgentMaterialIndex',
+    'MaterialEvaluation'
 ]

@@ -148,7 +148,7 @@ import { useUserStore } from '@/stores/user'
 import {
   Trophy, FolderOpened, User, Document, StarFilled,
   MagicStick, TrendCharts, ArrowRight, Medal, School,
-  Briefcase, Collection, Calendar
+  Briefcase, Collection, Calendar, DataAnalysis
 } from '@element-plus/icons-vue'
 import { getPublicStats } from '@/api/dashboard'
 
@@ -651,6 +651,15 @@ const allCards = [
     icon: TrendCharts,
     path: '/assessment',
     color: 'indigo',
+    roles: ['student', 'teacher', 'judge', 'admin']
+  },
+  {
+    key: 'material-evaluation',
+    title: 'AI材料评估',
+    desc: '智能评估PPT与项目报告',
+    icon: DataAnalysis,
+    path: '/ai-material-evaluation',
+    color: 'violet',
     roles: ['student', 'teacher', 'judge', 'admin']
   }
 ]
@@ -1183,6 +1192,9 @@ const recommendedCompetitions = ref([
 
 .card-indigo::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
 .card-indigo .card-icon { color: #6366f1; }
+
+.card-violet::before { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.card-violet .card-icon { color: #7c3aed; }
 
 .card-teal::before { background: linear-gradient(90deg, #14b8a6, #2dd4bf); }
 .card-teal .card-icon { color: #14b8a6; }

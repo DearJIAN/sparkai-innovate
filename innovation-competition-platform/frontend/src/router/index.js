@@ -70,6 +70,12 @@ const allRoutes = [
   { path: '/assessment/:id/result', name: 'AssessmentResult', component: () => import('@/views/portal/AssessmentResult.vue'), meta: withPlatformMeta({ title: '测评结果', icon: 'TrendCharts', hidden: true, public: true }) },
   { path: '/assessment/:id/coming-soon', name: 'AssessmentComingSoon', component: () => import('@/views/portal/AssessmentComingSoon.vue'), meta: withPlatformMeta({ title: '建设中', icon: 'TrendCharts', hidden: true, public: true }) },
 
+  // AI材料评估
+  { path: '/ai-material-evaluation', name: 'AIMaterialEvaluation', component: () => import('@/views/portal/AIMaterialEvaluation.vue'), meta: withPlatformMeta({ title: 'AI材料评估', icon: 'DataAnalysis', public: true }) },
+  { path: '/ai-material-evaluation/upload/:type', name: 'AIMaterialEvaluationUpload', component: () => import('@/views/portal/AIMaterialEvaluationUpload.vue'), meta: withPlatformMeta({ title: '上传材料', icon: 'DataAnalysis', hidden: true, public: true }) },
+  { path: '/ai-material-evaluation/progress/:taskId', name: 'AIMaterialEvaluationProgress', component: () => import('@/views/portal/AIMaterialEvaluationProgress.vue'), meta: withPlatformMeta({ title: 'AI分析进度', icon: 'DataAnalysis', hidden: true, public: true }) },
+  { path: '/ai-material-evaluation/report/:taskId', name: 'AIMaterialEvaluationReport', component: () => import('@/views/portal/AIMaterialEvaluationReport.vue'), meta: withPlatformMeta({ title: '评估报告', icon: 'DataAnalysis', hidden: true, public: true }) },
+
   // 通用路由（所有角色可访问）
   { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/dashboard/index.vue'), meta: { title: '工作台', icon: 'HomeFilled' } },
   { path: '/projects/:id', name: 'ProjectDetail', component: () => import('@/views/projects/detail.vue'), meta: { title: '项目详情', icon: 'Document', hidden: true } },
