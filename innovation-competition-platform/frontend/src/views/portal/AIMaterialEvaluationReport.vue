@@ -330,10 +330,23 @@ async function downloadPDF() {
   downloadingPDF.value = true
   try {
     const blob = await downloadReportPdf(taskId.value)
-    if (!blob) {
-      ElMessage.error('PDF报告内容为空，请稍后重试')
+
+    if (!blob || !(blob instanceof Blob)) {
+      ElMessage.error('PDF文件格式异常，请稍后重试')
       return
     }
+
+    if (blob.size === 0) {
+      ElMessage.error('PDF文件内容为空，无法下载')
+      return
+    }
+
+    const contentType = blob.type || ''
+    if (!contentType.includes('pdf') && !contentType.includes('octet-stream') && contentType !== '') {
+      ElMessage.error('下载内容格式异常，请稍后重试')
+      return
+    }
+
     const blobUrl = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = blobUrl

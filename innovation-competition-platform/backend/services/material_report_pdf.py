@@ -5,8 +5,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.lib.colors import HexColor
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_RIGHT
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_RIGHT, TA_LEFT
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable, PageBreak, KeepTogether
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.platypus.flowables import Flowable
@@ -40,7 +40,7 @@ except Exception:
         _font_bold = "Helvetica-Bold"
 
 NAVY = HexColor("#0F172A")
-ACCENT = HexColor("#0369A1")
+ACCENT = HexColor("#2563EB")
 SLATE = HexColor("#334155")
 MUTED = HexColor("#94A3B8")
 LIGHT_BG = HexColor("#F8FAFC")
@@ -49,18 +49,36 @@ BORDER = HexColor("#E2E8F0")
 GREEN = HexColor("#10B981")
 ORANGE = HexColor("#F59E0B")
 RED = HexColor("#EF4444")
-PURPLE = HexColor("#863bff")
+PURPLE = HexColor("#6366F1")
 LIGHT_PURPLE = HexColor("#A78BFA")
-
-COVER_H = 240
+DARK_BG = HexColor("#1E293B")
 
 
 class CoverFlowable(Flowable):
     def __init__(self, width, evaluation):
         Flowable.__init__(self)
         self.width = width
-        self.height = COVER_H
+        self.height = A4[1] - 68*mm
         self._e = evaluation
+
+    def _draw_spark_logo(self, c, cx, y):
+        c.setFillColor(LIGHT_PURPLE)
+        p = c.beginPath()
+        p.moveTo(cx, y + 7)
+        p.lineTo(cx + 3, y + 2)
+        p.lineTo(cx + 8, y)
+        p.lineTo(cx + 3, y - 2)
+        p.lineTo(cx, y - 7)
+        p.lineTo(cx - 3, y - 2)
+        p.lineTo(cx - 8, y)
+        p.lineTo(cx - 3, y + 2)
+        p.close()
+        c.drawPath(p, fill=1, stroke=0)
+
+    def _draw_accent_line(self, c, cx, y, w):
+        c.setStrokeColor(PURPLE)
+        c.setLineWidth(1.5)
+        c.line(cx - w/2, y, cx + w/2, y)
 
     def draw(self):
         c = self.canv
@@ -69,76 +87,128 @@ class CoverFlowable(Flowable):
 
         c.setFillColor(NAVY)
         c.rect(0, 0, w, h, fill=1, stroke=0)
-
         cx = w / 2
 
-        c.setFillColor(LIGHT_PURPLE)
-        p = c.beginPath()
-        sp_y = h - 22
-        p.moveTo(cx, sp_y + 7)
-        p.lineTo(cx + 3, sp_y + 2)
-        p.lineTo(cx + 8, sp_y)
-        p.lineTo(cx + 3, sp_y - 2)
-        p.lineTo(cx, sp_y - 7)
-        p.lineTo(cx - 3, sp_y - 2)
-        p.lineTo(cx - 8, sp_y)
-        p.lineTo(cx - 3, sp_y + 2)
-        p.close()
-        c.drawPath(p, fill=1, stroke=0)
+        top_deco_y = h - 8
+        c.setFillColor(HexColor("#1E293B"))
+        c.rect(0, top_deco_y, w, 8, fill=1, stroke=0)
+        c.setStrokeColor(HexColor("#334155"))
+        c.setLineWidth(0.5)
+        c.line(0, top_deco_y, w, top_deco_y)
+
+        self._draw_spark_logo(c, cx, h - 24)
+
+        c.setFillColor(WHITE)
+        c.setFont(_font_bold, 9)
+        c.drawCentredString(cx, h - 36, "火花智创  SparkAI Innovate")
+
+        self._draw_accent_line(c, cx, h - 44, 60)
 
         type_label = "路演PPT评估报告" if self._e.evaluation_type == "ppt" else "项目报告评估报告"
         c.setFillColor(WHITE)
         c.setFont(_font_bold, 24)
-        c.drawCentredString(cx, h - 42, type_label)
+        c.drawCentredString(cx, h - 70, type_label)
 
         c.setFont(_font_name, 10)
         c.setFillColor(HexColor("#CBD5E1"))
-        c.drawCentredString(cx, h - 58, "数据驱动 \u00b7 智能分析 \u00b7 精准优化")
+        c.drawCentredString(cx, h - 86, "数据驱动  \u00b7  智能分析  \u00b7  精准优化")
+
+        box_y_start = h - 130
+        box_h = 82
+        c.setFillColor(HexColor("#1E293B"))
+        c.roundRect(cx - 110, box_y_start, 220, box_h, 8, fill=1, stroke=0)
+        c.setStrokeColor(HexColor("#334155"))
+        c.setLineWidth(0.5)
+        c.roundRect(cx - 110, box_y_start, 220, box_h, 8, fill=0, stroke=1)
 
         score_value = self._e.total_score or 0
-        c.setFont(_font_bold, 52)
+        c.setFont(_font_bold, 48)
         c.setFillColor(WHITE)
-        c.drawCentredString(cx, h - 110, str(score_value))
+        c.drawCentredString(cx, box_y_start + 28, str(score_value))
+
+        c.setFont(_font_name, 8)
+        c.setFillColor(MUTED)
+        c.drawCentredString(cx, box_y_start + 12, "综合评分")
 
         lvl = self._e.level or _level_text(score_value)
         lvl_color = _level_color(score_value)
+        badge_w, badge_h_val = 52, 18
         c.setFillColor(lvl_color)
-        badge_w, badge_h = 48, 18
-        c.roundRect(cx - badge_w / 2, h - 132, badge_w, badge_h, 4, fill=1, stroke=0)
+        c.roundRect(cx - badge_w / 2, box_y_start - 24, badge_w, badge_h_val, 5, fill=1, stroke=0)
         c.setFillColor(WHITE)
         c.setFont(_font_bold, 9)
-        c.drawCentredString(cx, h - 128, lvl)
+        c.drawCentredString(cx, box_y_start - 18, lvl)
 
+        meta_y = box_y_start - 52
         c.setFont(_font_name, 8)
         c.setFillColor(MUTED)
         meta_lines = [
-            f"文件名：{self._e.file_name}",
+            f"文件：{self._e.file_name or '未知'}",
             f"评估类型：{'PPT评估' if self._e.evaluation_type == 'ppt' else '报告评估'}",
-            f"生成时间：{datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
+            f"生成时间：{datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
+            f"报告编号：REP-{self._e.id}-{datetime.utcnow().strftime('%Y%m')}"
         ]
         for i, line in enumerate(meta_lines):
-            c.drawCentredString(cx, h - 155 - i * 11, line)
+            c.drawCentredString(cx, meta_y - i * 10, line)
 
-        c.setStrokeColor(HexColor("#334155"))
-        c.setLineWidth(0.5)
-        sep_y = h - 195
-        c.line(cx - 90, sep_y, cx + 90, sep_y)
+        sep_y = meta_y - 6 * 10 - 6
+        self._draw_accent_line(c, cx, sep_y, 180)
 
+        c.setFont(_font_name, 9)
+        c.setFillColor(WHITE)
+        c.drawCentredString(cx, sep_y - 16, "综 合 评 价")
+
+        one_liner = _get_one_liner(score_value)
         c.setFont(_font_name, 8)
-        c.setFillColor(MUTED)
-        c.drawCentredString(cx, sep_y - 12, "火花智创 SparkAI \u00b7 AI材料评估系统")
+        c.setFillColor(HexColor("#CBD5E1"))
+        c.drawCentredString(cx, sep_y - 30, one_liner)
+
+        bottom_y = sep_y - 48
+        advantages = json.loads(self._e.advantages_json) if self._e.advantages_json else []
+        problems = json.loads(self._e.problems_json) if self._e.problems_json else []
+        suggestions = json.loads(self._e.suggestions_json) if self._e.suggestions_json else []
+
+        col_w = w / 3 - 8
+        col_start_x = [4, col_w + 10, col_w * 2 + 16]
+
+        labels = ["核心优势", "主要风险", "优化方向"]
+        colors_list = [GREEN, ORANGE, ACCENT]
+        data_sets = [advantages[:2], problems[:2], suggestions[:2]]
+
+        for ci in range(3):
+            lx = col_start_x[ci]
+            c.setFillColor(colors_list[ci])
+            c.setFont(_font_bold, 8)
+            c.drawString(lx, bottom_y, labels[ci])
+            c.setFont(_font_name, 7)
+            c.setFillColor(HexColor("#CBD5E1"))
+            for di, item in enumerate(data_sets[ci]):
+                text = item[:50] + "..." if len(item) > 50 else item
+                c.drawString(lx + 2, bottom_y - 12 - di * 10, f"\u2022 {text}")
+
+        footer_y = 12
+        c.setFont(_font_name, 6.5)
+        c.setFillColor(HexColor("#475569"))
+        c.drawCentredString(cx, footer_y, "本报告由火花智创 SparkAI Innovate \u00b7 AI材料评估系统自动生成")
+        c.drawCentredString(cx, footer_y - 9, "报告仅供学习和参赛参考，不构成任何形式的法律或专业建议")
+
+
+def _get_one_liner(score):
+    if score >= 90:
+        return "该材料整体表现优秀，在多个维度上达到了较高水准"
+    elif score >= 80:
+        return "该材料整体表现良好，具备较强的参赛展示基础"
+    elif score >= 70:
+        return "该材料具备较完整的表达基础，核心逻辑较为清晰"
+    else:
+        return "该材料具备基础框架，但在深度、细节或表达完整性上仍有提升空间"
 
 
 def _get_styles():
     styles = getSampleStyleSheet()
-
     styles.add(ParagraphStyle(
         "SectionH2", fontName=_font_bold, fontSize=14, leading=20,
-        textColor=NAVY, spaceBefore=16, spaceAfter=8
-    ))
-    styles.add(ParagraphStyle(
-        "SectionH3", fontName=_font_bold, fontSize=11, leading=16,
-        textColor=SLATE, spaceBefore=10, spaceAfter=4
+        textColor=NAVY, spaceBefore=10, spaceAfter=6
     ))
     styles.add(ParagraphStyle(
         "Body", fontName=_font_name, fontSize=10, leading=16,
@@ -149,41 +219,54 @@ def _get_styles():
         textColor=MUTED, spaceAfter=2
     ))
     styles.add(ParagraphStyle(
-        "TableCell", fontName=_font_name, fontSize=9, leading=13,
+        "TableCell", fontName=_font_name, fontSize=9, leading=14,
         textColor=NAVY
     ))
     styles.add(ParagraphStyle(
-        "TableHeader", fontName=_font_bold, fontSize=9, leading=13,
+        "TableHeader", fontName=_font_bold, fontSize=9, leading=14,
         textColor=WHITE
     ))
     styles.add(ParagraphStyle(
-        "BulletGreen", fontName=_font_name, fontSize=10, leading=16,
-        textColor=NAVY, leftIndent=14, spaceAfter=3, bulletIndent=0
+        "TableScore", fontName=_font_bold, fontSize=10, leading=14,
+        textColor=NAVY, alignment=TA_CENTER
     ))
     styles.add(ParagraphStyle(
-        "BulletOrange", fontName=_font_name, fontSize=10, leading=16,
-        textColor=NAVY, leftIndent=14, spaceAfter=3, bulletIndent=0
+        "BulletItem", fontName=_font_name, fontSize=10, leading=16,
+        textColor=NAVY, leftIndent=14, spaceAfter=4, bulletIndent=0
     ))
     styles.add(ParagraphStyle(
-        "BulletBlue", fontName=_font_name, fontSize=10, leading=16,
-        textColor=NAVY, leftIndent=14, spaceAfter=3, bulletIndent=0
+        "ActionItem", fontName=_font_name, fontSize=10, leading=16,
+        textColor=NAVY, leftIndent=14, spaceAfter=5, bulletIndent=0
     ))
     styles.add(ParagraphStyle(
-        "ActionNum", fontName=_font_name, fontSize=10, leading=16,
-        textColor=NAVY, leftIndent=14, spaceAfter=3, bulletIndent=0
+        "SectionTitle", fontName=_font_bold, fontSize=16, leading=22,
+        textColor=NAVY, spaceBefore=4, spaceAfter=8
+    ))
+    styles.add(ParagraphStyle(
+        "PageHeader", fontName=_font_bold, fontSize=10, leading=14,
+        textColor=WHITE, spaceBefore=0, spaceAfter=0
+    ))
+    styles.add(ParagraphStyle(
+        "Guide", fontName=_font_name, fontSize=9, leading=14,
+        textColor=MUTED, spaceAfter=8
     ))
     return styles
 
 
 def _build_section_header(text, styles):
-    accent_hr = HRFlowable(width=18*mm, thickness=3, color=ACCENT, spaceAfter=2)
+    accent_hr = HRFlowable(width=14*mm, thickness=3, color=PURPLE, spaceAfter=2, spaceBefore=8)
     title = Paragraph(text, styles["SectionH2"])
     return [accent_hr, title]
 
 
-def _build_bullet(text, style, color):
-    dot_color = f"<font color='#{color}' size='12'>\u25cf</font>"
-    return Paragraph(f"{dot_color}  {text}", style)
+def _build_bullet(text, color_hex):
+    return Paragraph(
+        f"<font color='#{color_hex}' size='10'>\u25cf</font>  {text}",
+        ParagraphStyle(
+            "Bullet", fontName=_font_name, fontSize=10, leading=16,
+            textColor=NAVY, leftIndent=14, spaceAfter=4
+        )
+    )
 
 
 def _score_color(score, max_score):
@@ -215,6 +298,59 @@ def _level_text(score):
     return "待改进"
 
 
+def _build_dimension_table(dim_scores, page_w, styles):
+    if not dim_scores:
+        return Paragraph("暂无可用的评分维度数据", styles["Body"])
+
+    dim_data = [[
+        Paragraph("评分维度", styles["TableHeader"]),
+        Paragraph("得分", styles["TableHeader"]),
+        Paragraph("得分率", styles["TableHeader"]),
+        Paragraph("评估说明", styles["TableHeader"])
+    ]]
+
+    for ds in dim_scores:
+        name = ds["name"]
+        sc = ds["score"]
+        mx = ds["max_score"]
+        ratio = sc / mx if mx > 0 else 0
+        pct = f"{round(ratio * 100)}%"
+        sc_color = _score_color(sc, mx)
+
+        bar_count = max(1, round(ratio * 12))
+        bar_chars = "\u2588" * bar_count + "\u2591" * (12 - bar_count)
+        bar_html = f"<font color='#{sc_color.hexval()[:6]}'>{bar_chars}</font>"
+
+        dim_data.append([
+            Paragraph(f"<b>{name}</b>", styles["TableCell"]),
+            Paragraph(
+                f"<font color='#{sc_color.hexval()[:6]}'><b>{sc}</b></font> / {mx}",
+                styles["TableScore"]
+            ),
+            Paragraph(
+                f"{bar_html}<br/><font size='7' color='#64748b'>{pct}</font>",
+                ParagraphStyle("BarCell", parent=styles["TableCell"], alignment=TA_CENTER)
+            ),
+            Paragraph(ds.get("comment", ""), styles["TableCell"])
+        ])
+
+    col_widths = [28*mm, 22*mm, 34*mm, page_w - 84*mm]
+    dim_table = Table(dim_data, colWidths=col_widths, repeatRows=1)
+    dim_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), PURPLE),
+        ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+        ("ALIGN", (1, 0), (2, -1), "CENTER"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, LIGHT_BG]),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    return dim_table
+
+
 def generate_report_pdf(evaluation, output_dir):
     os.makedirs(output_dir, exist_ok=True)
     timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
@@ -222,67 +358,34 @@ def generate_report_pdf(evaluation, output_dir):
     filepath = os.path.join(output_dir, filename)
 
     doc = SimpleDocTemplate(filepath, pagesize=A4,
-                            leftMargin=18*mm, rightMargin=18*mm,
-                            topMargin=18*mm, bottomMargin=18*mm)
+                            leftMargin=20*mm, rightMargin=20*mm,
+                            topMargin=18*mm, bottomMargin=20*mm)
 
-    PAGE_W = A4[0] - 36*mm
-    PAGE_H_CONTENT = A4[1] - 36*mm
+    PAGE_W = A4[0] - 40*mm
 
     styles = _get_styles()
     story = []
 
     story.append(CoverFlowable(PAGE_W, evaluation))
-    story.append(Spacer(1, 8*mm))
-
-    page_line = HRFlowable(width="100%", thickness=0.5, color=BORDER, spaceAfter=8)
-    story.append(page_line)
+    story.append(PageBreak())
 
     dim_scores = json.loads(evaluation.dimension_scores_json) if evaluation.dimension_scores_json else []
 
-    sec_header = _build_section_header("评分维度", styles)
+    sec_header = _build_section_header("评分维度总览", styles)
     for s in sec_header:
         story.append(s)
 
-    if dim_scores:
-        dim_data = [[
-            Paragraph("评分维度", styles["TableHeader"]),
-            Paragraph("得分", styles["TableHeader"]),
-            Paragraph("满分", styles["TableHeader"]),
-            Paragraph("评估说明", styles["TableHeader"])
-        ]]
-        for ds in dim_scores:
-            sc = _score_color(ds["score"], ds["max_score"])
-            dim_data.append([
-                Paragraph(ds["name"], styles["TableCell"]),
-                Paragraph(
-                    f"<font color='#{sc.hexval()[:6]}'><b>{ds['score']}</b></font>",
-                    ParagraphStyle("SC", parent=styles["TableCell"], alignment=TA_CENTER)
-                ),
-                Paragraph(str(ds["max_score"]),
-                          ParagraphStyle("MC", parent=styles["TableCell"], alignment=TA_CENTER)),
-                Paragraph(ds.get("comment", ""), styles["TableCell"])
-            ])
+    story.append(Paragraph(
+        "以下表格展示了各评估维度的得分情况与详细评估说明。得分率以进度条直观呈现，"
+        + ("PPT评估维度侧重路演表达的完整性、逻辑性和说服力。"
+           if evaluation.evaluation_type == "ppt"
+           else "报告评估维度侧重材料内容的论证深度、数据支撑和商业可行性。"),
+        styles["Guide"]
+    ))
+    story.append(_build_dimension_table(dim_scores, PAGE_W, styles))
+    story.append(Spacer(1, 6*mm))
 
-        col_widths = [35*mm, 16*mm, 16*mm, PAGE_W - 67*mm]
-        dim_table = Table(dim_data, colWidths=col_widths, repeatRows=1)
-        dim_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), ACCENT),
-            ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
-            ("ALIGN", (1, 0), (2, -1), "CENTER"),
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, LIGHT_BG]),
-            ("TOPPADDING", (0, 0), (-1, -1), 6),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-            ("LEFTPADDING", (0, 0), (-1, -1), 8),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-        ]))
-        story.append(dim_table)
-    else:
-        story.append(Paragraph("暂无可用的评分维度数据", styles["Body"]))
-
-    story.append(Spacer(1, 8*mm))
-    story.append(page_line)
+    story.append(HRFlowable(width="100%", thickness=0.5, color=BORDER, spaceAfter=4, spaceBefore=4))
 
     sec_header2 = _build_section_header("核心评价", styles)
     for s in sec_header2:
@@ -290,67 +393,62 @@ def generate_report_pdf(evaluation, output_dir):
 
     core_text = evaluation.core_comment or "暂无核心评价内容。"
     core_p = Paragraph(core_text, styles["Body"])
-    core_card = Table([[core_p]], colWidths=[PAGE_W])
-    core_card.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), LIGHT_BG),
-        ("BOX", (0, 0), (-1, -1), 1, ACCENT),
-        ("LEFTPADDING", (0, 0), (-1, -1), 12),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-        ("TOPPADDING", (0, 0), (-1, -1), 10),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-    ]))
-    story.append(core_card)
+    story.append(core_p)
 
-    story.append(Spacer(1, 4*mm))
-    story.append(page_line)
+    story.append(Spacer(1, 6*mm))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=BORDER, spaceAfter=4, spaceBefore=2))
 
     advantages = json.loads(evaluation.advantages_json) if evaluation.advantages_json else []
+    problems = json.loads(evaluation.problems_json) if evaluation.problems_json else []
+    suggestions = json.loads(evaluation.suggestions_json) if evaluation.suggestions_json else []
+    next_actions = json.loads(evaluation.next_actions_json) if evaluation.next_actions_json else []
+
+    has_extra_content = bool(advantages) or bool(problems) or bool(suggestions)
+    if has_extra_content:
+        story.append(PageBreak())
+
     if advantages:
         sec_header3 = _build_section_header("主要优势", styles)
         for s in sec_header3:
             story.append(s)
-        for adv in advantages:
-            story.append(_build_bullet(adv, styles["BulletGreen"], "10B981"))
+        for item in advantages:
+            story.append(_build_bullet(item, "10B981"))
 
-    problems = json.loads(evaluation.problems_json) if evaluation.problems_json else []
     if problems:
-        story.append(Spacer(1, 2*mm))
+        story.append(Spacer(1, 3*mm))
         sec_header4 = _build_section_header("待改进项", styles)
         for s in sec_header4:
             story.append(s)
-        for prob in problems:
-            story.append(_build_bullet(prob, styles["BulletOrange"], "F59E0B"))
+        for item in problems:
+            story.append(_build_bullet(item, "F59E0B"))
 
-    suggestions = json.loads(evaluation.suggestions_json) if evaluation.suggestions_json else []
     if suggestions:
-        story.append(Spacer(1, 2*mm))
+        story.append(Spacer(1, 3*mm))
         sec_header5 = _build_section_header("优化建议", styles)
         for s in sec_header5:
             story.append(s)
-        for sug in suggestions:
-            story.append(_build_bullet(sug, styles["BulletBlue"], "0369A1"))
+        for item in suggestions:
+            story.append(_build_bullet(item, "2563EB"))
 
-    next_actions = json.loads(evaluation.next_actions_json) if evaluation.next_actions_json else []
     if next_actions:
-        story.append(Spacer(1, 2*mm))
+        story.append(Spacer(1, 6*mm))
+        story.append(HRFlowable(width="100%", thickness=0.5, color=BORDER, spaceAfter=4, spaceBefore=2))
+
         sec_header6 = _build_section_header("下一步行动", styles)
         for s in sec_header6:
             story.append(s)
-        for i, act in enumerate(next_actions, 1):
+        for i, item in enumerate(next_actions, 1):
             story.append(Paragraph(
-                f"<font color='#0369A1'><b>{i}.</b></font>  {act}",
-                styles["ActionNum"]
+                f"<font color='#6366F1'><b>{i}.</b></font>  {item}",
+                styles["ActionItem"]
             ))
 
-    story.append(Spacer(1, 12*mm))
+    story.append(Spacer(1, 20*mm))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BORDER, spaceAfter=4))
     story.append(Paragraph(
         "本报告由火花智创 SparkAI Innovate \u00b7 AI材料评估系统自动生成，仅供学习参考。",
         styles["Small"]
     ))
-    story.append(Paragraph("第 1 页", ParagraphStyle(
-        "PageNum", parent=styles["Small"], alignment=TA_RIGHT
-    )))
 
     doc.build(story)
     return filepath

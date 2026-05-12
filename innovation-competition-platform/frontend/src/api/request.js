@@ -28,6 +28,22 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   async (response) => {
     if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
+      const ct = response.headers?.['content-type'] || ''
+      if (ct && !ct.includes('pdf') && !ct.includes('octet-stream') && !ct.includes('image') && response.status >= 400) {
+        const text = await new Promise(resolve => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result)
+          reader.readAsText(response.data)
+        })
+        try {
+          const json = JSON.parse(text)
+          if (json.message) {
+            ElMessage.error(json.message)
+          }
+        } catch {
+        }
+        return Promise.reject(new Error('下载内容格式异常'))
+      }
       return response.data
     }
 

@@ -231,9 +231,19 @@ def download_report_pdf(task_id):
         return error('评估尚未完成', 400)
 
     if evaluation.pdf_path and os.path.exists(evaluation.pdf_path):
-        return send_file(evaluation.pdf_path, as_attachment=True,
-                         download_name=f"AI评估报告_{evaluation.evaluation_type}_{evaluation.id}.pdf",
-                         mimetype='application/pdf')
+        file_size = os.path.getsize(evaluation.pdf_path)
+        if file_size > 0:
+            resp = send_file(evaluation.pdf_path, as_attachment=True,
+                             download_name=f"AI评估报告_{evaluation.evaluation_type}_{evaluation.id}.pdf",
+                             mimetype='application/pdf')
+            resp.headers['Content-Length'] = str(file_size)
+            return resp
+        try:
+            os.remove(evaluation.pdf_path)
+        except Exception:
+            pass
+        evaluation.pdf_path = None
+        db.session.commit()
 
     output_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads', 'material_evaluation', 'reports')
     try:
@@ -241,11 +251,17 @@ def download_report_pdf(task_id):
         pdf_path = generate_report_pdf(evaluation, output_dir)
         if not pdf_path or not os.path.exists(pdf_path):
             return error('PDF生成失败，请稍后重试', 500, 500)
+        pdf_size = os.path.getsize(pdf_path)
+        if pdf_size == 0:
+            return error('PDF生成内容为空，请稍后重试', 500, 500)
         evaluation.pdf_path = pdf_path
         db.session.commit()
-        return send_file(pdf_path, as_attachment=True,
+        resp = send_file(pdf_path, as_attachment=True,
                          download_name=f"AI评估报告_{evaluation.evaluation_type}_{evaluation.id}.pdf",
                          mimetype='application/pdf')
+        resp.headers['Content-Length'] = str(pdf_size)
+        resp.headers['Content-Disposition'] = f"attachment; filename*=UTF-8''AI评估报告_{evaluation.evaluation_type}_{evaluation.id}.pdf"
+        return resp
     except Exception as e:
         import traceback
         traceback.print_exc()

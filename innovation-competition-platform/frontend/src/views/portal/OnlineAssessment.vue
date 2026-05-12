@@ -53,12 +53,14 @@
             v-for="item in filteredList"
             :key="item.id"
             class="assessment-card"
+            :class="[`theme-${item.id}`]"
             @click="handleStart(item)"
           >
-            <div class="card-cover" :style="{ background: `linear-gradient(135deg, ${item.gradient[0]}, ${item.gradient[1]})` }">
-              <div class="card-cover-art">
-                <span class="cover-art-text">{{ getCoverText(item) }}</span>
-              </div>
+            <div class="card-cover" :style="coverStyle(item)">
+              <div class="card-cover-bg-deco" :style="getBgDeco(item)"></div>
+              <component :is="getSvgComponent(item)" :accent-color="getAccentColor(item)" />
+              <div class="cover-tag" :style="{ background: getTheme(item).accentColor + '22', color: getTheme(item).accentColor, borderColor: getTheme(item).accentColor + '44' }">{{ getThemeLabel(item) }}</div>
+              <div class="cover-sub" :style="{ color: getTheme(item).accentColor }">{{ getThemeSubtitle(item) }}</div>
             </div>
             <div class="card-body">
               <h3 class="card-title">{{ item.title }}</h3>
@@ -99,7 +101,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Clock, Document, View, ArrowRight } from '@element-plus/icons-vue'
 import {
@@ -108,6 +110,7 @@ import {
   getAssessmentsByCategory,
   getAssessmentsBySearch
 } from '@/data/assessmentBank'
+import { assessmentVisualThemes } from '@/data/assessmentVisualThemes'
 
 const router = useRouter()
 const activeCategory = ref('all')
@@ -127,23 +130,252 @@ const currentCategoryName = computed(() => {
   return cat ? (cat.key === 'all' ? '全部测评' : cat.name) : '全部测评'
 })
 
-const coverTextMap = {
-  'entrepreneurial-spirit': '创 业 精 神',
-  'entrepreneurial-personality': '创 业 性 格',
-  'entrepreneurial-interest': '创 业 兴 趣',
-  'entrepreneurial-ability': '创 业 能 力',
-  'career-temperament': '职 业 气 质',
-  'career-values': '职 业 价 值',
-  'career-interest': '职 业 兴 趣',
-  'career-personality': '职 业 性 格',
-  'teamwork-ability': '团 队 合 作',
-  'self-learning-ability': '自 主 学 习',
-  'communication-ability': '沟 通 交 际',
-  'emotion-control-ability': '情 绪 控 制'
+function getTheme(item) {
+  return assessmentVisualThemes[item.id] || assessmentVisualThemes['entrepreneurial-spirit']
 }
 
-function getCoverText(item) {
-  return coverTextMap[item.id] || ''
+function coverStyle(item) {
+  const theme = getTheme(item)
+  return { background: `linear-gradient(135deg, ${theme.gradient[0]}, ${theme.gradient[1]})` }
+}
+
+function getBgDeco(item) {
+  const theme = getTheme(item)
+  return { background: theme.bgDecorations }
+}
+
+function getAccentColor(item) {
+  return getTheme(item).accentColor
+}
+
+function getThemeLabel(item) {
+  return getTheme(item).label
+}
+
+function getThemeSubtitle(item) {
+  return getTheme(item).subtitle
+}
+
+function getSvgComponent(item) {
+  const theme = getTheme(item)
+  const svgType = theme.svgDecorations
+  const ac = theme.accentColor
+  return { render: () => renderSvg(svgType, ac) }
+}
+
+function renderSvg(svgType, ac) {
+  const gradId = `grad_${svgType}`
+  switch (svgType) {
+    case 'spark-energy':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.3' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.05' })
+          ])
+        ]),
+        h('circle', { cx: '100', cy: '60', r: '40', fill: 'none', stroke: `url(#${gradId})`, 'stroke-width': '1', class: 'svg-pulse' }),
+        h('circle', { cx: '100', cy: '60', r: '25', fill: 'none', stroke: ac, 'stroke-width': '0.8', 'stroke-dasharray': '4 6', class: 'svg-rotate-slow' }),
+        h('polygon', { points: '100,28 107,45 125,47 111,60 115,78 100,68 85,78 89,60 75,47 93,45', fill: ac, opacity: '0.4', class: 'svg-float' }),
+        ...[0, 60, 120, 180, 240, 300].map(angle =>
+          h('line', {
+            key: `el${angle}`,
+            x1: 100 + 35 * Math.cos(angle * Math.PI / 180),
+            y1: 60 + 35 * Math.sin(angle * Math.PI / 180),
+            x2: 100 + 42 * Math.cos(angle * Math.PI / 180),
+            y2: 60 + 42 * Math.sin(angle * Math.PI / 180),
+            stroke: ac, 'stroke-width': '1.2', opacity: '0.25', class: 'svg-pulse-delay'
+          })
+        )
+      ])
+    case 'radar-dots':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.25' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.05' })
+          ])
+        ]),
+        ...[3, 2, 1].map(r => {
+          const radius = r * 15
+          const pts = []
+          for (let i = 0; i < 6; i++) {
+            const a = i * 60 * Math.PI / 180 - Math.PI / 2
+            pts.push(`${100 + radius * Math.cos(a)},${60 + radius * Math.sin(a)}`)
+          }
+          return h('polygon', { key: `radar${r}`, points: pts.join(' '), fill: 'none', stroke: `url(#${gradId})`, 'stroke-width': '0.8', class: 'svg-rotate-slow' })
+        }),
+        ...[0, 60, 120, 180, 240, 300].map((angle, i) => {
+          const a = angle * Math.PI / 180 - Math.PI / 2
+          return h('circle', {
+            key: `dot${i}`,
+            cx: 100 + 45 * Math.cos(a),
+            cy: 60 + 45 * Math.sin(a),
+            r: 2 + i % 2,
+            fill: ac, opacity: '0.5', class: 'svg-pulse-delay'
+          })
+        })
+      ])
+    case 'compass-path':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.3' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.05' })
+          ])
+        ]),
+        h('circle', { cx: '100', cy: '60', r: '38', fill: 'none', stroke: `url(#${gradId})`, 'stroke-width': '1', class: 'svg-rotate-slow' }),
+        h('circle', { cx: '100', cy: '60', r: '4', fill: ac, opacity: '0.5' }),
+        h('path', { d: 'M100,22 L106,50 L100,60 L94,50 Z', fill: ac, opacity: '0.3', class: 'svg-float' }),
+        h('path', { d: 'M100,98 L94,70 L100,60 L106,70 Z', fill: ac, opacity: '0.15' }),
+        h('path', { d: 'M62,60 L90,54 L100,60 L90,66 Z', fill: ac, opacity: '0.15' }),
+        h('path', { d: 'M138,60 L110,66 L100,60 L110,54 Z', fill: ac, opacity: '0.25', class: 'svg-float' }),
+        h('path', { d: 'M78,38 L94,50 L100,60 L86,52 Z', fill: ac, opacity: '0.12' }),
+        h('path', { d: 'M122,82 L106,70 L100,60 L114,68 Z', fill: ac, opacity: '0.2', class: 'svg-pulse-delay' })
+      ])
+    case 'data-bars':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '0%', y2: '100%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.4' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.1' })
+          ])
+        ]),
+        ...[0, 1, 2, 3, 4].map((i) => {
+          const h_val = 15 + i * 8 + (i % 2) * 5
+          return h('rect', {
+            key: `bar${i}`,
+            x: 44 + i * 28,
+            y: 80 - h_val,
+            width: 16,
+            height: h_val,
+            rx: 3,
+            fill: `url(#${gradId})`,
+            class: 'svg-bar'
+          })
+        }),
+        h('line', { x1: '38', y1: '82', x2: '180', y2: '82', stroke: ac, 'stroke-width': '0.5', opacity: '0.2' }),
+        h('circle', { cx: '44', cy: '78', r: '2', fill: ac, opacity: '0.4', class: 'svg-float' })
+      ])
+    case 'network-nodes':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.3' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.05' })
+          ])
+        ]),
+        h('circle', { cx: '60', cy: '40', r: '3', fill: ac, opacity: '0.5', class: 'svg-pulse' }),
+        h('circle', { cx: '140', cy: '40', r: '3', fill: ac, opacity: '0.5', class: 'svg-pulse-delay' }),
+        h('circle', { cx: '100', cy: '60', r: '4', fill: ac, opacity: '0.6', class: 'svg-pulse' }),
+        h('circle', { cx: '60', cy: '80', r: '3', fill: ac, opacity: '0.5', class: 'svg-pulse-delay' }),
+        h('circle', { cx: '140', cy: '80', r: '3', fill: ac, opacity: '0.5', class: 'svg-pulse' }),
+        h('line', { x1: '60', y1: '40', x2: '100', y2: '60', stroke: `url(#${gradId})`, 'stroke-width': '1', class: 'svg-rotate-slow' }),
+        h('line', { x1: '140', y1: '40', x2: '100', y2: '60', stroke: `url(#${gradId})`, 'stroke-width': '1', class: 'svg-rotate-slow' }),
+        h('line', { x1: '60', y1: '80', x2: '100', y2: '60', stroke: `url(#${gradId})`, 'stroke-width': '1', class: 'svg-rotate-slow' }),
+        h('line', { x1: '140', y1: '80', x2: '100', y2: '60', stroke: `url(#${gradId})`, 'stroke-width': '1', class: 'svg-rotate-slow' }),
+        h('line', { x1: '60', y1: '40', x2: '60', y2: '80', stroke: `url(#${gradId})`, 'stroke-width': '0.6', class: 'svg-rotate-slow' }),
+        h('line', { x1: '140', y1: '40', x2: '140', y2: '80', stroke: `url(#${gradId})`, 'stroke-width': '0.6', class: 'svg-rotate-slow' })
+      ])
+    case 'abstract-shape':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.25' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.05' })
+          ])
+        ]),
+        h('polygon', { points: '100,20 150,55 135,100 65,100 50,55', fill: 'none', stroke: `url(#${gradId})`, 'stroke-width': '1.2', class: 'svg-rotate-slow' }),
+        h('polygon', { points: '100,35 135,60 125,90 75,90 65,60', fill: 'none', stroke: ac, 'stroke-width': '0.6', opacity: '0.2', class: 'svg-rotate-slow' }),
+        h('circle', { cx: '100', cy: '60', r: '2', fill: ac, opacity: '0.4' })
+      ])
+    case 'concentric-circles':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        ...[40, 30, 20, 10].map((r, i) =>
+          h('circle', {
+            key: `cc${i}`,
+            cx: '100', cy: '60', r,
+            fill: 'none',
+            stroke: ac,
+            'stroke-width': 0.6 + (i % 2) * 0.4,
+            opacity: 0.35 - i * 0.05,
+            'stroke-dasharray': i % 2 === 0 ? '4 6' : 'none',
+            class: i % 2 === 0 ? 'svg-rotate-slow' : 'svg-float'
+          })
+        )
+      ])
+    case 'path-direction':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '100%', y2: '0%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.1' }),
+            h('stop', { offset: '50%', 'stop-color': ac, 'stop-opacity': '0.3' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.1' })
+          ])
+        ]),
+        h('path', { d: 'M30,60 Q60,30 100,50 T170,40', fill: 'none', stroke: `url(#${gradId})`, 'stroke-width': '2', class: 'svg-rotate-slow' }),
+        h('circle', { cx: '30', cy: '60', r: '3', fill: ac, opacity: '0.3' }),
+        h('circle', { cx: '100', cy: '50', r: '4', fill: ac, opacity: '0.5', class: 'svg-pulse' }),
+        h('circle', { cx: '170', cy: '40', r: '3', fill: ac, opacity: '0.3' }),
+        h('polygon', { points: '170,34 178,40 170,46', fill: ac, opacity: '0.4', class: 'svg-float' })
+      ])
+    case 'geometric-diamond':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.25' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.05' })
+          ])
+        ]),
+        h('polygon', { points: '100,20 145,60 100,100 55,60', fill: 'none', stroke: `url(#${gradId})`, 'stroke-width': '1.2', class: 'svg-rotate-slow' }),
+        h('polygon', { points: '100,35 130,60 100,85 70,60', fill: 'none', stroke: ac, 'stroke-width': '0.6', opacity: '0.15', class: 'svg-rotate-slow' })
+      ])
+    case 'growth-spiral':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '100%', x2: '100%', y2: '0%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.1' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.3' })
+          ])
+        ]),
+        h('path', { d: 'M100,60 Q95,45 100,35 Q110,25 120,40 Q125,60 110,70 Q90,75 80,55 Q75,30 105,20 Q135,15 145,50', fill: 'none', stroke: `url(#${gradId})`, 'stroke-width': '1.5', class: 'svg-rotate-slow' }),
+        h('circle', { cx: '100', cy: '60', r: '2', fill: ac, opacity: '0.4' })
+      ])
+    case 'speech-bubbles':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.2' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.05' })
+          ])
+        ]),
+        h('rect', { x: '45', y: '35', width: '60', height: '32', rx: '8', fill: 'none', stroke: `url(#${gradId})`, 'stroke-width': '1.2', class: 'svg-float' }),
+        h('polygon', { points: '55,67 60,82 68,67', fill: 'none', stroke: ac, 'stroke-width': '0.8', opacity: '0.2' }),
+        h('rect', { x: '95', y: '50', width: '55', height: '28', rx: '8', fill: 'none', stroke: ac, 'stroke-width': '0.8', opacity: '0.2', class: 'svg-float' }),
+        h('polygon', { points: '135,78 140,90 145,78', fill: 'none', stroke: ac, 'stroke-width': '0.6', opacity: '0.15' }),
+        h('circle', { cx: '65', cy: '48', r: '1.5', fill: ac, opacity: '0.4' }),
+        h('circle', { cx: '80', cy: '48', r: '1.5', fill: ac, opacity: '0.4' }),
+        h('circle', { cx: '72', cy: '55', r: '1.5', fill: ac, opacity: '0.4' })
+      ])
+    case 'wave-balance':
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('defs', null, [
+          h('linearGradient', { id: gradId, x1: '0%', y1: '0%', x2: '100%', y2: '0%' }, [
+            h('stop', { offset: '0%', 'stop-color': ac, 'stop-opacity': '0.1' }),
+            h('stop', { offset: '50%', 'stop-color': ac, 'stop-opacity': '0.25' }),
+            h('stop', { offset: '100%', 'stop-color': ac, 'stop-opacity': '0.1' })
+          ])
+        ]),
+        h('path', { d: 'M30,65 Q55,40 80,60 T130,55 T170,65', fill: 'none', stroke: `url(#${gradId})`, 'stroke-width': '1.5', class: 'svg-rotate-slow' }),
+        h('path', { d: 'M30,75 Q55,55 80,70 T130,65 T170,75', fill: 'none', stroke: ac, 'stroke-width': '0.8', opacity: '0.15', class: 'svg-rotate-slow' }),
+        h('circle', { cx: '80', cy: '60', r: '2', fill: ac, opacity: '0.4', class: 'svg-float' }),
+        h('circle', { cx: '130', cy: '55', r: '2', fill: ac, opacity: '0.4', class: 'svg-float' })
+      ])
+    default:
+      return h('svg', { viewBox: '0 0 200 120', class: 'card-svg-deco' }, [
+        h('circle', { cx: '100', cy: '60', r: '30', fill: 'none', stroke: ac, 'stroke-width': '0.8', opacity: '0.2' })
+      ])
+  }
 }
 
 function selectCategory(key) {
@@ -347,12 +579,12 @@ function handleStart(item) {
 }
 
 .assessment-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
 }
 
 .card-cover {
-  height: 160px;
+  height: 180px;
   position: relative;
   display: flex;
   align-items: center;
@@ -360,28 +592,51 @@ function handleStart(item) {
   overflow: hidden;
 }
 
-.card-cover-art {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 0 16px;
+.card-cover-bg-deco {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
-.cover-art-text {
-  font-size: 28px;
-  font-weight: 900;
+.card-svg-deco {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.card-cover-overlay {
+  display: none;
+}
+
+.cover-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.92);
-  text-shadow:
-    0 2px 12px rgba(0, 0, 0, 0.18),
-    0 0 40px rgba(255, 255, 255, 0.08);
-  text-align: center;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid;
+  backdrop-filter: blur(4px);
+  line-height: 1.4;
+}
+
+.cover-sub {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  right: 12px;
+  z-index: 3;
+  font-size: 9px;
+  opacity: 0.5;
+  letter-spacing: 0.03em;
   line-height: 1.3;
-  word-break: keep-all;
-  -webkit-font-smoothing: antialiased;
+  text-align: left;
 }
 
 .card-body {
@@ -426,8 +681,6 @@ function handleStart(item) {
   justify-content: flex-end;
 }
 
-
-
 .card-btn {
   flex-shrink: 0;
 }
@@ -442,6 +695,48 @@ function handleStart(item) {
   background: linear-gradient(135deg, #1d4ed8, #2563eb);
   border-color: #1d4ed8;
   color: #ffffff;
+}
+
+/* SVG animations */
+@keyframes svgFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes svgPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes svgRotateSlow {
+  from { transform: rotate(0deg); transform-origin: center; }
+  to { transform: rotate(360deg); transform-origin: center; }
+}
+
+@keyframes svgBarGrow {
+  from { transform: scaleY(0.3); transform-origin: bottom; }
+  to { transform: scaleY(1); transform-origin: bottom; }
+}
+
+.card-svg-deco :deep(.svg-float) {
+  animation: svgFloat 4s ease-in-out infinite;
+}
+
+.card-svg-deco :deep(.svg-pulse) {
+  animation: svgPulse 3s ease-in-out infinite;
+}
+
+.card-svg-deco :deep(.svg-pulse-delay) {
+  animation: svgPulse 3s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+.card-svg-deco :deep(.svg-rotate-slow) {
+  animation: svgRotateSlow 20s linear infinite;
+}
+
+.card-svg-deco :deep(.svg-bar) {
+  animation: svgBarGrow 1.5s ease-out;
 }
 
 /* card list transition */
@@ -531,6 +826,19 @@ function handleStart(item) {
 
   .banner-subtitle {
     font-size: 14px;
+  }
+
+  .assessment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cover-tag {
+    font-size: 10px;
+    padding: 3px 10px;
+  }
+
+  .cover-sub {
+    font-size: 8px;
   }
 }
 </style>

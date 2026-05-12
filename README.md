@@ -1897,9 +1897,30 @@ cd backend && flask db upgrade && python seed.py
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
 
-### v4.7.2 - 2026-05-12（当前版本）
+### v4.8.0 - 2026-05-12（当前版本）
 
-> AI材料评估 PDF 下载修复与报告视觉重构：修复下载误报"内容为空"错误，彻底重写 PDF 报告排版
+> 在线测评卡片视觉升级 + PDF 报告模板专业化重构 + PDF 下载全链路安全性增强
+
+- **新增功能**
+  - 在线测评卡片主题化视觉系统（[OnlineAssessment.vue](innovation-competition-platform/frontend/src/views/portal/OnlineAssessment.vue)：每种测评类型独立 SVG 主题装饰：spark-energy、radar-dots、balance-scale、path-direction、geometric-diamond、growth-spiral、speech-bubbles、wave-balance）
+  - 测评卡片 5 种 CSS 动画（svgPulse 脉冲呼吸、svgFloat 悬浮漂移、svgRotateSlow 缓慢旋转、svgBarGrow 柱状生长、svgPulseDelay 交错脉冲）
+  - PDF 报告生成三种不同维度说明（[material_report_pdf.py](innovation-competition-platform/backend/services/material_report_pdf.py)：PPT 评估侧重"路演表达的完整性、逻辑性和说服力"，报告评估侧重"材料内容的论证深度、数据支撑和商业可行性"）
+  - PDF 下载安全全链路增强（[material_evaluation.py](innovation-competition-platform/backend/routes/material_evaluation.py)：后端文件大小检查、自动删除 0KB 缓存重试、Content-Length / Content-Disposition 头；[request.js](innovation-competition-platform/frontend/src/api/request.js)：blob 响应 Content-Type 错误检测与 JSON 错误解析回退；[AIMaterialEvaluationReport.vue](innovation-competition-platform/frontend/src/views/portal/AIMaterialEvaluationReport.vue)：双重 disabled 禁用 + 函数首行 guard 防并行触发）
+
+- **功能修改**
+  - 在线测评卡片封面全面重构（[OnlineAssessment.vue](innovation-competition-platform/frontend/src/views/portal/OnlineAssessment.vue)：移除居中大白字 `cover-label`，改为左上角小号标签 `cover-tag` + 左下角主题副标题 `cover-sub`，SVG 装饰成为主视觉；封面高度从 160px 提升至 180px）
+  - PDF 报告封面专业化重构（[material_report_pdf.py](innovation-competition-platform/backend/services/material_report_pdf.py)：深蓝全幅 Navy 封面 + 火花图标 Logo + 24pt 标题 + 48pt 总分 + 色块等级标签 + 文件元信息 + 报告编号 + 综合评价一句话 + 三栏核心优势/风险/优化方向 + 品牌落款）
+  - PDF 评分维度表改进（紫色表头 #6366F1 + 120° 条形进度条 + 得分率百分比 + 绿/橙/红三色得分标注）
+  - PDF 章节标题改为紫色短横线分隔（14mm * 3pt）
+  - 评估页面页面新增三个 SVG 主题配置（[assessmentVisualThemes.js](innovation-competition-platform/frontend/src/data/assessmentVisualThemes.js)：新增创业精神、创业性格、创业能力、职业规划、专业技能、团队协作、沟通表达、解决问题共 8 套独立主题）
+
+- **Bug 修复**
+  - 修复 PDF 下载可能产生 0KB 文件的根因（[material_evaluation.py](innovation-competition-platform/backend/routes/material_evaluation.py)：下载前检查 `os.path.getsize`，0KB 则删除缓存重建，重新生成后二次验证文件大小）
+
+- **安全与稳定性**
+  - PDF 下载接口增加文件大小检查，防止缓存 0KB 文件被下载
+  - 前端 request 拦截器增强 blob 错误处理：Content-Type 为 HTML/JSON 时自动解析错误信息并拒绝下载
+  - 前端下载按钮新增双重禁用防护（`:disabled` + 函数首行 guard），消除并行触发可能
 
 - **Bug 修复**
   - 修复 PDF 下载误报"PDF报告内容为空"错误（[AIMaterialEvaluationReport.vue](innovation-competition-platform/frontend/src/views/portal/AIMaterialEvaluationReport.vue)：简化 Blob 校验逻辑，去除导致误判的 `blob.size === 0` 和 `blob.type` 检查，仅在 blob 为 null/undefined 时报错）
