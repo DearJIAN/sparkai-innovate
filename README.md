@@ -4,9 +4,9 @@
 >
 > GitHub: https://github.com/DearJIAN/sparkai-innovate
 
-一个面向高校的**创新创业竞赛全流程服务平台**，覆盖竞赛发现、报名、项目创建、团队管理、材料上传、任务进度、评审打分、AI 辅助的完整流程。平台采用**前后端分离架构**，支持学生、指导老师、评委、管理员四种角色，提供竞赛广场、项目工作室、训练营、在线课程、产业命题等多元化功能。
+一个面向高校的**创新创业竞赛全流程服务平台**，覆盖竞赛发现、报名、项目创建、团队管理、材料上传、任务进度、评审打分、AI 辅助的完整流程。平台采用**前后端分离架构**，支持学生、指导老师、评委、管理员四种角色，提供竞赛广场、项目工作室、训练营、在线课程、产业命题、**AI 材料评估**、**在线测评**等多元化功能。
 
-平台集成了 **Live2D 虚拟形象「火花」**、**语音交互**、**AI 智能对话**、**AI 项目智能体**等特色功能，为用户提供沉浸式智能辅助体验。其中 AI 项目智能体提供智能引航、材料问答、商业计划书体检、路演稿生成、评审辅助、竞赛推荐、项目创意生成、模拟答辩、批量审核、智能反馈、评审草稿、评分检查 12 大 AI 能力，基于 LangChain + FAISS + BM25 混合检索技术实现。
+平台集成了 **Live2D 虚拟形象「火花」**、**语音交互**、**AI 智能对话**、**AI 项目智能体**、**AI 材料评估**等特色功能，为用户提供沉浸式智能辅助体验。其中 AI 项目智能体提供智能引航、材料问答、商业计划书体检、路演稿生成、评审辅助、竞赛推荐、项目创意生成、模拟答辩、批量审核、智能反馈、评审草稿、评分检查 12 大 AI 能力，基于 LangChain + FAISS + BM25 混合检索技术实现。AI 材料评估支持路演 PPT 和项目报告的 PDF 智能上传评估，自动生成 8 维度评分报告并支持 PDF 报告下载。
 
 **品牌视觉**：「火花智创 SparkAI」品牌 Logo 采用动态渐变色彩（红-橙-黄-粉-紫-蓝六色流动渐变）+ 底部粒子浮动效果 + 奖杯呼吸光晕，悬停时加速闪烁，呈现烟花般的视觉氛围。
 
@@ -26,6 +26,7 @@
   - [全局引导系统](#全局引导系统)
   - [双模式布局](#双模式布局)
   - [数字雨背景动画](#数字雨背景动画)
+  - [AI 材料评估](#ai-材料评估)
 - [项目结构](#项目结构)
 - [环境要求](#环境要求)
 - [快速开始](#快速开始)
@@ -46,6 +47,7 @@
   - [系统接口](#系统接口)
   - [其他接口](#其他接口)
   - [AI 智能体 /api/agent](#ai-智能体-apiagent)
+  - [AI 材料评估 /api/material-evaluation](#ai-材料评估-apimaterial-evaluation)
 - [路由配置](#路由配置)
 - [数据库模型](#数据库模型)
 - [用户角色与权限](#用户角色与权限)
@@ -1011,6 +1013,55 @@ done:1                     # 流结束标记
 | `/api/agent/tasks` | GET | JWT | 所有角色 | 任务记录列表（分页，按时间倒序） |
 | `/api/agent/tasks/<id>` | GET | JWT | 所有角色 | 任务详情（含输入参数和 AI 输出结果） |
 
+### AI 材料评估 `/api/material-evaluation`
+
+| 接口 | 方法 | 认证 | 说明 |
+|------|------|------|------|
+| `/api/material-evaluation/tasks` | GET | JWT | 获取当前用户的评估任务列表 |
+| `/api/material-evaluation/upload` | POST | JWT | 上传 PDF 文件并创建评估任务 |
+| `/api/material-evaluation/tasks/<id>` | GET | JWT | 获取评估任务详情和进度 |
+| `/api/material-evaluation/tasks/<id>/status` | GET | JWT | 轮询评估任务状态（pending/processing/completed/failed） |
+| `/api/material-evaluation/reports/<id>` | GET | JWT | 获取评估报告数据（评分、维度、评价内容） |
+| `/api/material-evaluation/reports/<id>/pdf` | GET | JWT | 下载 PDF 报告（已有缓存则直接返回，无缓存则生成后返回，约需 30~60s） |
+
+**上传请求示例**：
+
+```json
+// multipart/form-data
+{
+  "file": "（PDF 文件，最大 50MB）",
+  "evaluation_type": "ppt",  // 或 "report"
+  "file_name": "项目路演PPT"
+}
+```
+
+**报告响应示例**：
+
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": {
+    "id": 1,
+    "evaluation_type": "ppt",
+    "file_name": "项目路演PPT",
+    "total_score": 85.5,
+    "level": "优秀",
+    "summary": "整体表现优秀...",
+    "dimension_scores": {
+      "content_integrity": 88,
+      "expression_logic": 82,
+      ...
+    },
+    "advantages": ["内容完整", "表达清晰"],
+    "problems": ["市场数据不足"],
+    "suggestions": ["补充市场规模数据"]
+  }
+}
+```
+
+> **注意**：PDF 生成使用 Reportlab 库，首次加载 CID 中文字体（STSong-Light）需要约 30~60 秒。下载时不会返回 502（代理超时已设为 300s），已有缓存则秒级返回。
+
 **索引材料请求示例**：
 
 ```json
@@ -1478,6 +1529,26 @@ done:1                     # 流结束标记
 | created\_at      | DateTime                      | 创建时间                                                       |
 | updated\_at      | DateTime                      | 更新时间                                                       |
 
+#### MaterialEvaluation（AI 材料评估）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer (PK) | 评估记录 ID |
+| user\_id | Integer (FK → users) | 用户 ID |
+| evaluation\_type | String(20) | 评估类型（ppt / report） |
+| file\_name | String(255) | 原始文件名 |
+| status | String(20) | 状态（pending / processing / completed / failed） |
+| total\_score | Float | 综合评分（百分制） |
+| level | String(20) | 等级评定（优秀 / 良好 / 一般 / 待改进） |
+| advantages\_json | Text | 核心优势列表（JSON 数组） |
+| problems\_json | Text | 主要风险列表（JSON 数组） |
+| suggestions\_json | Text | 优化方向列表（JSON 数组） |
+| dimension\_scores\_json | Text | 8 维度评分数据（JSON 对象） |
+| summary | Text | 综合评价摘要 |
+| pdf\_path | String(500) | PDF 报告存储路径 |
+| created\_at | DateTime | 创建时间 |
+| updated\_at | DateTime | 更新时间 |
+
 ***
 
 ## 用户角色与权限
@@ -1693,13 +1764,20 @@ def create_competition():
 2. 前端 Axios 拦截器自动检测 401 响应，清除 Token 并跳转登录页
 3. 登录接口返回的 Token 存储在 `localStorage`
 
-### 12. AI 智能体接口超时 / 502
+### 12. 接口超时 / 502
 
+**AI 智能体接口超时**
 1. LLM 密集型接口（BP 体检、路演稿、评审辅助）耗时较长，Vite 代理超时已设为 120 秒
 2. 偶发 502 可重试，通常第二次请求会成功
 3. 前端 API 客户端超时已设为 120 秒（`agentTimeout`）
 4. 检查 `.env` 中 `GLM_API_KEY` 和 `GLM_BASE_URL` 是否正确（通义千问为主要模型）
 5. 如使用火山方舟模型，检查 `ARK_API_KEY` 和 `ARK_BASE_URL`
+
+**PDF 下载超时**
+1. PDF 报告首次生成需要加载 CID 中文字体，耗时约 30~60 秒
+2. 已去掉 `refresh=1` 强制刷新参数，已有缓存 PDF 秒级下载
+3. Vite 代理超时已设为 300 秒，前端 Axios 超时已设为 300 秒
+4. 如仍遇 502，等待 30 秒后重试即可
 
 ### 13. FAISS 向量索引不可用
 
