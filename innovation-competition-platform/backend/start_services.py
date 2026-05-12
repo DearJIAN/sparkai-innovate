@@ -12,47 +12,25 @@ env["FLASK_ENV"] = "development"
 env["FLASK_APP"] = "app.py"
 env["FLASK_DEBUG"] = "0"
 
-DETACHED_PROCESS = 0x00000008
-CREATE_NEW_PROCESS_GROUP = 0x00000200
-flags = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+DETACHED = 0x00000008 | 0x00000200
 
 proc_backend = subprocess.Popen(
     [python_exe, "-m", "flask", "run", "--host=0.0.0.0", "--port=5000", "--no-debugger", "--no-reload"],
-    cwd=backend_dir,
-    env=env,
-    creationflags=flags,
-    close_fds=True
+    cwd=backend_dir, env=env, creationflags=DETACHED, close_fds=True
 )
-
-time.sleep(1)
+print(f"Backend: PID {proc_backend.pid}")
 
 proc_frontend = subprocess.Popen(
-    ["cmd", "/c", "npm", "run", "dev"],
-    cwd=frontend_dir,
-    creationflags=flags,
-    close_fds=True
+    ["cmd", "/c", "start", "npm", "run", "dev"],
+    cwd=frontend_dir, creationflags=DETACHED, close_fds=True
 )
+print(f"Frontend: PID {proc_frontend.pid}")
 
-print(f"Backend PID: {proc_backend.pid}")
-print(f"Frontend PID: {proc_frontend.pid}")
-time.sleep(5)
+time.sleep(8)
 
-s = socket.socket()
-try:
+for name, port in [("Backend", 5000), ("Frontend", 5173)]:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(3)
-    s.connect(("127.0.0.1", 5000))
-    print("Port 5000: OPEN - Backend OK")
+    r = s.connect_ex(('127.0.0.1', port))
+    print(f"{name} port {port}: {'OPEN' if r == 0 else 'CLOSED'}")
     s.close()
-except Exception as e:
-    print(f"Port 5000: CLOSED ({e})")
-
-s2 = socket.socket()
-try:
-    s2.settimeout(3)
-    s2.connect(("127.0.0.1", 5173))
-    print("Port 5173: OPEN - Frontend OK")
-    s2.close()
-except Exception as e:
-    print(f"Port 5173: CLOSED ({e})")
-
-print("Done - services running in background")

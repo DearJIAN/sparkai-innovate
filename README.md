@@ -264,6 +264,16 @@
 - 全屏铺满，动态高度检测
 - IntersectionObserver 懒加载触发
 
+### AI 材料评估
+
+- 支持路演 PPT 和项目报告两种类型的 PDF 智能评估
+- 上传 PDF 后自动进入 AI 分析进度页（含分阶段进度动画）
+- 评分报告页采用飞入动画，各模块从上下左右四个方向飞入组合
+- 8 维度评分体系（PPT：内容完整性/表达逻辑/视觉设计/创新性/可行性/市场价值/团队表现/答辩准备；报告：内容深度/数据支撑/论证逻辑/创新性/可行性/市场分析/团队能力/写作规范）
+- 综合评分 + 等级评定 + 分项维度雷达图
+- PDF 报告下载（reportlab 生成，含深蓝封面 + 评分维度表 + 核心评价卡片 + 改进建议，支持中文 CID 字体回退）
+- 仅允许上传 PDF 文件（扩展名 + MIME type 双重校验，最大 50MB）
+
 ***
 
 ## 项目结构
@@ -283,10 +293,8 @@ innovation-competition-platform/
 │   ├── .env.example                  # 环境变量模板（基础配置）
 │   ├── requirements.txt              # Python 依赖
 │   ├── test_all_api.py               # API 测试脚本
-│   ├── test_file_api.py              # 文件接口测试
-│   ├── test_task_api.py              # 任务接口测试
 │   │
-│   ├── models/                       # 数据模型（14 个）
+│   ├── models/                       # 数据模型（15 个）
 │   │   ├── __init__.py               # 模型统一导出
 │   │   ├── user.py                   # 用户信息（users 表）
 │   │   ├── competition.py            # 竞赛信息（competitions 表）
@@ -301,9 +309,10 @@ innovation-competition-platform/
 │   │   ├── review.py                 # 评审记录（reviews 表）
 │   │   ├── ai_record.py             # AI 使用记录（ai_records 表）
 │   │   ├── agent_task.py            # AI 智能体任务（agent_tasks 表）
-│   │   └── agent_material_index.py  # AI 智能体材料索引（agent_material_indices 表）
+│   │   ├── agent_material_index.py  # AI 智能体材料索引（agent_material_indices 表）
+│   │   └── material_evaluation.py   # AI 材料评估（material_evaluations 表）
 │   │
-│   ├── routes/                       # API 路由（14 个蓝图）
+│   ├── routes/                       # API 路由（15 个蓝图）
 │   │   ├── __init__.py               # 蓝图包初始化
 │   │   ├── auth.py                   # /api/auth    认证接口（注册/登录/当前用户/登出）
 │   │   ├── user.py                   # /api/users   用户接口（列表/详情/创建/更新/删除/状态切换）
@@ -318,7 +327,8 @@ innovation-competition-platform/
 │   │   ├── ai.py                     # /api/ai      AI 接口（聊天/语音/ASR/TTS/分析/表情/健康）
 │   │   ├── competition.py            # /api         竞赛接口（公开+管理+赛道）
 │   │   ├── registration.py           # /api         报名接口（学生+管理员）
-│   │   └── agent.py                  # /api/agent   AI 智能体接口（材料索引/问答/体检/路演/评审辅助/推荐/任务）
+│   │   ├── agent.py                  # /api/agent   AI 智能体接口（材料索引/问答/体检/路演/评审辅助/推荐/任务）
+│   │   └── material_evaluation.py    # /api/material-evaluation  AI 材料评估接口（上传/进度/报告/PDF 下载）
 │   │
 │   ├── services/                     # 业务逻辑
 │   │   ├── __init__.py
@@ -328,7 +338,9 @@ innovation-competition-platform/
 │   │   ├── vector_store.py           # 向量存储服务（FAISS 索引 + BM25 混合检索 + Embedding）
 │   │   ├── tts_service.py            # TTS 语音合成（火山 TTS HTTP API + 文件缓存 + 缓存统计/清理）
 │   │   ├── volc_realtime_bridge.py   # 火山实时语音对话桥（WebSocket + 流式回复 + 回答清洗）
-│   │   └── volc_realtime_protocol.py # 火山实时语音二进制协议（编解码 + Gzip）
+│   │   ├── volc_realtime_protocol.py # 火山实时语音二进制协议（编解码 + Gzip）
+│   │   ├── material_evaluation_service.py # AI 材料评估评分服务（PPT/报告各 8 维度评分体系 + 等级评定）
+│   │   └── material_report_pdf.py     # AI 材料评估 PDF 报告生成（reportlab 封面+维度表+评价卡片+中文 CID 字体回退）
 │   │
 │   ├── utils/                        # 工具函数
 │   │   ├── __init__.py
@@ -384,7 +396,7 @@ innovation-competition-platform/
 │       ├── App.vue                   # 根组件（路由视图 + GuideSystem）
 │       ├── style.css                 # 全局基础样式
 │       │
-│       ├── api/                      # API 接口封装（12 个模块）
+│       ├── api/                      # API 接口封装（13 个模块）
 │       │   ├── request.js            # Axios 基础配置（baseURL:/api，30s超时，Token拦截器，401自动跳转）
 │       │   ├── auth.js               # 认证 API（login/register/getCurrentUser）
 │       │   ├── project.js            # 项目 API
@@ -396,7 +408,8 @@ innovation-competition-platform/
 │       │   ├── competition.js        # 竞赛 API
 │       │   ├── registration.js       # 报名 API
 │       │   ├── ai.js                 # AI API（聊天/语音/ASR/TTS/流式/分析）
-│       │   └── agent.js              # AI 智能体 API（材料索引/问答/体检/路演/评审辅助/推荐/任务）
+│       │   ├── agent.js              # AI 智能体 API（材料索引/问答/体检/路演/评审辅助/推荐/任务）
+│       │   └── materialEvaluation.js # AI 材料评估 API（上传/进度/报告/PDF 下载）
 │       │
 │       ├── components/               # 公共组件
 │       │   ├── SparkLogo.vue         # 品牌 Logo 组件（彩色渐变文字+粒子浮动+奖杯光晕，烟花视觉效果）
@@ -406,6 +419,10 @@ innovation-competition-platform/
 │       │   ├── TestButton.vue        # 测试按钮组件
 │       │   ├── TestButtonDemo.vue    # 测试按钮演示
 │       │   └── HelloWorld.vue        # 示例组件
+│       │
+│       ├── data/                      # 数据配置文件
+│       │   ├── assessmentVisualThemes.js  # 在线测评视觉主题（8 套 SVG 装饰 + 渐变色 + 图标）
+│       │   └── assessmentQuestionnaires.js # 在线测评问卷题库
 │       │
 │       ├── composables/              # 组合函数
 │       │   └── useLive2d.js          # Live2D 表情/情绪联动工具（detectEmotionByText/getExpressionByEmotion/notifyLive2dHook）
@@ -460,7 +477,7 @@ innovation-competition-platform/
 │           │   └── register.vue      # 注册页
 │           ├── materials/
 │           │   └── index.vue         # 材料管理
-│           ├── portal/               # 平台页面（15 个，无侧边栏）
+│           ├── portal/               # 平台页面（19 个，无侧边栏）
 │           │   ├── PortalHome.vue    # 平台首页（全局数字雨背景 + 功能入口 + 推荐竞赛 + 动态统计）
 │           │   ├── CompetitionCenter.vue # 竞赛报名中心（校外/校内双入口分流页 + 蓝紫/青色双卡片）
 │           │   ├── ExternalCompetitions.vue # 校外竞赛（国家级赛事聚合 + 分类筛选 + 官方外链 + 官方海报封面）
@@ -475,7 +492,13 @@ innovation-competition-platform/
 │           │   ├── CourseDetail.vue   # 课程详情（海报占满宽度 + 章节目录 + 学习计划）
 │           │   ├── IndustryTopics.vue # 产业命题（承接命题跳转填写页）
 │           │   ├── AcceptTopic.vue   # 承接命题（填写承接信息 + 快速填充 + 跳转创建项目）
-│           │   └── Certificates.vue  # 证书成果（查看详情弹窗 + 证书图片）
+│           │   ├── Certificates.vue  # 证书成果（查看详情弹窗 + 证书图片）
+│           │   ├── OnlineAssessment.vue   # 在线测评（8 套主题 SVG 卡片 + 10 题问卷 + 40 分制评分 + 维度分析）
+│           │   ├── AssessmentResult.vue   # 测评结果（40 分制雷达图 + 综合评级 + 分项解读）
+│           │   ├── AIMaterialEvaluation.vue           # AI 材料评估中心（任务面板 + 状态筛选 + 空状态引导）
+│           │   ├── AIMaterialEvaluationUpload.vue     # AI 材料评估上传页（文件拖拽/选择 + 类型选择 + 名称编辑）
+│           │   ├── AIMaterialEvaluationProgress.vue   # AI 材料评估进度页（分阶段进度动画 + 实时状态轮询）
+│           │   └── AIMaterialEvaluationReport.vue     # AI 材料评估报告页（飞入动画 + 8 维度评分 + 雷达图 + PDF 下载）
 │           ├── projects/             # 项目页面（9 个）
 │           │   ├── my-projects.vue   # 我的项目（onActivated 自动刷新）
 │           │   ├── create.vue        # 创建项目（快速填充 + 数据预处理 + 详细错误处理）
@@ -1720,7 +1743,9 @@ def create_competition():
 | 首页数字雨       | ✅ 完成 | 全局 Canvas 数字雨背景/科幻风格/扫描线/全屏铺满                                 |
 | Banner 动画   | ✅ 完成 | 竞赛/训练营/课程各具独特渐变色+光球动画                                         |
 | AI 项目智能体 | ✅ 完成 | 12 大 AI 能力（智能引航/材料问答/BP 体检/路演稿/评审辅助/竞赛推荐/项目创意/模拟答辩/批量审核/智能反馈/评审草稿/评分检查）+ LangChain + FAISS + BM25 |
-| 一键启动        | ✅ 完成 | start.bat 自动检测依赖+启动前后端                                        |
+| AI 材料评估   | ✅ 完成 | PPT/报告 PDF 智能评估（上传→AI 分析→评分报告→PDF 下载），含飞入动画报告页、reportlab 专业化 PDF 报告生成 |
+| 在线测评      | ✅ 完成 | 8 套主题化测评卡片（SVG 装饰+CSS 动画）+ 10 题×4 选项问卷 + 40 分制评分 + 维度分析 + PDF 导出 |
+| 一键启动      | ✅ 完成 | start.bat 自动检测依赖+停止旧进程+启动前后端 |
 
 ### 正在进行的开发任务
 
@@ -1897,7 +1922,30 @@ cd backend && flask db upgrade && python seed.py
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
 
-### v4.8.0 - 2026-05-12（当前版本）
+### v4.9.0 - 2026-05-13（当前版本）
+
+> PDF 首页封面重构 + 在线测评卡片主题化 + PDF 下载 502 修复 + 全链路稳定性优化
+
+- **新增功能**
+  - 在线测评 8 套独立 SVG 主题装饰系统（[assessmentVisualThemes.js](innovation-competition-platform/frontend/src/data/assessmentVisualThemes.js)：创业精神/创业性格/创业能力/职业规划/专业技能/团队协作/沟通表达/解决问题，每套含独特 SVG 装饰图案）
+  - 测评卡片 5 种 CSS 动画效果（svgPulse 脉冲呼吸、svgFloat 悬浮漂移、svgRotateSlow 缓慢旋转、svgBarGrow 柱状生长、svgPulseDelay 交错脉冲）
+
+- **功能修改**
+  - PDF 报告封面彻底重构（[material_report_pdf.py](innovation-competition-platform/backend/services/material_report_pdf.py)：封面改为垂直三卡片排布（核心优势/主要风险/优化方向），标题字号全面提升（品牌 11pt→14pt、报告标题 20pt→28pt、总分 32pt→40pt），内容整体居中布局，每模块有独立圆角卡片+内容居中视觉）
+  - 在线测评卡片封面重新设计（[OnlineAssessment.vue](innovation-competition-platform/frontend/src/views/portal/OnlineAssessment.vue)：封面高度 160→180px，居中大白字改为左上角 cover-tag + 左下角 cover-sub，SVG 装饰成为主视觉）
+
+- **Bug 修复**
+  - 修复 PDF 下载返回 502 Bad Gateway（[materialEvaluation.js](innovation-competition-platform/frontend/src/api/materialEvaluation.js)：去掉 `refresh=1` 强制刷新参数，不再每次下载都删除缓存 PDF 重新生成；[vite.config.js](innovation-competition-platform/frontend/vite.config.js)：代理超时从 120s 提升至 300s 应对 CID 字体渲染慢场景；[material_evaluation.py](innovation-competition-platform/backend/routes/material_evaluation.py)：去掉 force_refresh 逻辑，优先使用已有缓存 PDF 直接返回）
+  - 修复 student1 密码与登录页演示账号不一致（fix_password.py：重置为 student123 与登录页一键填充匹配）
+
+- **安全与稳定性**
+  - PDF 生成请求超时保护（Vite proxyTimeout 300s + Axios timeout 300s，防止慢请求被截断为 502）
+  - 后端启动脚本恢复完整版本（[start.bat](innovation-competition-platform/start.bat)：含端口清理/依赖检查/前后端顺序启动）
+
+- **文档更新**
+  - README 全量更新至 v4.9.0：新增 AI材料评估特色功能章节、补充 material-evaluation 路由和 API 端点、更新项目结构、更新当前开发状态
+
+### v4.8.0 - 2026-05-12
 
 > 在线测评卡片视觉升级 + PDF 报告模板专业化重构 + PDF 下载全链路安全性增强
 
