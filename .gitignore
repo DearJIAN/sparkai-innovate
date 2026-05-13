@@ -34,3 +34,7 @@ skills/
 # *.db 数据库文件
 # *.sqlite / *.sqlite3
 # 以上文件即使出现也不会被忽略
+
+
+innovation-competition-platform/backend/uploads/
+innovation-competition-platform/backend/test_output/
