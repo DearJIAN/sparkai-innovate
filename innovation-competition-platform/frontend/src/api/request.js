@@ -1,9 +1,10 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
+import { withApiBase } from '@/utils/appBase'
 
 const request = axios.create({
-  baseURL: '/api',
+  baseURL: withApiBase(''),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
@@ -29,7 +30,10 @@ request.interceptors.response.use(
   async (response) => {
     if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
       const ct = response.headers?.['content-type'] || ''
-      if (ct && !ct.includes('pdf') && !ct.includes('octet-stream') && !ct.includes('image') && response.status >= 400) {
+      const isErrorStatus = response.status >= 400
+      const isNonBinaryContent = ct && !ct.includes('pdf') && !ct.includes('octet-stream') && !ct.includes('image')
+
+      if (isErrorStatus || (isNonBinaryContent && response.data?.size < 1000)) {
         const text = await new Promise(resolve => {
           const reader = new FileReader()
           reader.onload = () => resolve(reader.result)

@@ -341,9 +341,8 @@ async function downloadPDF() {
       return
     }
 
-    const contentType = blob.type || ''
-    if (!contentType.includes('pdf') && !contentType.includes('octet-stream') && contentType !== '') {
-      ElMessage.error('下载内容格式异常，请稍后重试')
+    if (blob.size < 100) {
+      ElMessage.error('PDF文件内容不完整，请稍后重试')
       return
     }
 
@@ -357,6 +356,7 @@ async function downloadPDF() {
     setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
     ElMessage.success('PDF报告下载成功')
   } catch (e) {
+    console.error('PDF download error:', e)
     ElMessage.error('PDF下载失败，请稍后重试')
   } finally {
     downloadingPDF.value = false

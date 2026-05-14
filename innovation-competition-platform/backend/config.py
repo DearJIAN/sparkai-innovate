@@ -7,6 +7,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
 
+def _split_env_list(value, default=''):
+    raw = os.environ.get(value, default)
+    return [item.strip() for item in raw.split(',') if item.strip()]
+
+
 class Config:
     # Flask 基础配置
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
@@ -28,7 +33,7 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=7)
     
     # 文件上传配置
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+    UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
     MAX_CONTENT_LENGTH = 4 * 1024 * 1024 * 1024  # 最大 4GB
     ALLOWED_EXTENSIONS = {
         'png', 'jpg', 'jpeg', 'gif', 'bmp',  # 图片
@@ -38,6 +43,10 @@ class Config:
         'mp4', 'avi', 'mov', 'wmv', 'mkv',  # 视频
         'zip', 'rar', '7z'  # 压缩包
     }
+
+    # 部署与跨域配置
+    CORS_ORIGINS = _split_env_list('CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
+    TRUST_PROXY = os.environ.get('TRUST_PROXY', '0').lower() in ('1', 'true', 'yes', 'on')
     
     # 分页配置
     DEFAULT_PAGE_SIZE = 10

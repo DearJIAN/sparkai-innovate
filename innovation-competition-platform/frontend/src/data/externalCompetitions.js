@@ -1,6 +1,9 @@
 import innovationPoster from '@/assets/images/Off-campus_competitions/中国国际大学生创新大赛.png'
 import challengePoster from '@/assets/images/Off-campus_competitions/“挑战杯”中国大学生创业计划竞赛.png'
 import ecommercePoster from '@/assets/images/Off-campus_competitions/全国大学生电子商务“创新、创意及创业”挑战赛.png'
+import careerPlanningPoster from '@/assets/images/Off-campus_competitions/全国大学生职业规划大赛.png'
+import energySavingPoster from '@/assets/images/Off-campus_competitions/全国大学生节能减排社会实践与科技竞赛.png'
+import engineeringPracticePoster from '@/assets/images/Off-campus_competitions/全国大学生工程实践与创新能力大赛.png'
 
 export const externalCompetitions = [
   {
@@ -121,6 +124,121 @@ export const externalCompetitions = [
       '参赛项目信息、团队组成在校赛开始后通常不可增加或修改'
     ],
     materials: ['项目报告书', '路演 PPT', '参赛团队承诺书', '指导老师承诺书', '实战赛知情书或授权协议，如有']
+  },
+  {
+    slug: 'career-planning',
+    title: '全国大学生职业规划大赛',
+    shortTitle: '职业规划大赛',
+    organizer: '教育部',
+    level: '国家级',
+    category: '职业发展',
+    statusText: '备赛关注中',
+    timeText: '每年以官方通知为准',
+    officialUrl: 'https://zgs.chsi.com.cn/home',
+    posterImage: careerPlanningPoster,
+    coverGradient: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%)',
+    tags: ['职业规划', '就业指导', '生涯教育', '国家级'],
+    summary: '面向高校学生开展职业规划、求职实践和生涯教育展示，帮助学生明确发展目标、提升就业竞争力。',
+    tracks: [
+      '成长赛道：面向中低年级学生，考察职业发展规划的科学性和围绕实现职业目标的成长过程',
+      '就业赛道：面向高年级学生，考察求职实战能力，个人发展路径与经济社会发展需要的适应度',
+      '课程教学赛道：面向教师，考察就业指导课程的建设、教学和实施情况'
+    ],
+    schedule: [
+      { name: '参赛报名', date: '以当届官方通知为准', desc: '通过全国大学生职业规划大赛平台或学校指定渠道报名' },
+      { name: '校赛', date: '以学校通知为准', desc: '学校组织评审，选拔优秀选手进入省赛' },
+      { name: '省赛', date: '以各省通知为准', desc: '省级组织复赛并推荐全国总决赛人选' },
+      { name: '全国总决赛', date: '以当届官方通知为准', desc: '现场展示、答辩和评审，产生国家级奖项' }
+    ],
+    awards: [
+      '成长赛道、就业赛道通常设置金奖、银奖、铜奖',
+      '课程教学赛道通常设置相应奖项',
+      '优秀指导教师、优秀组织奖等按当届通知执行'
+    ],
+    requirements: [
+      '面向普通高校在校学生，按赛道要求选择对应组别',
+      '参赛信息和材料须真实、完整，符合赛事通知要求',
+      '已获往届相关奖项的选手参赛规则以当届通知为准',
+      '具体要求以当届官方通知为准'
+    ],
+    materials: ['个人职业规划材料', '求职展示材料', '生涯发展过程材料', '课程教学赛道相关课程材料']
+  },
+  {
+    slug: 'energy-saving',
+    title: '全国大学生节能减排社会实践与科技竞赛',
+    shortTitle: '节能减排竞赛',
+    organizer: '教育部高等学校能源动力类专业教学指导委员会 / 全国大学生节能减排社会实践与科技竞赛委员会',
+    level: '国家级',
+    category: '节能环保',
+    statusText: '备赛关注中',
+    timeText: '每年举办，具体以官网当届通知为准',
+    officialUrl: 'https://www.jienengjianpai.org/',
+    posterImage: energySavingPoster,
+    coverGradient: 'linear-gradient(135deg, #059669 0%, #16a34a 50%, #65a30d 100%)',
+    tags: ['节能减排', '绿色能源', '双碳实践', '科技作品'],
+    summary: '围绕节能减排、绿色能源和国家双碳目标，鼓励学生开展科技作品、工程设计和社会实践调研。',
+    tracks: [
+      '科技作品类：实物制作、模型、软件、设计等',
+      '社会实践调查报告类：围绕节能减排、绿色能源的调研与分析',
+      '产业赛道：围绕企业命题和产业需求开展项目',
+      '港澳台及国际相关赛道按当届通知设置'
+    ],
+    schedule: [
+      { name: '高校报名', date: '以当届官方通知为准', desc: '学校组织团队报名并提交作品信息' },
+      { name: '作品申报', date: '以当届官方通知为准', desc: '提交申报书、作品说明书等材料' },
+      { name: '校内选拔', date: '以学校安排为准', desc: '学校组织评审并推荐进入国赛' },
+      { name: '国赛评审', date: '以当届官方通知为准', desc: '专家评审，择优进入全国总决赛' },
+      { name: '全国总决赛', date: '以当届官方通知为准', desc: '现场展示、答辩和评审，产生国家级奖项' }
+    ],
+    awards: [
+      '全国总决赛通常设置特等奖、一等奖、二等奖、三等奖',
+      '部分专项赛或产业赛道可能另设奖项',
+      '优秀指导教师、优秀组织奖等按当届通知执行'
+    ],
+    requirements: [
+      '面向高校学生团队，作品应紧扣节能减排、绿色能源主题',
+      '作品形式可以是实物制作、模型、软件、设计、调研报告等',
+      '具体组队人数、报名方式、名额限制以当届官方通知为准',
+      '不得侵犯知识产权，具体要求以当届通知为准'
+    ],
+    materials: ['申报书', '作品说明书', '设计图纸或软件说明', '社会实践调研报告', '作品展示材料']
+  },
+  {
+    slug: 'engineering-practice',
+    title: '全国大学生工程实践与创新能力大赛',
+    shortTitle: '工程实践创新大赛',
+    organizer: '教育部高等教育司 / 教育部高等学校工程训练教学指导委员会',
+    level: '国家级',
+    category: '工程实践',
+    statusText: '备赛关注中',
+    timeText: '按校级初赛、省级选拔赛、全国总决赛推进，具体以当届通知为准',
+    officialUrl: 'http://www.gcxl.edu.cn/',
+    posterImage: engineeringPracticePoster,
+    coverGradient: 'linear-gradient(135deg, #0369a1 0%, #2563eb 50%, #4f46e5 100%)',
+    tags: ['工程实践', '智能制造', '新工科', '创新能力'],
+    summary: '面向大学生工程实践和创新能力培养，强调工程设计、制作调试、团队协作和现场展示。',
+    tracks: [
+      '新能源车赛道：围绕新能源车辆设计、制作与调试',
+      '“智能+”赛道：围绕智能制造、智能系统、机器人等方向',
+      '虚拟仿真赛道：围绕工程虚拟仿真、数字孪生等方向'
+    ],
+    schedule: [
+      { name: '校级初赛', date: '以学校通知为准', desc: '学校组织校内选拔，推荐进入省赛' },
+      { name: '省级选拔赛', date: '以各省通知为准', desc: '省级组织选拔赛并推荐全国总决赛' },
+      { name: '全国总决赛', date: '以当届官方通知为准', desc: '现场运行、答辩和评审，产生国家级奖项' }
+    ],
+    awards: [
+      '全国总决赛通常设置一等奖、二等奖、三等奖',
+      '部分赛项可能另设特等奖或专项奖',
+      '优秀指导教师、优秀组织奖等按当届通知执行'
+    ],
+    requirements: [
+      '面向普通高校在校本科生',
+      '以团队形式参赛，按赛项要求完成设计、制作、调试、运行和展示',
+      '具体赛项规则以当届官方命题与评分文件为准',
+      '不得侵犯知识产权，具体要求以当届通知为准'
+    ],
+    materials: ['参赛报名表', '方案设计文档', '工程图纸或系统说明', '作品运行视频', '答辩展示材料']
   }
 ]
 
@@ -132,5 +250,8 @@ export const externalCategories = [
   { label: '全部', value: 'all' },
   { label: '创新创业', value: '创新创业' },
   { label: '创业计划', value: '创业计划' },
-  { label: '电子商务', value: '电子商务' }
+  { label: '电子商务', value: '电子商务' },
+  { label: '职业发展', value: '职业发展' },
+  { label: '节能环保', value: '节能环保' },
+  { label: '工程实践', value: '工程实践' }
 ]

@@ -1,4 +1,5 @@
 import request from './request'
+import { withApiBase } from '@/utils/appBase'
 
 export const generateProjectSummary = (data) => request.post('/ai/project-summary', data)
 export const generateBusinessAdvice = (data) => request.post('/ai/business-plan-advice', data)
@@ -12,7 +13,7 @@ export const getExpressions = () => request.get('/ai/expressions')
 export const getModelInfo = () => request.get('/ai/model-info')
 
 export function chatStream(message, sessionId, scene = '火花智创') {
-  return fetch('/api/ai/chat/stream', {
+  return fetch(withApiBase('/ai/chat/stream'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -23,7 +24,7 @@ export function chatStream(message, sessionId, scene = '火花智创') {
 }
 
 export function voiceChatStream(message, sessionId, scene = '火花智创') {
-  return fetch('/api/ai/voice/chat/stream', {
+  return fetch(withApiBase('/ai/voice/chat/stream'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -34,7 +35,7 @@ export function voiceChatStream(message, sessionId, scene = '火花智创') {
 }
 
 export function uploadAsrAudio(formData) {
-  return fetch('/api/ai/asr', {
+  return fetch(withApiBase('/ai/asr'), {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,

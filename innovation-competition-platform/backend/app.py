@@ -2,6 +2,7 @@ import os
 import sys
 from flask import Flask, jsonify, send_from_directory
 from sqlalchemy import text
+from werkzeug.middleware.proxy_fix import ProxyFix
 from config import config
 from extensions import db, migrate, jwt, cors
 
@@ -20,6 +21,9 @@ def create_app(config_name=None):
     
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+
+    if app.config.get('TRUST_PROXY'):
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
     
     # 确保上传目录存在
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -30,7 +34,7 @@ def create_app(config_name=None):
     jwt.init_app(app)
     cors.init_app(app, resources={
         r"/api/*": {
-            "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
+            "origins": app.config.get('CORS_ORIGINS', []),
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
@@ -143,4 +147,5 @@ app = create_app()
 
 if __name__ == '__main__':
     init_database(app)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    debug_mode = os.environ.get('FLASK_ENV', 'development') != 'production'
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)

@@ -263,6 +263,7 @@ import { Plus, Upload, MagicStick } from '@element-plus/icons-vue'
 import { getPublicCompetitionDetail } from '@/api/competition'
 import { getProjects } from '@/api/project'
 import { createRegistration, addRegistrationMember, submitRegistration } from '@/api/registration'
+import { withApiBase } from '@/utils/appBase'
 
 const route = useRoute()
 const router = useRouter()
@@ -328,7 +329,7 @@ const uploadHeaders = computed(() => {
 
 const uploadAction = computed(() => {
   if (!registrationId.value) return ''
-  return `/api/registrations/${registrationId.value}/materials`
+  return withApiBase(`/registrations/${registrationId.value}/materials`)
 })
 
 onMounted(async () => {

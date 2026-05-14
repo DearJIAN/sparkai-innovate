@@ -1,4 +1,5 @@
 import request from './request'
+import { withApiBase } from '@/utils/appBase'
 
 export const uploadMaterial = (formData) =>
   request.post('/material-evaluation/upload', formData, {
@@ -24,7 +25,7 @@ export const downloadReportPdf = (taskId) =>
   })
 
 export const getDownloadUrl = (taskId) =>
-  `/material-evaluation/reports/${taskId}/pdf`
+  withApiBase(`/material-evaluation/reports/${taskId}/pdf`)
 
 export const getMyTasks = (params = {}) =>
   request.get('/material-evaluation/tasks', { params })

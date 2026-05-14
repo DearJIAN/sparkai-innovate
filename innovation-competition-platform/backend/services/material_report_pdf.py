@@ -53,6 +53,17 @@ PURPLE = HexColor("#6366F1")
 LIGHT_PURPLE = HexColor("#A78BFA")
 DARK_BG = HexColor("#1E293B")
 
+COVER_BG = HexColor("#FFFFFF")
+COVER_TEXT_PRIMARY = HexColor("#1E293B")
+COVER_TEXT_SECONDARY = HexColor("#475569")
+COVER_TEXT_TERTIARY = HexColor("#64748B")
+COVER_ACCENT = HexColor("#2563EB")
+COVER_CARD_BG = HexColor("#F8FAFC")
+COVER_CARD_BORDER = HexColor("#E2E8F0")
+COVER_TOP_BAR = HexColor("#2563EB")
+COVER_SCORE_BG = HexColor("#EFF6FF")
+COVER_SCORE_BORDER = HexColor("#BFDBFE")
+
 
 class CoverFlowable(Flowable):
     def __init__(self, width, evaluation):
@@ -62,7 +73,7 @@ class CoverFlowable(Flowable):
         self._e = evaluation
 
     def _draw_spark_logo(self, c, cx, y):
-        c.setFillColor(LIGHT_PURPLE)
+        c.setFillColor(COVER_ACCENT)
         p = c.beginPath()
         p.moveTo(cx, y + 7)
         p.lineTo(cx + 3, y + 2)
@@ -76,16 +87,23 @@ class CoverFlowable(Flowable):
         c.drawPath(p, fill=1, stroke=0)
 
     def _draw_accent_line(self, c, cx, y, w):
-        c.setStrokeColor(PURPLE)
-        c.setLineWidth(1.5)
+        c.setStrokeColor(COVER_ACCENT)
+        c.setLineWidth(2)
         c.line(cx - w/2, y, cx + w/2, y)
+
+    def _draw_dotted_line(self, c, x1, y, x2):
+        c.setStrokeColor(COVER_CARD_BORDER)
+        c.setLineWidth(0.5)
+        c.setDash([3, 3])
+        c.line(x1, y, x2, y)
+        c.setDash([])
 
     def draw(self):
         c = self.canv
         w = self.width
         h = self.height
 
-        c.setFillColor(NAVY)
+        c.setFillColor(COVER_BG)
         c.rect(0, 0, w, h, fill=1, stroke=0)
         cx = w / 2
 
@@ -97,78 +115,77 @@ class CoverFlowable(Flowable):
 
         cur = h
 
-        # === TOP DECO BAR (10pt) ===
-        cur -= 10
-        c.setFillColor(DARK_BG)
-        c.rect(0, cur, w, 10, fill=1, stroke=0)
-        c.setStrokeColor(HexColor("#334155"))
-        c.setLineWidth(0.5)
-        c.line(0, cur, w, cur)
+        # === TOP BLUE BAR (6pt) ===
+        cur -= 6
+        c.setFillColor(COVER_TOP_BAR)
+        c.rect(0, cur, w, 6, fill=1, stroke=0)
 
         # === SPARK LOGO ===
-        cur -= 18
+        cur -= 22
         self._draw_spark_logo(c, cx, cur)
 
-        # === BRAND NAME (11pt) ===
+        # === BRAND NAME (10pt) ===
         cur -= 16
-        c.setFillColor(WHITE)
-        c.setFont(_font_bold, 11)
+        c.setFillColor(COVER_TEXT_SECONDARY)
+        c.setFont(_font_bold, 10)
         c.drawCentredString(cx, cur, "火花智创  SparkAI Innovate")
 
         # === ACCENT LINE ===
         cur -= 12
-        self._draw_accent_line(c, cx, cur, 70)
+        self._draw_accent_line(c, cx, cur, 60)
 
-        # === REPORT TYPE (28pt) ===
-        cur -= 30
+        # === REPORT TYPE (26pt) ===
+        cur -= 34
         type_label = "路演PPT评估报告" if self._e.evaluation_type == "ppt" else "项目报告评估报告"
-        c.setFillColor(WHITE)
-        c.setFont(_font_bold, 28)
+        c.setFillColor(COVER_TEXT_PRIMARY)
+        c.setFont(_font_bold, 26)
         c.drawCentredString(cx, cur, type_label)
 
-        # === SUBTITLE (11pt) ===
-        cur -= 24
-        c.setFont(_font_name, 11)
-        c.setFillColor(HexColor("#CBD5E1"))
+        # === SUBTITLE (10pt) ===
+        cur -= 20
+        c.setFont(_font_name, 10)
+        c.setFillColor(COVER_TEXT_TERTIARY)
         c.drawCentredString(cx, cur, "数据驱动  ·  智能分析  ·  精准优化")
 
-        # === SCORE CARD BOX (110pt high, 192pt wide) ===
-        box_bottom = cur - 18 - 110
-        card_w = 192
-        c.setFillColor(DARK_BG)
-        c.roundRect(cx - card_w / 2, box_bottom, card_w, 110, 10, fill=1, stroke=0)
-        c.setStrokeColor(HexColor("#334155"))
-        c.setLineWidth(0.5)
-        c.roundRect(cx - card_w / 2, box_bottom, card_w, 110, 10, fill=0, stroke=1)
+        # === SCORE CARD (light blue background with subtle shadow) ===
+        score_card_h = 100
+        score_card_w = 180
+        box_bottom = cur - 16 - score_card_h
+        # Shadow
+        c.setFillColor(HexColor("#E2E8F0"))
+        c.roundRect(cx - score_card_w / 2 + 2, box_bottom - 2, score_card_w, score_card_h, 12, fill=1, stroke=0)
+        c.setFillColor(COVER_SCORE_BG)
+        c.roundRect(cx - score_card_w / 2, box_bottom, score_card_w, score_card_h, 12, fill=1, stroke=0)
+        c.setStrokeColor(COVER_SCORE_BORDER)
+        c.setLineWidth(1)
+        c.roundRect(cx - score_card_w / 2, box_bottom, score_card_w, score_card_h, 12, fill=0, stroke=1)
 
-        box_top = box_bottom + 110
-
-        # Score number (56pt)
-        score_cy = box_bottom + 68
-        c.setFont(_font_bold, 56)
-        c.setFillColor(WHITE)
+        # Score number (48pt)
+        score_cy = box_bottom + 58
+        c.setFont(_font_bold, 48)
+        c.setFillColor(COVER_ACCENT)
         c.drawCentredString(cx, score_cy, str(score_value))
 
-        # Score label (11pt)
-        c.setFont(_font_name, 11)
-        c.setFillColor(MUTED)
-        c.drawCentredString(cx, score_cy - 24, "综合评分")
+        # Score label (10pt)
+        c.setFont(_font_name, 10)
+        c.setFillColor(COVER_TEXT_TERTIARY)
+        c.drawCentredString(cx, score_cy - 22, "综合评分")
 
         # Level badge
         lvl_color = _level_color(score_value)
-        badge_w = 60
-        badge_h_val = 22
-        badge_y = box_bottom - badge_h_val - 6
+        badge_w = 56
+        badge_h_val = 20
+        badge_y = box_bottom - badge_h_val - 8
         c.setFillColor(lvl_color)
         c.roundRect(cx - badge_w / 2, badge_y, badge_w, badge_h_val, 6, fill=1, stroke=0)
         c.setFillColor(WHITE)
-        c.setFont(_font_bold, 11)
+        c.setFont(_font_bold, 10)
         c.drawCentredString(cx, badge_y + 4, lvl)
 
-        # === META INFO (10pt, 4 lines) ===
-        cur = badge_y - 18
-        c.setFont(_font_name, 10)
-        c.setFillColor(MUTED)
+        # === META INFO (9pt) ===
+        cur = badge_y - 20
+        c.setFont(_font_name, 9)
+        c.setFillColor(COVER_TEXT_TERTIARY)
         meta_lines = [
             f"文件：{self._e.file_name or '未知'}",
             f"评估类型：{'PPT评估' if self._e.evaluation_type == 'ppt' else '报告评估'}",
@@ -176,29 +193,28 @@ class CoverFlowable(Flowable):
             f"报告编号：REP-{self._e.id}-{datetime.utcnow().strftime('%Y%m')}"
         ]
         for i, line in enumerate(meta_lines):
-            c.drawCentredString(cx, cur - i * 14, line)
+            c.drawCentredString(cx, cur - i * 13, line)
 
-        # === SEPARATOR LINE ===
-        cur = cur - 4 * 14 - 12
-        self._draw_accent_line(c, cx, cur, 200)
+        # === DOTTED SEPARATOR ===
+        cur = cur - 4 * 13 - 14
+        self._draw_dotted_line(c, cx - 120, cur, cx + 120)
 
-        # === 综合评价 (12pt) ===
-        cur -= 18
+        # === 综合评价 ===
+        cur -= 20
         c.setFont(_font_bold, 12)
-        c.setFillColor(WHITE)
+        c.setFillColor(COVER_TEXT_PRIMARY)
         c.drawCentredString(cx, cur, "综 合 评 价")
         one_liner = _get_one_liner(score_value)
         cur -= 18
         c.setFont(_font_name, 10)
-        c.setFillColor(HexColor("#CBD5E1"))
+        c.setFillColor(COVER_TEXT_SECONDARY)
         c.drawCentredString(cx, cur, one_liner)
 
-        # === THREE VERTICAL CARDS ===
-        cur -= 22
-        card_h = 56
-        card_w_3 = 320
-        card_gap = 16
-
+        # === THREE INFO CARDS (vertical full-width layout) ===
+        cur -= 18
+        card_w = w - 32
+        card_x = cx - card_w / 2
+        card_gap = 10
         card_data = [
             (GREEN, "核 心 优 势", advantages[:2]),
             (ORANGE, "主 要 风 险", problems[:2]),
@@ -206,43 +222,44 @@ class CoverFlowable(Flowable):
         ]
 
         for idx, (color, label, items) in enumerate(card_data):
-            cy = cur - idx * (card_h + card_gap)
+            item_count = len(items) if items else 0
+            card_h = 36 + item_count * 18 if item_count > 0 else 36
+            card_y = cur - card_h
 
-            c.setFillColor(HexColor("#1E293B"))
-            c.roundRect(cx - card_w_3 / 2, cy, card_w_3, card_h, 8, fill=1, stroke=0)
-            c.setStrokeColor(HexColor("#334155"))
-            c.setLineWidth(0.3)
-            c.roundRect(cx - card_w_3 / 2, cy, card_w_3, card_h, 8, fill=0, stroke=1)
+            # Card shadow
+            c.setFillColor(HexColor("#E2E8F0"))
+            c.roundRect(card_x + 1, card_y - 1, card_w, card_h, 8, fill=1, stroke=0)
+            c.setFillColor(COVER_CARD_BG)
+            c.roundRect(card_x, card_y, card_w, card_h, 8, fill=1, stroke=0)
+            c.setStrokeColor(COVER_CARD_BORDER)
+            c.setLineWidth(0.5)
+            c.roundRect(card_x, card_y, card_w, card_h, 8, fill=0, stroke=1)
 
-            card_mid = cy + card_h / 2
-
-            if items:
-                if len(items) == 1:
-                    first_item = items[0][:60] + "..." if len(items[0]) > 60 else items[0]
-                    c.setFont(_font_name, 10)
-                    c.setFillColor(HexColor("#CBD5E1"))
-                    c.drawCentredString(cx, card_mid - 4, f"• {first_item}")
-                else:
-                    for di in range(2):
-                        item_text = items[di][:60] + "..." if len(items[di]) > 60 else items[di]
-                        c.setFont(_font_name, 10)
-                        c.setFillColor(HexColor("#CBD5E1"))
-                        c.drawCentredString(cx, card_mid - 2 - di * 16, f"• {item_text}")
-            else:
-                c.setFont(_font_name, 10)
-                c.setFillColor(MUTED)
-                c.drawCentredString(cx, card_mid - 4, "暂无数据")
-
-            badge_lx = cx - card_w_3 / 2 + 8
-            badge_cy_label = cy + card_h - 12
+            # Color indicator bar at left
             c.setFillColor(color)
-            c.setFont(_font_bold, 11)
-            c.drawString(badge_lx, badge_cy_label, label)
+            c.roundRect(card_x, card_y, 4, card_h, 0, fill=1, stroke=0)
 
-        # === FOOTER (8pt) ===
-        cur = cur - 2 * (card_h + card_gap) + card_gap - 30
+            # Label
+            c.setFont(_font_bold, 10)
+            c.setFillColor(color)
+            c.drawString(card_x + 14, card_y + card_h - 18, label)
+
+            # Content items
+            c.setFont(_font_name, 9)
+            c.setFillColor(COVER_TEXT_SECONDARY)
+            if items:
+                for di, item in enumerate(items[:3]):
+                    item_text = item[:80] + "..." if len(item) > 80 else item
+                    c.drawString(card_x + 14, card_y + card_h - 36 - di * 16, f"• {item_text}")
+            else:
+                c.drawString(card_x + 14, card_y + card_h - 36, "暂无数据")
+
+            cur = card_y - card_gap
+
+        # === FOOTER ===
+        cur -= 16
         c.setFont(_font_name, 8)
-        c.setFillColor(HexColor("#475569"))
+        c.setFillColor(COVER_TEXT_TERTIARY)
         c.drawCentredString(cx, cur, "本报告由火花智创 SparkAI Innovate · AI材料评估系统自动生成")
         cur -= 12
         c.drawCentredString(cx, cur, "报告仅供学习和参赛参考，不构成任何形式的法律或专业建议")

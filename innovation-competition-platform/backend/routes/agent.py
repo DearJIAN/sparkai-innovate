@@ -38,14 +38,19 @@ logger = logging.getLogger(__name__)
 
 agent_bp = Blueprint('agent', __name__)
 
-UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads')
-
 
 def _get_current_user():
     user_id = get_jwt_identity()
     if user_id is None:
         return None
     return User.query.get(int(user_id))
+
+
+def _get_upload_folder():
+    return os.environ.get('UPLOAD_FOLDER') or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'uploads'
+    )
 
 
 def _check_project_access(project, user):
@@ -164,7 +169,7 @@ def index_materials():
         if not files:
             return error('该项目暂无上传文件')
 
-        parsed_results = parse_project_files(files, UPLOAD_FOLDER)
+        parsed_results = parse_project_files(files, _get_upload_folder())
 
         source_id = project_id
         index_info = get_index_info('project', source_id)
@@ -191,7 +196,7 @@ def index_materials():
         if not materials:
             return error('该报名暂无上传材料')
 
-        parsed_results = parse_registration_materials(materials, UPLOAD_FOLDER)
+        parsed_results = parse_registration_materials(materials, _get_upload_folder())
 
         source_id = registration_id
         index_info = get_index_info('registration', source_id)
