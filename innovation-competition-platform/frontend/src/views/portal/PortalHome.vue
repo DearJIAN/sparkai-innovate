@@ -21,6 +21,9 @@
           <el-icon size="16"><Trophy /></el-icon>
           <span>2026 创新创业季</span>
         </div>
+        <h2 class="banner-system-title">
+          <span class="title-highlight">创新创业基础</span>
+        </h2>
         <h1 class="banner-title">
           <span class="title-highlight">火花智创</span> SparkAI
         </h1>
@@ -812,6 +815,13 @@ const recommendedCompetitions = ref([
   color: #ffffff;
   margin-bottom: 12px;
   letter-spacing: 2px;
+}
+
+.banner-system-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
 }
 
 .banner-subtitle {

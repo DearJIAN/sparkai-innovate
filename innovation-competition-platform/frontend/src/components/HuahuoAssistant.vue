@@ -999,7 +999,8 @@ watch(panelOpen, (val) => {
   // 面板打开/关闭时的处理（拖拽按钮已移除，此 watch 保留用于后续扩展）
 })
 
-async function sendMessage() {
+async function sendMessage(options = {}) {
+  const { autoSpeak = false } = options
   const text = inputText.value.trim()
   if (!text || isStreaming.value) return
   messages.value.push({ role: 'user', content: text })
@@ -1013,6 +1014,8 @@ async function sendMessage() {
   notifyLive2dHook('onStreamStart')
 
   let fullResponse = ''
+  let streamServerError = ''
+  let hardStopByBilling = false
   const MAX_RETRY = 2
   let retryCount = 0
   let success = false
@@ -1061,6 +1064,10 @@ async function sendMessage() {
           } else if (trimmed.startsWith('error:')) {
             const errMsg = trimmed.slice(6)
             console.error('[AI Stream] Server error:', errMsg)
+            streamServerError = errMsg
+            if (errMsg.includes('Arrearage') || errMsg.includes('overdue-payment') || errMsg.includes('Access denied')) {
+              hardStopByBilling = true
+            }
           }
         }
 
@@ -1079,10 +1086,11 @@ async function sendMessage() {
       }
 
       success = true
+      if (hardStopByBilling) break
     } catch (err) {
       retryCount++
       console.error(`[AI Stream] Attempt ${retryCount} failed:`, err.message)
-      if (retryCount > MAX_RETRY) {
+      if (hardStopByBilling || retryCount > MAX_RETRY) {
         ElMessage.error('AI 对话服务暂时不可用，请稍后重试')
         break
       }
@@ -1103,6 +1111,17 @@ async function sendMessage() {
       msg.capability = currentCapability.value
     }
     messages.value.push(msg)
+    if (autoSpeak) {
+      speakText(fullResponse, { forceRestart: true })
+    }
+  } else if (streamServerError) {
+    const billingError = streamServerError.includes('Arrearage') || streamServerError.includes('overdue-payment') || streamServerError.includes('Access denied')
+    messages.value.push({
+      role: 'assistant',
+      content: billingError
+        ? '当前 AI 服务账号状态异常（欠费/权限受限），所以本次无法生成回复。请先在模型服务商控制台恢复账号状态后再试。'
+        : `本次对话失败：${streamServerError}`
+    })
   }
 
   isStreaming.value = false
@@ -1154,7 +1173,7 @@ function startVoiceRecognition() {
         else interim += e.results[i][0].transcript
       }
       if (interim) inputText.value = interim
-      if (final) { inputText.value = final; nextTick(() => sendMessage()) }
+      if (final) { inputText.value = final; nextTick(() => sendMessage({ autoSpeak: true })) }
     }
     recognition.onerror = (e) => { isListening.value = false; if (e.error !== 'no-speech') ElMessage.error('语音识别出错：' + e.error) }
     recognition.onend = () => { isListening.value = false }
@@ -1182,7 +1201,7 @@ async function startFirefoxVoice() {
         const { uploadAsrAudio } = await import('@/api/ai')
         const res = await uploadAsrAudio(fd)
         const result = await res.json()
-        if (result.text) { inputText.value = result.text; nextTick(() => sendMessage()) }
+        if (result.text) { inputText.value = result.text; nextTick(() => sendMessage({ autoSpeak: true })) }
         else ElMessage.error('语音识别失败')
       } catch (err) { ElMessage.error('语音识别失败：' + err.message) }
       finally { isAsrProcessing.value = false }
@@ -1195,7 +1214,18 @@ async function startFirefoxVoice() {
 function toggleSpeech() {
   if (isSpeaking.value) { window.speechSynthesis.cancel(); isSpeaking.value = false; notifyLive2dHook('onSpeechEnd'); return }
   if (!currentReplyText.value) return
-  const u = new SpeechSynthesisUtterance(currentReplyText.value)
+  speakText(currentReplyText.value)
+}
+
+function speakText(text, options = {}) {
+  const { forceRestart = false } = options
+  if (!text) return
+  if (forceRestart && isSpeaking.value) {
+    window.speechSynthesis.cancel()
+    isSpeaking.value = false
+    notifyLive2dHook('onSpeechEnd')
+  }
+  const u = new SpeechSynthesisUtterance(text)
   u.lang = 'zh-CN'; u.rate = 1.0; u.pitch = 1.0
   const voices = window.speechSynthesis.getVoices()
   const zhVoice = voices.find(v => v.lang.startsWith('zh') && v.name.includes('Female')) || voices.find(v => v.lang.startsWith('zh'))
@@ -1207,6 +1237,11 @@ function toggleSpeech() {
 }
 
 function clearMessages() {
+  if (window.speechSynthesis && isSpeaking.value) {
+    window.speechSynthesis.cancel()
+    isSpeaking.value = false
+    notifyLive2dHook('onSpeechEnd')
+  }
   messages.value = []
   currentReplyText.value = ''
   streamingText.value = ''

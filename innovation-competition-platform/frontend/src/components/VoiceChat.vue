@@ -136,7 +136,8 @@ function scrollToBottom() {
 watch(messages, () => scrollToBottom(), { deep: true })
 watch(streamingText, () => scrollToBottom())
 
-async function sendMessage() {
+async function sendMessage(options = {}) {
+  const { autoSpeak = false } = options
   const text = inputText.value.trim()
   if (!text || isStreaming.value) return
 
@@ -157,6 +158,7 @@ async function sendMessage() {
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
+    let streamServerError = ''
 
     while (true) {
       const { done, value } = await reader.read()
@@ -175,7 +177,8 @@ async function sendMessage() {
           currentReplyText.value += delta
           notifyLive2dHook('onDelta', { text: delta })
         } else if (line.startsWith('error:')) {
-          ElMessage.error(line.slice(6))
+          streamServerError = line.slice(6).trim()
+          ElMessage.error(streamServerError)
         }
       }
     }
@@ -183,6 +186,17 @@ async function sendMessage() {
     if (streamingText.value) {
       messages.value.push({ role: 'assistant', content: streamingText.value })
       emit('reply', streamingText.value)
+      if (autoSpeak) {
+        speakText(streamingText.value, { forceRestart: true })
+      }
+    } else if (streamServerError) {
+      const billingError = streamServerError.includes('Arrearage') || streamServerError.includes('overdue-payment') || streamServerError.includes('Access denied')
+      messages.value.push({
+        role: 'assistant',
+        content: billingError
+          ? '当前 AI 服务账号状态异常（欠费/权限受限），本次无法生成回复。请先恢复账号状态。'
+          : `本次对话失败：${streamServerError}`
+      })
     }
   } catch (err) {
     ElMessage.error('发送失败：' + err.message)
@@ -229,7 +243,7 @@ function startVoiceRecognition() {
       }
       if (finalTranscript) {
         inputText.value = finalTranscript
-        nextTick(() => sendMessage())
+        nextTick(() => sendMessage({ autoSpeak: true }))
       }
     }
 
@@ -285,7 +299,7 @@ async function startFirefoxVoice() {
         const result = await response.json()
         if (result.text) {
           inputText.value = result.text
-          nextTick(() => sendMessage())
+          nextTick(() => sendMessage({ autoSpeak: true }))
         } else {
           ElMessage.error('语音识别失败')
         }
@@ -319,7 +333,19 @@ function toggleSpeech() {
 
   if (!currentReplyText.value) return
 
-  const utterance = new SpeechSynthesisUtterance(currentReplyText.value)
+  speakText(currentReplyText.value)
+}
+
+function speakText(text, options = {}) {
+  const { forceRestart = false } = options
+  if (!text) return
+  if (forceRestart && isSpeaking.value) {
+    window.speechSynthesis.cancel()
+    isSpeaking.value = false
+    notifyLive2dHook('onSpeechEnd')
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text)
   utterance.lang = 'zh-CN'
   utterance.rate = 1.0
   utterance.pitch = 1.0
@@ -348,6 +374,11 @@ function toggleSpeech() {
 }
 
 function clearMessages() {
+  if (window.speechSynthesis && isSpeaking.value) {
+    window.speechSynthesis.cancel()
+    isSpeaking.value = false
+    notifyLive2dHook('onSpeechEnd')
+  }
   messages.value = []
   currentReplyText.value = ''
   streamingText.value = ''
