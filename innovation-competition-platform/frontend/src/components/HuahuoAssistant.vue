@@ -1085,7 +1085,7 @@ watch(panelOpen, (val) => {
 })
 
 async function sendMessage(options = {}) {
-  const { autoSpeak = false } = options
+  const { autoSpeak = true } = options
   const shouldAutoSpeak = autoSpeak || asrTextPendingAutoSpeak
   if (isListening.value) {
     suppressAutoSendOnFinalize = true
