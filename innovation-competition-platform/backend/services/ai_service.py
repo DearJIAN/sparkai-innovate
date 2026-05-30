@@ -208,17 +208,53 @@ def call_llm_chat(question, scene_name, session_id, user_role='student'):
     return reply, user_prompt, record
 
 
+def _extract_stream_chunk_text(chunk):
+    content = getattr(chunk, "content", "")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict):
+                text_value = item.get("text")
+                if text_value:
+                    parts.append(str(text_value))
+        return "".join(parts)
+    return str(content or "")
+
+
+def stream_llm_chat(question, scene_name, session_id, user_role='student'):
+    llm = get_llm()
+    messages, user_prompt, record = build_langchain_messages(question, session_id, scene_name, user_role)
+    full_parts = []
+    for chunk in llm.stream(messages):
+        delta = _extract_stream_chunk_text(chunk)
+        if not delta:
+            continue
+        full_parts.append(delta)
+        yield delta, None, None
+
+    reply = sanitize_answer_text("".join(full_parts)) or "我刚刚没有组织出合适的回答，你可以换个方式再问一次。"
+    yield None, reply, (user_prompt, record)
+
+
 def _stream_text_model(queue, question, scene_name, session_id):
     try:
-        reply, user_prompt, record = call_llm_chat(question, scene_name, session_id)
-        reply = sanitize_answer_text(reply) or "我刚刚没有组织出合适的回答，你可以换个方式再问一次。"
-        for delta in split_stream_chunks(reply):
+        final_reply = ""
+        user_prompt = None
+        record = None
+        for delta, reply, meta in stream_llm_chat(question, scene_name, session_id):
             if delta:
                 queue.put(delta)
-                time.sleep(0.01)
-        if record is not None and reply:
+            if reply is not None:
+                final_reply = reply
+            if meta is not None:
+                user_prompt, record = meta
+        if record is not None and final_reply:
             record['messages'].append({'role': 'user', 'content': user_prompt})
-            record['messages'].append({'role': 'assistant', 'content': reply})
+            record['messages'].append({'role': 'assistant', 'content': final_reply})
             trim_chat_history(record)
             record['updated_at'] = datetime.utcnow()
     except Exception as error:
@@ -229,18 +265,83 @@ def _stream_text_model(queue, question, scene_name, session_id):
 
 def _stream_voice_model(queue, question, scene_name, session_id):
     try:
-        from services.volc_realtime_bridge import is_voice_realtime_configured, run_text_dialog
-        if is_voice_realtime_configured():
-            import asyncio
-            result = asyncio.run(run_text_dialog(question, scene_name, session_id))
-            reply = sanitize_answer_text(result.get('reply') or "") or "我刚刚没有组织出合适的回答，你可以换个方式再问一次。"
+        from services.tts_service import AliyunTTSStreamingSession, get_tts_provider
+        
+        provider = get_tts_provider()
+        
+        if provider == "aliyun":
+            # 阿里云全流式实现
+            tts_session = AliyunTTSStreamingSession()
+            tts_session.start()
+            
+            # 使用同步事件来协调停止
+            stop_event = threading.Event()
+            
+            def audio_worker():
+                try:
+                    for audio_delta in tts_session.get_audio_deltas():
+                        if stop_event.is_set():
+                            break
+                        queue.put({"audio": audio_delta})
+                except Exception as e:
+                    print(f"[Aliyun TTS] Audio worker error: {e}")
+
+            audio_thread = threading.Thread(target=audio_worker, daemon=True)
+            audio_thread.start()
+            
+            final_reply = ""
+            user_prompt = None
+            record = None
+            
+            # 记录是否已经开始喂文本，避免由于首包空 token 造成的异常
+            for delta, reply, meta in stream_llm_chat(question, scene_name, session_id):
+                if delta:
+                    # 关键修复：当使用语音流时，delta 只作为文本传输，不应再次触发 split_stream_chunks 回退逻辑
+                    queue.put({"text": delta})
+                    try:
+                        tts_session.feed_text(delta)
+                    except Exception as e:
+                        print(f"[Aliyun TTS] Feed text error: {e}")
+                if reply is not None:
+                    final_reply = reply
+                if meta is not None:
+                    user_prompt, record = meta
+            
+            try:
+                tts_session.finish()
+            except:
+                pass
+
+            # 等待音频队列处理完毕，最多等待 30 秒（一个长回答的音频尾巴通常也就 1-3 秒）
+            audio_thread.join(timeout=30)
+            stop_event.set()
+            tts_session.close()
+            
+            if record is not None and final_reply:
+                record['messages'].append({'role': 'user', 'content': user_prompt})
+                record['messages'].append({'role': 'assistant', 'content': final_reply})
+                trim_chat_history(record)
+                record['updated_at'] = datetime.utcnow()
         else:
-            reply, user_prompt, record = call_llm_chat(question, scene_name, session_id)
-            reply = sanitize_answer_text(reply) or "我刚刚没有组织出合适的回答，你可以换个方式再问一次。"
-        for delta in split_stream_chunks(reply):
-            if delta:
-                queue.put(delta)
-                time.sleep(0.01)
+            # 原有的逻辑 (火山或其他)
+            from services.volc_realtime_bridge import is_voice_realtime_configured, run_text_dialog
+            if is_voice_realtime_configured():
+                import asyncio
+                result = asyncio.run(run_text_dialog(question, scene_name, session_id))
+                reply = sanitize_answer_text(result.get('reply') or "") or "我刚刚没有组织出合适的回答，你可以换个方式再问一次。"
+            else:
+                final_reply = ""
+                for delta, reply, _meta in stream_llm_chat(question, scene_name, session_id):
+                    if delta:
+                        queue.put(delta)
+                    if reply is not None:
+                        final_reply = reply
+                reply = final_reply or "我刚刚没有组织出合适的回答，你可以换个方式再问一次。"
+            
+            # 这里的 split_stream_chunks 曾用于触发前端分句播报
+            # 但现在前端已经在 delta 监听里实现了分句逻辑，这里再发送一遍会导致重复
+            # 为保持向下兼容且不重复，如果不是全流式且需要语音，我们只需要依赖前端对 delta 的处理即可
+            pass
     except Exception as error:
         queue.put({'error': '调用模型失败', 'detail': error.__class__.__name__ + ': ' + str(error)})
     finally:
@@ -259,6 +360,8 @@ def generate_stream_response(question, scene_name, session_id, use_voice=False):
     @stream_with_context
     def generate():
         yield f"sessionId:{session_id}\n"
+        # 加上提示，告知前端这是一个全流式音频会话，前端应禁用自动文本转语音 fallback
+        yield f"type:voice_chat\n"
         while True:
             try:
                 item = queue.get(timeout=0.5)
@@ -268,9 +371,16 @@ def generate_stream_response(question, scene_name, session_id, use_voice=False):
                 continue
             if item is None:
                 break
-            if isinstance(item, dict) and item.get('error'):
-                yield f"\nerror:{item.get('detail', '未知错误')}\n"
-                break
+            if isinstance(item, dict):
+                if item.get('error'):
+                    yield f"\nerror:{item.get('detail', '未知错误')}\n"
+                    break
+                if 'audio' in item:
+                    yield f"audio_delta:{item['audio']}\n"
+                    continue
+                if 'text' in item:
+                    yield f"delta:{item['text']}\n"
+                    continue
             yield f"delta:{str(item)}\n"
         yield "done:1\n"
 
@@ -398,19 +508,23 @@ def _stream_unified_model(queue, message, role, scene_name, session_id):
         has_history = _has_conversation_history(session_id)
 
         if has_history:
-            reply, user_prompt, record = call_llm_chat(message, scene_name, session_id, user_role=role)
-            if not reply:
-                reply = '我刚刚没有组织出合适的回答，你可以换个方式再问一次。'
+            final_reply = ''
+            user_prompt = None
+            record = None
+            queue.put({'header': 'type:chat\n'})
+            for delta, reply, meta in stream_llm_chat(message, scene_name, session_id, user_role=role):
+                if delta:
+                    queue.put(delta)
+                if reply is not None:
+                    final_reply = reply
+                if meta is not None:
+                    user_prompt, record = meta
+            reply = final_reply or '我刚刚没有组织出合适的回答，你可以换个方式再问一次。'
             if record is not None:
                 record['messages'].append({'role': 'user', 'content': user_prompt})
                 record['messages'].append({'role': 'assistant', 'content': reply})
                 trim_chat_history(record)
                 record['updated_at'] = datetime.utcnow()
-            queue.put({'header': 'type:chat\n'})
-            for delta in split_stream_chunks(reply):
-                if delta:
-                    queue.put(delta)
-                    time.sleep(0.02)
         else:
             intent, params = detect_intent(message, role)
 
@@ -471,19 +585,23 @@ def _stream_unified_model(queue, message, role, scene_name, session_id):
                     record['updated_at'] = datetime.utcnow()
 
             else:
-                reply, user_prompt, record = call_llm_chat(message, scene_name, session_id, user_role=role)
-                if not reply:
-                    reply = '我刚刚没有组织出合适的回答，你可以换个方式再问一次。'
+                final_reply = ''
+                user_prompt = None
+                record = None
+                queue.put({'header': 'type:chat\n'})
+                for delta, reply, meta in stream_llm_chat(message, scene_name, session_id, user_role=role):
+                    if delta:
+                        queue.put(delta)
+                    if reply is not None:
+                        final_reply = reply
+                    if meta is not None:
+                        user_prompt, record = meta
+                reply = final_reply or '我刚刚没有组织出合适的回答，你可以换个方式再问一次。'
                 if record is not None:
                     record['messages'].append({'role': 'user', 'content': user_prompt})
                     record['messages'].append({'role': 'assistant', 'content': reply})
                     trim_chat_history(record)
                     record['updated_at'] = datetime.utcnow()
-                queue.put({'header': 'type:chat\n'})
-                for delta in split_stream_chunks(reply):
-                    if delta:
-                        queue.put(delta)
-                        time.sleep(0.02)
 
     except Exception as error:
         queue.put({'error': '调用模型失败', 'detail': error.__class__.__name__ + ': ' + str(error)})

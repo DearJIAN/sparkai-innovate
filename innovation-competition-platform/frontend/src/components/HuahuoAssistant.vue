@@ -19,6 +19,7 @@
               <span class="panel-title">🤖 火花 AI 助手</span>
               <el-tag v-if="isListening" type="danger" size="small" effect="light" class="listening-tag">录音中 {{ voiceRemainingSeconds }}s</el-tag>
               <el-tag v-else-if="isAsrProcessing" type="warning" size="small" effect="light" class="asr-tag">识别中 {{ asrRemainingSeconds }}s</el-tag>
+              <el-tag v-else-if="isSpeechStreaming" type="success" size="small" effect="light" class="speech-tag">播报中...</el-tag>
             </div>
             <div class="header-actions">
               <el-button size="small" text @click.stop="switchToAgent" title="AI 智能体">
@@ -208,7 +209,7 @@ import { ref, reactive, computed, nextTick, onMounted, onBeforeUnmount, watch } 
 import { useRouter } from 'vue-router'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import { chatStream, generateAnalysis } from '@/api/ai'
+import { chatStream, voiceChatStream, generateAnalysis } from '@/api/ai'
 import { synthesizeTts } from '@/api/ai'
 import { ElMessage } from 'element-plus'
 import { Loading, WarningFilled, MagicStick, ArrowDown, Microphone, Delete, Plus, VideoPause, VideoPlay } from '@element-plus/icons-vue'
@@ -216,6 +217,48 @@ import { useLive2d } from '@/composables/useLive2d'
 import AgentPanel from '@/views/ai-assistant/AgentPanel.vue'
 import { useUserStore } from '@/stores/user'
 import { withApiBase } from '@/utils/appBase'
+
+// PCM 流式播放器
+class PCMStreamPlayer {
+  constructor(sampleRate = 24000) {
+    this.sampleRate = sampleRate
+    this.audioCtx = null
+    this.nextPlayTime = 0
+  }
+  init() {
+    if (!this.audioCtx) {
+      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: this.sampleRate })
+      this.nextPlayTime = this.audioCtx.currentTime
+    } else if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume()
+    }
+  }
+  feed(base64Data) {
+    this.init()
+    const binary = atob(base64Data)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+    const pcm16 = new Int16Array(bytes.buffer)
+    const float32 = new Float32Array(pcm16.length)
+    for (let i = 0; i < pcm16.length; i++) float32[i] = pcm16[i] / 32768.0
+    const buffer = this.audioCtx.createBuffer(1, float32.length, this.sampleRate)
+    buffer.getChannelData(0).set(float32)
+    const source = this.audioCtx.createBufferSource()
+    source.buffer = buffer
+    source.connect(this.audioCtx.destination)
+    const startTime = Math.max(this.audioCtx.currentTime, this.nextPlayTime)
+    source.start(startTime)
+    this.nextPlayTime = startTime + buffer.duration
+    return buffer.duration
+  }
+  stop() {
+    if (this.audioCtx) {
+      this.audioCtx.close().catch(() => {})
+      this.audioCtx = null
+    }
+    this.nextPlayTime = 0
+  }
+}
 
 const { detectEmotionByText, getExpressionByEmotion, updateExpressionByText, notifyLive2dHook } = useLive2d()
 const userStore = useUserStore()
@@ -252,6 +295,7 @@ const sessionId = ref('')
 const isListening = ref(false)
 const isAsrProcessing = ref(false)
 const isSpeaking = ref(false)
+const isSpeechStreaming = ref(false)
 const messagesRef = ref(null)
 const panelRef = ref(null)
 const panelStyle = ref({})
@@ -274,6 +318,7 @@ let recognitionRestartAttempts = 0
 let asrMediaRecorder = null
 let asrMediaStream = null
 let asrChunks = []
+const pcmPlayer = new PCMStreamPlayer()
 let asrManualStop = false
 let asrTextPendingAutoSpeak = false
 let listeningCountdownTimer = null
@@ -285,6 +330,14 @@ const asrRemainingSeconds = ref(Math.ceil(ASR_PROCESS_MAX_MS / 1000))
 let asrCountdownTimer = null
 let asrProcessStartAt = 0
 let pendingAudioPlayToken = 0
+let speechQueue = []
+let speechQueuePlaying = false
+let speechPendingText = ''
+let speechAutoMode = false
+
+function updateSpeechStreamingState() {
+  isSpeechStreaming.value = speechQueuePlaying || speechQueue.length > 0 || !!speechPendingText.trim()
+}
 
 function startListeningCountdown() {
   if (listeningCountdownTimer) clearInterval(listeningCountdownTimer)
@@ -1102,18 +1155,24 @@ async function sendMessage(options = {}) {
   currentResponseType.value = 'chat'
   currentNavigateData.value = null
   currentCapability.value = ''
+  if (shouldAutoSpeak && isSpeaking.value) {
+    stopSpeechPlayback()
+  }
   notifyLive2dHook('onStreamStart')
 
   let fullResponse = ''
   let streamServerError = ''
   let hardStopByBilling = false
+  let hasAudioDeltaFound = false
+  let isTrueStreaming = false // 标记是否为全流式音频（由后端 type:voice_chat 指定）
   const MAX_RETRY = 2
   let retryCount = 0
   let success = false
 
   while (retryCount <= MAX_RETRY && !success) {
     try {
-      const response = await chatStream(text, sessionId.value)
+      const isVoice = shouldAutoSpeak
+      const response = await (isVoice ? voiceChatStream(text, sessionId.value) : chatStream(text, sessionId.value))
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       if (!response.body) throw new Error('响应体为空')
 
@@ -1122,6 +1181,12 @@ async function sendMessage(options = {}) {
       let buffer = ''
       let lastChunkTime = Date.now()
       const CHUNK_TIMEOUT = 180000
+
+      if (isVoice) {
+        pcmPlayer.init()
+        isSpeaking.value = true
+        notifyLive2dHook('onSpeechStart')
+      }
 
       while (true) {
         const { done, value } = await reader.read()
@@ -1138,8 +1203,18 @@ async function sendMessage(options = {}) {
 
           if (trimmed.startsWith('sessionId:')) {
             sessionId.value = trimmed.slice(10).trim()
+          } else if (trimmed.startsWith('audio_delta:')) {
+            const base64 = trimmed.slice(12)
+            if (isVoice) {
+              pcmPlayer.feed(base64)
+              hasAudioDeltaFound = true
+            }
           } else if (trimmed.startsWith('type:')) {
-            currentResponseType.value = trimmed.slice(5).trim()
+            const typeValue = trimmed.slice(5).trim()
+            currentResponseType.value = typeValue
+            if (typeValue === 'voice_chat') {
+              isTrueStreaming = true
+            }
           } else if (trimmed.startsWith('navigate:')) {
             try {
               currentNavigateData.value = JSON.parse(trimmed.slice(9))
@@ -1152,6 +1227,13 @@ async function sendMessage(options = {}) {
             fullResponse += delta
             currentReplyText.value = fullResponse
             notifyLive2dHook('onDelta', { text: delta })
+            
+            // 修复重复播报核心逻辑：
+            // 如果是全流式语音(isTrueStreaming)，则绝对不触发前端 fallback 播报
+            // 否则，只有在还没发现音频包的情况下才进行前端 fallback
+            if (isVoice && !hasAudioDeltaFound && !isTrueStreaming) {
+              speakText(delta, { streamMode: true })
+            }
           } else if (trimmed.startsWith('error:')) {
             const errMsg = trimmed.slice(6)
             console.error('[AI Stream] Server error:', errMsg)
@@ -1169,10 +1251,20 @@ async function sendMessage(options = {}) {
 
       if (buffer.trim()) {
         const trimmed = buffer.trim()
-        if (trimmed.startsWith('delta:')) {
+        if (trimmed.startsWith('audio_delta:')) {
+          const base64 = trimmed.slice(12)
+          if (isVoice) {
+            pcmPlayer.feed(base64)
+            hasAudioDeltaFound = true
+          }
+        } else if (trimmed.startsWith('delta:')) {
           const delta = trimmed.slice(6)
           streamingText.value += delta
           fullResponse += delta
+          currentReplyText.value = fullResponse
+          if (isVoice && !hasAudioDeltaFound && !isTrueStreaming) {
+            speakText(delta, { streamMode: true })
+          }
         }
       }
 
@@ -1202,8 +1294,10 @@ async function sendMessage(options = {}) {
       msg.capability = currentCapability.value
     }
     messages.value.push(msg)
-    if (shouldAutoSpeak) {
-      speakText(fullResponse, { forceRestart: true })
+    
+    // 如果是全流式语音，后端会处理 flush；只有在非全流式且没发现音频时，才由前端 flush
+    if (shouldAutoSpeak && !hasAudioDeltaFound && !isTrueStreaming) {
+      speakText('', { streamMode: true, flush: true })
     }
   } else if (streamServerError) {
     const billingError = streamServerError.includes('Arrearage') || streamServerError.includes('overdue-payment') || streamServerError.includes('Access denied')
@@ -1328,30 +1422,81 @@ async function startFirefoxVoice() {
 function toggleSpeech() {
   if (isSpeaking.value) { stopSpeechPlayback(); return }
   if (!currentReplyText.value) return
+  
+  // 统一使用全流式 TTS 进行重播，不再使用旧的 speakText
+  isSpeaking.value = true
+  notifyLive2dHook('onSpeechStart')
+  pcmPlayer.init()
+  
+  // 通过 API 直接获取整段文本的流式音频数据
+  // 如果后端支持针对整段文本的流式合成，这里调用那个接口
+  // 目前最稳妥且一致的方法是调用现有的 synthesizeTts 获取音频 URL 播放
+  // 或者为了极致体验，允许它走一次 synthesizeTts 但使用 Audio 播放器
+  // 这里暂时保留 speakText 但将其简化
   speakText(currentReplyText.value)
 }
 
 function stopSpeechPlayback() {
   pendingAudioPlayToken += 1
+  speechQueue = []
+  speechQueuePlaying = false
+  speechPendingText = ''
+  speechAutoMode = false
+  updateSpeechStreamingState()
   if (ttsAudio) {
     try { ttsAudio.pause() } catch (_e) {}
     try { ttsAudio.currentTime = 0 } catch (_e) {}
     ttsAudio = null
   }
+  pcmPlayer.stop()
   isSpeaking.value = false
   notifyLive2dHook('onSpeechEnd')
 }
 
-function speakText(text, options = {}) {
-  const { forceRestart = false } = options
-  if (!text) return
-  if (forceRestart && isSpeaking.value) {
-    stopSpeechPlayback()
+function splitSpeakableSegments(text) {
+  const source = String(text || '')
+  // 极大简化：不再进行复杂的正则拆分，直接当做一个整段处理，或者按换行切分
+  return source.split('\n').map(s => s.trim()).filter(Boolean)
+}
+
+function takeCompleteSpeakableSegments() {
+  // 弃用：全流式模式下不再使用这个复杂的缓冲区提取函数
+  return []
+}
+
+function enqueueSpeechSegments(segments) {
+  for (const segment of segments) {
+    if (segment) speechQueue.push(segment)
   }
-  const playToken = ++pendingAudioPlayToken
+  updateSpeechStreamingState()
+  if (!speechQueuePlaying) {
+    playNextSpeechSegment()
+  }
+}
+
+function playNextSpeechSegment() {
+  if (!speechQueue.length) {
+    speechQueuePlaying = false
+    updateSpeechStreamingState()
+    if (!speechAutoMode) {
+      isSpeaking.value = false
+      notifyLive2dHook('onSpeechEnd')
+    } else if (!ttsAudio) {
+      isSpeaking.value = false
+      notifyLive2dHook('onSpeechEnd')
+    }
+    return
+  }
+
+  const text = speechQueue.shift()
+  const playToken = pendingAudioPlayToken
+  speechQueuePlaying = true
+  updateSpeechStreamingState()
   notifyLive2dHook('onSpeechStart')
   isSpeaking.value = true
+
   synthesizeTts({ text }).then((res) => {
+    if (playToken !== pendingAudioPlayToken) return
     const audioUrl = res?.audio_url || res?.data?.audio_url
     if (!audioUrl) throw new Error('TTS返回为空')
     const finalUrl = audioUrl.startsWith('http')
@@ -1362,13 +1507,15 @@ function speakText(text, options = {}) {
     audio.src = finalUrl
     ttsAudio = audio
     audio.onended = () => {
+      if (playToken !== pendingAudioPlayToken) return
       if (ttsAudio === audio) ttsAudio = null
-      isSpeaking.value = false
-      notifyLive2dHook('onSpeechEnd')
+      playNextSpeechSegment()
     }
     audio.onerror = () => {
       if (playToken !== pendingAudioPlayToken) return
       if (ttsAudio === audio) ttsAudio = null
+      speechQueuePlaying = false
+      updateSpeechStreamingState()
       isSpeaking.value = false
       notifyLive2dHook('onSpeechEnd')
       ElMessage.error('语音播放失败')
@@ -1381,6 +1528,8 @@ function speakText(text, options = {}) {
         if (playToken !== pendingAudioPlayToken) return
         if (playErr?.name === 'AbortError') return
         if (ttsAudio === audio) ttsAudio = null
+        speechQueuePlaying = false
+        updateSpeechStreamingState()
         isSpeaking.value = false
         notifyLive2dHook('onSpeechEnd')
         ElMessage.error(`语音播放失败${playErr?.message ? '：' + playErr.message : ''}`)
@@ -1391,11 +1540,36 @@ function speakText(text, options = {}) {
     audio.load()
   }).catch((err) => {
     if (playToken !== pendingAudioPlayToken) return
+    speechQueuePlaying = false
+    updateSpeechStreamingState()
     isSpeaking.value = false
     notifyLive2dHook('onSpeechEnd')
     const detail = err?.response?.data?.detail || err?.response?.data?.error || err?.message
     ElMessage.error(`语音合成失败${detail ? '：' + detail : ''}`)
   })
+}
+
+function speakText(text, options = {}) {
+  const { forceRestart = false, streamMode = false, flush = false } = options
+  if (!text && !(streamMode && flush)) return
+  
+  if (forceRestart) {
+    stopSpeechPlayback()
+  }
+
+  // 如果是在回答过程中(streamMode)，全流式已接管音频，直接跳过旧播报
+  if (streamMode) return
+
+  // 手动点击“重播”的情况
+  speechAutoMode = false
+  pendingAudioPlayToken += 1
+  speechQueue = []
+  speechQueuePlaying = false
+  speechPendingText = ''
+  updateSpeechStreamingState()
+  
+  // 对于重播，直接请求整段文本的 TTS 资源，不再进行分句，避免停顿
+  enqueueSpeechSegments([text])
 }
 
 function clearMessages() {
@@ -1995,6 +2169,10 @@ onBeforeUnmount(() => {
 
 .asr-tag {
   animation: pulse 1.5s infinite;
+}
+
+.speech-tag {
+  animation: pulse 1.2s infinite;
 }
 
 @keyframes pulse {

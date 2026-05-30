@@ -5,6 +5,7 @@ import uuid
 import wave
 from pathlib import Path
 from threading import Event
+from queue import Queue, Empty
 from typing import Dict, Optional, Tuple
 
 TTS_CACHE_DIR = Path(__file__).parent / "tts_cache"
@@ -166,6 +167,99 @@ def synthesize_aliyun_tts_realtime(text: str, voice_type_override: Optional[str]
                 client.close()
             except Exception:
                 pass
+
+
+class AliyunTTSStreamingSession:
+    """
+    阿里云实时语音合成流式会话管理器
+    能够持续喂入文本并实时获取音频 delta
+    """
+    def __init__(self, voice_type=None, sample_rate=24000):
+        self.dashscope, self.AudioFormat, self.QwenTtsRealtime, self.QwenTtsRealtimeCallback = _ensure_dashscope()
+        self.api_key = os.getenv("DASHSCOPE_API_KEY", "").strip() or os.getenv("ALIYUN_API_KEY", "").strip()
+        self.model = os.getenv("ALIYUN_TTS_MODEL", "qwen-tts-realtime").strip() or "qwen-tts-realtime"
+        self.voice = (voice_type or os.getenv("ALIYUN_TTS_VOICE", "Cherry")).strip() or "Cherry"
+        self.sample_rate = sample_rate
+        self.mode = os.getenv("ALIYUN_TTS_MODE", "server_commit").strip() or "server_commit"
+        
+        if not self.api_key:
+            # 尝试从 config 中获取
+            try:
+                from services.ai_service import get_chat_config
+                self.api_key = get_chat_config().get("api_key", "")
+            except:
+                pass
+            
+        if not self.api_key:
+            raise TTSError("DASHSCOPE_API_KEY 未配置")
+        
+        self.dashscope.api_key = self.api_key
+        self.client = None
+        self.audio_queue = Queue()
+        self.is_finished = False
+        self.error = None
+
+    def start(self):
+        # 将 Callback 定义移动到 start 内部，以确保能够访问到 self.QwenTtsRealtimeCallback
+        class StreamingCallback(self.QwenTtsRealtimeCallback):
+            def __init__(self, outer):
+                self.outer = outer
+
+            def on_open(self) -> None:
+                print("[Aliyun TTS Stream] connection opened")
+
+            def on_close(self, code, msg) -> None:
+                print(f"[Aliyun TTS Stream] connection closed: {code}, {msg}")
+
+            def on_event(self, response: dict) -> None:
+                try:
+                    event_type = response.get("type")
+                    if event_type == "response.audio.delta":
+                        audio_b64 = response.get("delta", "")
+                        if audio_b64:
+                            self.outer.audio_queue.put(audio_b64)
+                    elif event_type == "session.finished":
+                        self.outer.is_finished = True
+                    elif event_type == "error":
+                        self.outer.error = str(response)
+                        self.outer.is_finished = True
+                except Exception as e:
+                    self.outer.error = f"Event error: {e}"
+                    self.outer.is_finished = True
+
+        self.client = self.QwenTtsRealtime(model=self.model, callback=StreamingCallback(self))
+        self.client.connect()
+        self.client.update_session(
+            voice=self.voice,
+            response_format=self.AudioFormat.PCM_24000HZ_MONO_16BIT,
+            mode=self.mode,
+        )
+
+    def feed_text(self, text):
+        if self.client and text:
+            self.client.append_text(text)
+
+    def finish(self):
+        if self.client:
+            self.client.finish()
+
+    def close(self):
+        if self.client:
+            try:
+                self.client.close()
+            except:
+                pass
+
+    def get_audio_deltas(self):
+        """同步获取队列中的音频 delta"""
+        while not self.is_finished or not self.audio_queue.empty():
+            try:
+                yield self.audio_queue.get(timeout=0.1)
+            except Empty:
+                if self.is_finished:
+                    break
+        if self.error:
+            raise TTSError(self.error)
 
 
 def synthesize_speech(text: str, speaker_config: Optional[Dict] = None, voice_type: Optional[str] = None) -> Optional[str]:
