@@ -21,3 +21,4 @@ python-pptx
 pypdf
 websockets
 requests
+dashscope

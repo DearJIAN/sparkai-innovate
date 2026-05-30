@@ -24,8 +24,8 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5173 ^| findstr LISTENING') 
 timeout /t 1 /nobreak >nul
 
 echo.
-echo [1/4] Checking frontend dependencies...
-call npm install --prefix frontend
+echo [1/4] Skipping frontend dependency check...
+rem call npm install --prefix frontend
 
 echo.
 echo [2/4] Starting backend service...

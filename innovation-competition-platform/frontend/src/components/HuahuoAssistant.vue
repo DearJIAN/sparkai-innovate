@@ -209,11 +209,13 @@ import { useRouter } from 'vue-router'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { chatStream, generateAnalysis } from '@/api/ai'
+import { synthesizeTts } from '@/api/ai'
 import { ElMessage } from 'element-plus'
 import { Loading, WarningFilled, MagicStick, ArrowDown, Microphone, Delete, Plus, VideoPause, VideoPlay } from '@element-plus/icons-vue'
 import { useLive2d } from '@/composables/useLive2d'
 import AgentPanel from '@/views/ai-assistant/AgentPanel.vue'
 import { useUserStore } from '@/stores/user'
+import { withApiBase } from '@/utils/appBase'
 
 const { detectEmotionByText, getExpressionByEmotion, updateExpressionByText, notifyLive2dHook } = useLive2d()
 const userStore = useUserStore()
@@ -259,6 +261,7 @@ let resizeState = { resizing: false, startX: 0, startY: 0, startW: 0, startH: 0 
 let isMobile = ref(false)
 let recognition = null
 let speechUtterance = null
+let ttsAudio = null
 let recognitionStartAt = 0
 let recognitionFinalText = ''
 let recognitionInterimText = ''
@@ -281,6 +284,7 @@ const ASR_PROCESS_MAX_MS = 15000
 const asrRemainingSeconds = ref(Math.ceil(ASR_PROCESS_MAX_MS / 1000))
 let asrCountdownTimer = null
 let asrProcessStartAt = 0
+let pendingAudioPlayToken = 0
 
 function startListeningCountdown() {
   if (listeningCountdownTimer) clearInterval(listeningCountdownTimer)
@@ -1290,14 +1294,18 @@ async function startFirefoxVoice() {
       try {
         const { uploadAsrAudio } = await import('@/api/ai')
         const res = await uploadAsrAudio(fd)
+        if (!res.ok) {
+          const failText = await res.text()
+          throw new Error(`ASR请求失败(${res.status}) ${failText || ''}`.trim())
+        }
         const result = await res.json()
         if (result.text) {
           inputText.value = result.text
           asrTextPendingAutoSpeak = true
           if (!asrManualStop && !suppressAutoSendOnFinalize) nextTick(() => sendMessage({ autoSpeak: true }))
         }
-        else ElMessage.error('语音识别失败')
-      } catch (err) { ElMessage.error('语音识别失败：' + err.message) }
+        else ElMessage.error(`语音识别失败${result.error ? '：' + result.error : ''}`)
+      } catch (err) { ElMessage.error('语音识别失败：' + (err?.message || String(err))) }
       finally {
         isAsrProcessing.value = false
         stopAsrCountdown()
@@ -1318,36 +1326,80 @@ async function startFirefoxVoice() {
 }
 
 function toggleSpeech() {
-  if (isSpeaking.value) { window.speechSynthesis.cancel(); isSpeaking.value = false; notifyLive2dHook('onSpeechEnd'); return }
+  if (isSpeaking.value) { stopSpeechPlayback(); return }
   if (!currentReplyText.value) return
   speakText(currentReplyText.value)
+}
+
+function stopSpeechPlayback() {
+  pendingAudioPlayToken += 1
+  if (ttsAudio) {
+    try { ttsAudio.pause() } catch (_e) {}
+    try { ttsAudio.currentTime = 0 } catch (_e) {}
+    ttsAudio = null
+  }
+  isSpeaking.value = false
+  notifyLive2dHook('onSpeechEnd')
 }
 
 function speakText(text, options = {}) {
   const { forceRestart = false } = options
   if (!text) return
   if (forceRestart && isSpeaking.value) {
-    window.speechSynthesis.cancel()
+    stopSpeechPlayback()
+  }
+  const playToken = ++pendingAudioPlayToken
+  notifyLive2dHook('onSpeechStart')
+  isSpeaking.value = true
+  synthesizeTts({ text }).then((res) => {
+    const audioUrl = res?.audio_url || res?.data?.audio_url
+    if (!audioUrl) throw new Error('TTS返回为空')
+    const finalUrl = audioUrl.startsWith('http')
+      ? audioUrl
+      : (audioUrl.startsWith('/api/') ? audioUrl : withApiBase(audioUrl))
+    const audio = new Audio()
+    audio.preload = 'auto'
+    audio.src = finalUrl
+    ttsAudio = audio
+    audio.onended = () => {
+      if (ttsAudio === audio) ttsAudio = null
+      isSpeaking.value = false
+      notifyLive2dHook('onSpeechEnd')
+    }
+    audio.onerror = () => {
+      if (playToken !== pendingAudioPlayToken) return
+      if (ttsAudio === audio) ttsAudio = null
+      isSpeaking.value = false
+      notifyLive2dHook('onSpeechEnd')
+      ElMessage.error('语音播放失败')
+    }
+    const tryPlay = () => {
+      if (playToken !== pendingAudioPlayToken) return
+      audio.onloadeddata = null
+      audio.oncanplay = null
+      audio.play().catch((playErr) => {
+        if (playToken !== pendingAudioPlayToken) return
+        if (playErr?.name === 'AbortError') return
+        if (ttsAudio === audio) ttsAudio = null
+        isSpeaking.value = false
+        notifyLive2dHook('onSpeechEnd')
+        ElMessage.error(`语音播放失败${playErr?.message ? '：' + playErr.message : ''}`)
+      })
+    }
+    audio.onloadeddata = tryPlay
+    audio.oncanplay = tryPlay
+    audio.load()
+  }).catch((err) => {
+    if (playToken !== pendingAudioPlayToken) return
     isSpeaking.value = false
     notifyLive2dHook('onSpeechEnd')
-  }
-  const u = new SpeechSynthesisUtterance(text)
-  u.lang = 'zh-CN'; u.rate = 1.0; u.pitch = 1.0
-  const voices = window.speechSynthesis.getVoices()
-  const zhVoice = voices.find(v => v.lang.startsWith('zh') && v.name.includes('Female')) || voices.find(v => v.lang.startsWith('zh'))
-  if (zhVoice) u.voice = zhVoice
-  u.onstart = () => { isSpeaking.value = true; notifyLive2dHook('onSpeechStart') }
-  u.onend = () => { isSpeaking.value = false; notifyLive2dHook('onSpeechEnd') }
-  u.onerror = () => { isSpeaking.value = false; notifyLive2dHook('onSpeechEnd') }
-  window.speechSynthesis.speak(u)
+    const detail = err?.response?.data?.detail || err?.response?.data?.error || err?.message
+    ElMessage.error(`语音合成失败${detail ? '：' + detail : ''}`)
+  })
 }
 
 function clearMessages() {
-  if (window.speechSynthesis && isSpeaking.value) {
-    window.speechSynthesis.cancel()
-    isSpeaking.value = false
-    notifyLive2dHook('onSpeechEnd')
-  }
+  if (isSpeaking.value) stopSpeechPlayback()
   messages.value = []
   currentReplyText.value = ''
   streamingText.value = ''
@@ -1643,8 +1695,6 @@ onMounted(() => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
 
-  if (window.speechSynthesis) { window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices() }
-
   const currentPath = window.location.pathname
   if (currentPath === '/login' || currentPath === '/register') {
     return
@@ -1663,7 +1713,7 @@ onBeforeUnmount(() => {
   stopAsrCountdown(false)
   stopModelPatchLoop()
   stopAutoExpression()
-  if (window.speechSynthesis) window.speechSynthesis.cancel()
+  stopSpeechPlayback()
 
   try {
     const manager = window.__live2dWidgetModelManager

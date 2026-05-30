@@ -8,7 +8,7 @@ export const getAiRecords = () => request.get('/ai/records')
 export const chatWithAi = (data) => request.post('/ai/chat', data)
 export const getVoiceConfig = () => request.get('/ai/voice/config')
 export const getAiHealth = () => request.get('/ai/health')
-export const synthesizeTts = (data) => request.post('/ai/tts/synthesize', data)
+export const synthesizeTts = (data) => request.post('/ai/tts/synthesize', data, { skipGlobalError: true })
 export const getExpressions = () => request.get('/ai/expressions')
 export const getModelInfo = () => request.get('/ai/model-info')
 

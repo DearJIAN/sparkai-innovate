@@ -28,6 +28,7 @@ request.interceptors.request.use(
 
 request.interceptors.response.use(
   async (response) => {
+    const skipGlobalError = !!response.config?.skipGlobalError
     if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
       const ct = response.headers?.['content-type'] || ''
       const isErrorStatus = response.status >= 400
@@ -79,7 +80,7 @@ request.interceptors.response.use(
 
     if (res.code !== 200) {
       const isAuthEndpoint = response.config?.url?.includes('/auth/')
-      if (!isAuthEndpoint) {
+      if (!isAuthEndpoint && !skipGlobalError) {
         ElMessage.error(res.message || '请求失败')
       }
 
@@ -97,12 +98,13 @@ request.interceptors.response.use(
   },
   (error) => {
     const { response } = error
+    const skipGlobalError = !!response?.config?.skipGlobalError
 
     if (response) {
       const message = response.data?.message || `请求失败 (${response.status})`
       const isAuthEndpoint = response.config?.url?.includes('/auth/')
 
-      if (!isAuthEndpoint) {
+      if (!isAuthEndpoint && !skipGlobalError) {
         ElMessage.error(message)
       }
 
@@ -114,7 +116,7 @@ request.interceptors.response.use(
           query: currentPath && currentPath !== '/login' ? { redirect: currentPath } : {}
         })
       }
-    } else {
+    } else if (!error?.config?.skipGlobalError) {
       ElMessage.error('网络错误，请检查网络连接')
     }
 

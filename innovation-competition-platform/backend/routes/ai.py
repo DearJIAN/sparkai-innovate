@@ -27,7 +27,7 @@ from services.ai_service import (
     get_chat_config,
     get_env_value,
 )
-from services.tts_service import synthesize_speech, get_tts_cache_stats, clear_tts_cache, TTS_CACHE_DIR
+from services.tts_service import synthesize_speech, synthesize_speech_with_detail, preflight_tts, get_tts_cache_stats, clear_tts_cache, TTS_CACHE_DIR
 from services.volc_realtime_bridge import is_voice_realtime_configured, get_voice_realtime_config
 
 ai_bp = Blueprint('ai', __name__)
@@ -223,12 +223,13 @@ def health():
 def synthesize_tts():
     payload = request.get_json(silent=True) or {}
     text = str(payload.get('text') or '').strip()
+    voice_type = str(payload.get('voiceType') or '').strip()
     if not text:
         return jsonify({"error": "文本内容不能为空"}), 400
     try:
-        file_path = synthesize_speech(text)
+        file_path, detail = synthesize_speech_with_detail(text, voice_type=voice_type or None)
         if not file_path:
-            return jsonify({"error": "语音合成失败"}), 500
+            return jsonify({"error": "语音合成失败", "detail": detail}), 500
         return jsonify({
             "success": True,
             "audio_url": f"/api/ai/tts/audio/{os.path.basename(file_path)}"
@@ -243,6 +244,13 @@ def serve_tts_audio(filename):
     if not os.path.exists(file_path):
         return jsonify({"error": "音频文件不存在"}), 404
     return send_from_directory(str(TTS_CACHE_DIR), filename)
+
+
+@ai_bp.route('/tts/preflight', methods=['GET'])
+@jwt_required()
+def tts_preflight():
+    result = preflight_tts()
+    return jsonify(result), (200 if result.get("success") else 500)
 
 
 @ai_bp.route('/asr', methods=['POST'])
@@ -292,7 +300,7 @@ def asr():
                     provider_name = "doubao-asr"
                     model_name = doubao_config["model_name"]
                 except Exception as e:
-                    asr_provider = "faster-whisper"
+                    return jsonify({"error": f"豆包ASR失败：{str(e)}"}), 500
 
             if not recognized_text:
                 try:
