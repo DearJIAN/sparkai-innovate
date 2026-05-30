@@ -17,11 +17,7 @@
         </h2>
         <p class="page-subtitle">基于 AI 技术，为竞赛项目提供智能化辅助分析</p>
       </div>
-      <div class="header-actions">
-        <el-button type="primary" :icon="ChatDotRound" @click="showVoiceChat = !showVoiceChat">
-          {{ showVoiceChat ? '关闭对话' : '打开对话' }}
-        </el-button>
-      </div>
+      <div class="header-actions"></div>
     </div>
 
     <el-tabs v-model="activeTab" class="ai-tabs">
@@ -139,8 +135,9 @@
                 circle
                 @click="toggleVoice"
                 :loading="isAsrProcessing"
-                title="语音输入"
+                :title="isListening ? `录音中 ${voiceRemainingSeconds}s` : '语音输入'"
               />
+              <span v-if="isListening" class="listening-countdown">剩余 {{ voiceRemainingSeconds }}s</span>
               <el-input
                 v-model="chatInput"
                 placeholder="输入你的问题..."
@@ -165,20 +162,18 @@
       </el-tab-pane>
     </el-tabs>
 
-    <VoiceChat v-if="showVoiceChat" @close="showVoiceChat = false" @reply="onVoiceReply" />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
-import { MagicStick, CopyDocument, VideoPlay, ChatDotRound, Microphone, Promotion } from '@element-plus/icons-vue'
+import { MagicStick, CopyDocument, VideoPlay, Microphone, Promotion } from '@element-plus/icons-vue'
 import {
   generateProjectSummary, generateBusinessAdvice, generateRiskAnalysis, getAiRecords,
   chatStream, uploadAsrAudio,
 } from '@/api/ai'
 import { marked } from 'marked'
 import { ElMessage } from 'element-plus'
-import VoiceChat from '@/components/VoiceChat.vue'
 import { useLive2d } from '@/composables/useLive2d'
 import AgentPanel from '@/views/ai-assistant/AgentPanel.vue'
 import { useUserStore } from '@/stores/user'
@@ -199,7 +194,6 @@ const loading = ref(false)
 const result = ref('')
 const currentType = ref('')
 const records = ref([])
-const showVoiceChat = ref(false)
 
 const form = reactive({
   project_name: '',
@@ -302,6 +296,51 @@ const chatMessagesRef = ref(null)
 const isListening = ref(false)
 const isAsrProcessing = ref(false)
 let chatRecognition = null
+let recognitionStartAt = 0
+let recognitionFinalText = ''
+let recognitionManualStop = false
+let recognitionStopTimer = null
+let recognitionForceFinalizeTimer = null
+let recognitionActive = false
+let suppressAutoSendOnFinalize = false
+let listeningCountdownTimer = null
+let listeningWindowStartAt = 0
+const VOICE_LISTEN_MAX_MS = 60000
+const voiceRemainingSeconds = ref(Math.ceil(VOICE_LISTEN_MAX_MS / 1000))
+
+function startListeningCountdown() {
+  if (listeningCountdownTimer) clearInterval(listeningCountdownTimer)
+  const tick = () => {
+    const remain = Math.max(0, VOICE_LISTEN_MAX_MS - (Date.now() - listeningWindowStartAt))
+    voiceRemainingSeconds.value = Math.max(0, Math.ceil(remain / 1000))
+  }
+  tick()
+  listeningCountdownTimer = setInterval(tick, 200)
+}
+
+function stopListeningCountdown(reset = true) {
+  if (listeningCountdownTimer) {
+    clearInterval(listeningCountdownTimer)
+    listeningCountdownTimer = null
+  }
+  if (reset) voiceRemainingSeconds.value = Math.ceil(VOICE_LISTEN_MAX_MS / 1000)
+}
+
+function finalizeRecognitionAndSend() {
+  if (recognitionStopTimer) { clearTimeout(recognitionStopTimer); recognitionStopTimer = null }
+  if (recognitionForceFinalizeTimer) { clearTimeout(recognitionForceFinalizeTimer); recognitionForceFinalizeTimer = null }
+  stopListeningCountdown()
+  recognitionActive = false
+  isListening.value = false
+  const finalText = (recognitionFinalText || chatInput.value || '').trim()
+  recognitionFinalText = ''
+  chatRecognition = null
+  if (finalText && !suppressAutoSendOnFinalize) {
+    chatInput.value = finalText
+    nextTick(() => sendChatMessage())
+  }
+  suppressAutoSendOnFinalize = false
+}
 
 const chatQuickQuestions = [
   { icon: '💡', text: '帮我分析项目创新性' },
@@ -311,6 +350,10 @@ const chatQuickQuestions = [
 ]
 
 async function sendChatMessage(text) {
+  if (isListening.value) {
+    suppressAutoSendOnFinalize = true
+    stopVoice(true)
+  }
   const message = text || chatInput.value.trim()
   if (!message || isChatStreaming.value) return
 
@@ -390,8 +433,18 @@ function startVoice() {
   if (SpeechRecognition) {
     chatRecognition = new SpeechRecognition()
     chatRecognition.lang = 'zh-CN'
-    chatRecognition.continuous = false
+    chatRecognition.continuous = true
     chatRecognition.interimResults = true
+    recognitionFinalText = ''
+    recognitionManualStop = false
+    recognitionActive = true
+    recognitionStartAt = Date.now()
+    listeningWindowStartAt = recognitionStartAt
+    startListeningCountdown()
+    if (recognitionStopTimer) clearTimeout(recognitionStopTimer)
+    recognitionStopTimer = setTimeout(() => {
+      if (isListening.value) stopVoice(false)
+    }, VOICE_LISTEN_MAX_MS)
 
     chatRecognition.onresult = (event) => {
       let finalTranscript = ''
@@ -405,19 +458,26 @@ function startVoice() {
       }
       if (interimTranscript) chatInput.value = interimTranscript
       if (finalTranscript) {
-        chatInput.value = finalTranscript
-        nextTick(() => sendChatMessage())
+        recognitionFinalText += finalTranscript
+        chatInput.value = recognitionFinalText
       }
     }
 
     chatRecognition.onerror = (event) => {
-      isListening.value = false
-      if (event.error !== 'no-speech') {
-        ElMessage.error('语音识别出错：' + event.error)
-      }
+      if (event.error === 'no-speech') return
+      recognitionActive = false
+      ElMessage.error('语音识别出错：' + event.error)
+      finalizeRecognitionAndSend()
     }
 
-    chatRecognition.onend = () => { isListening.value = false }
+    chatRecognition.onend = () => {
+      const shouldContinue = recognitionActive && !recognitionManualStop && (Date.now() - recognitionStartAt < VOICE_LISTEN_MAX_MS)
+      if (shouldContinue) {
+        try { chatRecognition.start() } catch (_e) { isListening.value = false }
+        return
+      }
+      finalizeRecognitionAndSend()
+    }
     chatRecognition.start()
     isListening.value = true
   } else {
@@ -425,18 +485,28 @@ function startVoice() {
   }
 }
 
-function stopVoice() {
+function stopVoice(manual = true) {
+  recognitionManualStop = manual
+  recognitionActive = false
+  if (manual) suppressAutoSendOnFinalize = true
+  if (recognitionStopTimer) { clearTimeout(recognitionStopTimer); recognitionStopTimer = null }
   if (chatRecognition) {
-    chatRecognition.stop()
-    chatRecognition = null
+    try { chatRecognition.stop() } catch (_e) {}
+    if (recognitionForceFinalizeTimer) clearTimeout(recognitionForceFinalizeTimer)
+    recognitionForceFinalizeTimer = setTimeout(() => {
+      if (isListening.value) finalizeRecognitionAndSend()
+    }, 1200)
   }
-  isListening.value = false
+  if (!chatRecognition) isListening.value = false
+  if (!chatRecognition) stopListeningCountdown()
 }
 
 async function startFirefoxVoice() {
   try {
     isListening.value = true
     isAsrProcessing.value = true
+    listeningWindowStartAt = Date.now()
+    startListeningCountdown()
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
     const chunks = []
@@ -464,17 +534,15 @@ async function startFirefoxVoice() {
       }
     }
     mediaRecorder.start()
-    setTimeout(() => { if (mediaRecorder.state === 'recording') mediaRecorder.stop() }, 5000)
+    setTimeout(() => { if (mediaRecorder.state === 'recording') mediaRecorder.stop() }, VOICE_LISTEN_MAX_MS)
   } catch (err) {
     isListening.value = false
     isAsrProcessing.value = false
+    stopListeningCountdown()
     ElMessage.error('无法访问麦克风')
   }
 }
 
-function onVoiceReply(text) {
-  updateExpressionByText(text)
-}
 </script>
 
 <style scoped>
@@ -528,6 +596,13 @@ function onVoiceReply(text) {
 .output-actions {
   display: flex;
   gap: 8px;
+}
+
+.listening-countdown {
+  font-size: 12px;
+  color: #dc2626;
+  font-weight: 600;
+  min-width: 64px;
 }
 
 .output-placeholder {

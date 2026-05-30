@@ -17,7 +17,8 @@
           <div class="panel-header">
             <div class="header-drag-area" @mousedown="startDrag" @touchstart="startDragTouch">
               <span class="panel-title">🤖 火花 AI 助手</span>
-              <el-tag v-if="isListening" type="danger" size="small" effect="light" class="listening-tag">录音中</el-tag>
+              <el-tag v-if="isListening" type="danger" size="small" effect="light" class="listening-tag">录音中 {{ voiceRemainingSeconds }}s</el-tag>
+              <el-tag v-else-if="isAsrProcessing" type="warning" size="small" effect="light" class="asr-tag">识别中 {{ asrRemainingSeconds }}s</el-tag>
             </div>
             <div class="header-actions">
               <el-button size="small" text @click.stop="switchToAgent" title="AI 智能体">
@@ -153,18 +154,18 @@
               </div>
 
               <div class="chat-input-area">
-                <el-input
-                  v-model="inputText"
-                  placeholder="输入消息..."
-                  @keyup.enter="sendMessage"
-                  :disabled="isStreaming"
-                  size="default"
-                  clearable
-                >
-                  <template #append>
-                    <el-button @click="sendMessage" :loading="isStreaming" :disabled="!inputText.trim()">发送</el-button>
-                  </template>
-                </el-input>
+                <div class="chat-input-row">
+                  <el-input
+                    v-model="inputText"
+                    type="textarea"
+                    :autosize="{ minRows: 1, maxRows: 5 }"
+                    placeholder="输入消息..."
+                    @keydown.enter.exact.prevent="sendMessage"
+                    :disabled="isStreaming"
+                    clearable
+                  />
+                  <el-button class="chat-send-btn" @click="sendMessage" :loading="isStreaming" :disabled="!inputText.trim()">发送</el-button>
+                </div>
                 <div class="voice-controls">
                   <el-button
                     :type="isListening ? 'danger' : 'primary'"
@@ -258,6 +259,86 @@ let resizeState = { resizing: false, startX: 0, startY: 0, startW: 0, startH: 0 
 let isMobile = ref(false)
 let recognition = null
 let speechUtterance = null
+let recognitionStartAt = 0
+let recognitionFinalText = ''
+let recognitionInterimText = ''
+let recognitionManualStop = false
+let recognitionStopTimer = null
+let recognitionForceFinalizeTimer = null
+let recognitionActive = false
+let suppressAutoSendOnFinalize = false
+let recognitionRestartAttempts = 0
+let asrMediaRecorder = null
+let asrMediaStream = null
+let asrChunks = []
+let asrManualStop = false
+let asrTextPendingAutoSpeak = false
+let listeningCountdownTimer = null
+let listeningWindowStartAt = 0
+const VOICE_LISTEN_MAX_MS = 60000
+const voiceRemainingSeconds = ref(Math.ceil(VOICE_LISTEN_MAX_MS / 1000))
+const ASR_PROCESS_MAX_MS = 15000
+const asrRemainingSeconds = ref(Math.ceil(ASR_PROCESS_MAX_MS / 1000))
+let asrCountdownTimer = null
+let asrProcessStartAt = 0
+
+function startListeningCountdown() {
+  if (listeningCountdownTimer) clearInterval(listeningCountdownTimer)
+  const tick = () => {
+    const remain = Math.max(0, VOICE_LISTEN_MAX_MS - (Date.now() - listeningWindowStartAt))
+    voiceRemainingSeconds.value = Math.max(0, Math.ceil(remain / 1000))
+  }
+  tick()
+  listeningCountdownTimer = setInterval(tick, 200)
+}
+
+function stopListeningCountdown(reset = true) {
+  if (listeningCountdownTimer) {
+    clearInterval(listeningCountdownTimer)
+    listeningCountdownTimer = null
+  }
+  if (reset) voiceRemainingSeconds.value = Math.ceil(VOICE_LISTEN_MAX_MS / 1000)
+}
+
+function startAsrCountdown() {
+  if (asrCountdownTimer) clearInterval(asrCountdownTimer)
+  asrProcessStartAt = Date.now()
+  const tick = () => {
+    const remain = Math.max(0, ASR_PROCESS_MAX_MS - (Date.now() - asrProcessStartAt))
+    asrRemainingSeconds.value = Math.max(0, Math.ceil(remain / 1000))
+  }
+  tick()
+  asrCountdownTimer = setInterval(tick, 200)
+}
+
+function stopAsrCountdown(reset = true) {
+  if (asrCountdownTimer) {
+    clearInterval(asrCountdownTimer)
+    asrCountdownTimer = null
+  }
+  if (reset) asrRemainingSeconds.value = Math.ceil(ASR_PROCESS_MAX_MS / 1000)
+}
+
+function syncInputFromRecognition() {
+  inputText.value = `${recognitionFinalText}${recognitionInterimText}`
+}
+
+function finalizeRecognitionAndSend() {
+  if (recognitionStopTimer) { clearTimeout(recognitionStopTimer); recognitionStopTimer = null }
+  if (recognitionForceFinalizeTimer) { clearTimeout(recognitionForceFinalizeTimer); recognitionForceFinalizeTimer = null }
+  stopListeningCountdown()
+  recognitionActive = false
+  isListening.value = false
+  const finalText = (recognitionFinalText + recognitionInterimText || inputText.value || '').trim()
+  recognitionFinalText = ''
+  recognitionInterimText = ''
+  recognition = null
+  if (finalText && !suppressAutoSendOnFinalize) {
+    inputText.value = finalText
+    nextTick(() => sendMessage({ autoSpeak: true }))
+  }
+  suppressAutoSendOnFinalize = false
+}
 let dragState = { dragging: false, startX: 0, startY: 0 }
 let modelDragState = { dragging: false, startX: 0, startY: 0, origLeft: 0, origBottom: 0 }
 let modelPatchLoopId = null
@@ -1001,8 +1082,14 @@ watch(panelOpen, (val) => {
 
 async function sendMessage(options = {}) {
   const { autoSpeak = false } = options
+  const shouldAutoSpeak = autoSpeak || asrTextPendingAutoSpeak
+  if (isListening.value) {
+    suppressAutoSendOnFinalize = true
+    stopVoiceRecognition(true)
+  }
   const text = inputText.value.trim()
   if (!text || isStreaming.value) return
+  asrTextPendingAutoSpeak = false
   messages.value.push({ role: 'user', content: text })
   inputText.value = ''
   isStreaming.value = true
@@ -1111,7 +1198,7 @@ async function sendMessage(options = {}) {
       msg.capability = currentCapability.value
     }
     messages.value.push(msg)
-    if (autoSpeak) {
+    if (shouldAutoSpeak) {
       speakText(fullResponse, { forceRestart: true })
     }
   } else if (streamServerError) {
@@ -1160,55 +1247,74 @@ function handleNavigate(route) {
 function toggleVoiceRecognition() { isListening.value ? stopVoiceRecognition() : startVoiceRecognition() }
 
 function startVoiceRecognition() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-  if (SR) {
-    recognition = new SR()
-    recognition.lang = 'zh-CN'
-    recognition.continuous = false
-    recognition.interimResults = true
-    recognition.onresult = (e) => {
-      let final = '', interim = ''
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) final += e.results[i][0].transcript
-        else interim += e.results[i][0].transcript
-      }
-      if (interim) inputText.value = interim
-      if (final) { inputText.value = final; nextTick(() => sendMessage({ autoSpeak: true })) }
-    }
-    recognition.onerror = (e) => { isListening.value = false; if (e.error !== 'no-speech') ElMessage.error('语音识别出错：' + e.error) }
-    recognition.onend = () => { isListening.value = false }
-    recognition.start()
-    isListening.value = true
-  } else {
-    startFirefoxVoice()
-  }
+  startFirefoxVoice()
 }
 
-function stopVoiceRecognition() { if (recognition) { recognition.stop(); recognition = null }; isListening.value = false }
+function stopVoiceRecognition(manual = true) {
+  asrManualStop = manual
+  if (manual) suppressAutoSendOnFinalize = true
+  if (recognitionStopTimer) { clearTimeout(recognitionStopTimer); recognitionStopTimer = null }
+  if (asrMediaRecorder && asrMediaRecorder.state === 'recording') {
+    try { asrMediaRecorder.stop() } catch (_e) {}
+    return
+  }
+  isListening.value = false
+  stopListeningCountdown()
+}
 
 async function startFirefoxVoice() {
   try {
-    isListening.value = true; isAsrProcessing.value = true
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-    const chunks = []
-    mr.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data) }
-    mr.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop()); isListening.value = false
-      const blob = new Blob(chunks, { type: 'audio/webm' })
+    isListening.value = true
+    isAsrProcessing.value = false
+    asrManualStop = false
+    listeningWindowStartAt = Date.now()
+    startListeningCountdown()
+    asrMediaStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    asrMediaRecorder = new MediaRecorder(asrMediaStream, { mimeType: 'audio/webm' })
+    asrChunks = []
+    if (recognitionStopTimer) clearTimeout(recognitionStopTimer)
+    recognitionStopTimer = setTimeout(() => {
+      if (isListening.value) stopVoiceRecognition(false)
+    }, VOICE_LISTEN_MAX_MS)
+
+    asrMediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) asrChunks.push(e.data) }
+    asrMediaRecorder.onstop = async () => {
+      try { asrMediaStream?.getTracks()?.forEach(t => t.stop()) } catch (_e) {}
+      asrMediaStream = null
+      isListening.value = false
+      stopListeningCountdown()
+      isAsrProcessing.value = true
+      startAsrCountdown()
+      const blob = new Blob(asrChunks, { type: 'audio/webm' })
       const fd = new FormData(); fd.append('audio', blob, 'recording.webm')
       try {
         const { uploadAsrAudio } = await import('@/api/ai')
         const res = await uploadAsrAudio(fd)
         const result = await res.json()
-        if (result.text) { inputText.value = result.text; nextTick(() => sendMessage({ autoSpeak: true })) }
+        if (result.text) {
+          inputText.value = result.text
+          asrTextPendingAutoSpeak = true
+          if (!asrManualStop && !suppressAutoSendOnFinalize) nextTick(() => sendMessage({ autoSpeak: true }))
+        }
         else ElMessage.error('语音识别失败')
       } catch (err) { ElMessage.error('语音识别失败：' + err.message) }
-      finally { isAsrProcessing.value = false }
+      finally {
+        isAsrProcessing.value = false
+        stopAsrCountdown()
+        asrMediaRecorder = null
+        asrChunks = []
+        asrManualStop = false
+        suppressAutoSendOnFinalize = false
+      }
     }
-    mr.start()
-    setTimeout(() => { if (mr.state === 'recording') mr.stop() }, 5000)
-  } catch (err) { isListening.value = false; isAsrProcessing.value = false; ElMessage.error('无法访问麦克风：' + err.message) }
+    asrMediaRecorder.start()
+  } catch (err) {
+    isListening.value = false
+    isAsrProcessing.value = false
+    stopListeningCountdown()
+    stopAsrCountdown()
+    ElMessage.error('无法访问麦克风：' + err.message)
+  }
 }
 
 function toggleSpeech() {
@@ -1553,6 +1659,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('open-huahuo-agent', handleOpenHuahuoAgent)
   window.removeEventListener('resize', checkMobile)
   stopVoiceRecognition()
+  stopListeningCountdown(false)
+  stopAsrCountdown(false)
   stopModelPatchLoop()
   stopAutoExpression()
   if (window.speechSynthesis) window.speechSynthesis.cancel()
@@ -1832,6 +1940,10 @@ onBeforeUnmount(() => {
 }
 
 .listening-tag {
+  animation: pulse 1.5s infinite;
+}
+
+.asr-tag {
   animation: pulse 1.5s infinite;
 }
 
@@ -2118,6 +2230,17 @@ onBeforeUnmount(() => {
   padding: 10px 16px;
   border-top: 1px solid rgba(59, 130, 246, 0.12);
   background: #f8fafc;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.chat-send-btn {
+  flex-shrink: 0;
+  height: 36px;
 }
 
 .voice-controls {
