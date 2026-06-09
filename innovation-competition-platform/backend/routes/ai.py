@@ -6,6 +6,7 @@ import gzip
 import tempfile
 import subprocess
 import shutil
+import time
 
 from flask import Blueprint, request, jsonify, send_from_directory
 from models.user import User
@@ -297,10 +298,13 @@ def asr():
                     loop = asyncio.new_event_loop()
                     recognized_text = loop.run_until_complete(_call_doubao_asr(wav_path, doubao_config))
                     loop.close()
-                    provider_name = "doubao-asr"
-                    model_name = doubao_config["model_name"]
+                    if recognized_text:
+                        provider_name = "doubao-asr"
+                        model_name = doubao_config["model_name"]
                 except Exception as e:
-                    return jsonify({"error": f"豆包ASR失败：{str(e)}"}), 500
+                    print(f"[ASR] Doubao ASR failed: {e}, falling back to local whisper...")
+                    # 发生错误时不直接返回 500，而是继续向下走，触发 whisper 兜底
+                    recognized_text = ""
 
             if not recognized_text:
                 try:
@@ -351,6 +355,7 @@ async def _call_doubao_asr(wav_path, config):
         "X-Api-Request-Id": request_id,
         "X-Api-Access-Key": access_token,
         "X-Api-App-Key": app_id,
+        "Authorization": f"Bearer {access_token}" # 双重保险
     }
 
     async with websockets.connect(ws_url, additional_headers=headers) as ws:
@@ -365,7 +370,11 @@ async def _call_doubao_asr(wav_path, config):
         message = header + payload_size.to_bytes(4, 'big') + compressed_request
         await ws.send(message)
 
-        response = await ws.recv()
+        # 接收第一个响应
+        try:
+            await asyncio.wait_for(ws.recv(), timeout=2.0)
+        except Exception:
+            pass
 
         audio_message_type = 0b0010
         audio_message_flags = 0b0010
@@ -375,24 +384,60 @@ async def _call_doubao_asr(wav_path, config):
         audio_message = audio_header + audio_payload_size.to_bytes(4, 'big') + compressed_audio
         await ws.send(audio_message)
 
-        final_result = await ws.recv()
-
+        # 连续接收直到收到最终结果或超时
+        start_time = time.time()
         text = ""
-        try:
+        while time.time() - start_time < 15:
+            try:
+                final_result = await asyncio.wait_for(ws.recv(), timeout=5.0)
+            except (asyncio.TimeoutError, websockets.exceptions.ConnectionClosed):
+                break
+
             if len(final_result) > 12:
                 payload_data = final_result[12:]
                 try:
                     result_json = gzip.decompress(payload_data).decode('utf-8')
                 except:
-                    result_json = payload_data.decode('utf-8')
-                result = json.loads(result_json)
-                if "result" in result:
-                    text = result.get("result", {}).get("text", "")
-        except Exception:
-            pass
+                    try:
+                        result_json = payload_data.decode('utf-8')
+                    except:
+                        continue
+                
+                try:
+                    result = json.loads(result_json)
+                except:
+                    continue
+                
+                # 如果收到了错误
+                if result.get("code") and result.get("code") != 1000:
+                    if result.get("code") == 1001: continue
+                    raise Exception(f"ASR服务端错误: {result.get('message')} (code: {result.get('code')})")
 
+                # 提取文本 - 适配不同协议版本
+                current_text = ""
+                res = result.get("result")
+                
+                if isinstance(res, dict):
+                    current_text = res.get("text", "")
+                elif isinstance(res, list) and len(res) > 0:
+                    # 取数组中最后一句话
+                    last_item = res[-1]
+                    if isinstance(last_item, dict):
+                        current_text = last_item.get("text", "")
+                
+                # 兼容性备选路径
+                if not current_text and "text" in result:
+                     current_text = result.get("text")
+                
+                if current_text:
+                    text = current_text
+                
+                # 如果发现消息标记为“完成”
+                if result.get("is_last") or result.get("message") == "Success":
+                    break
+        
         if not text:
-            raise Exception("未收到有效识别结果")
+            raise Exception("ASR识别结束，但未提取到文本。可能原因：1. 录音太短 2. 只有背景噪音 3. 服务端配置不匹配。")
         return text
 
 

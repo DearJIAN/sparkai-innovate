@@ -35,10 +35,11 @@ export function voiceChatStream(message, sessionId, scene = '火花智创') {
 }
 
 export function uploadAsrAudio(formData) {
+  const token = localStorage.getItem('token') || ''
   return fetch(withApiBase('/ai/asr'), {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+      'Authorization': `Bearer ${token}`,
     },
     body: formData,
   })

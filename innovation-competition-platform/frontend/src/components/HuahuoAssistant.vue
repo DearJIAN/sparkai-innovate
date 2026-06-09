@@ -1390,7 +1390,15 @@ async function startFirefoxVoice() {
         const res = await uploadAsrAudio(fd)
         if (!res.ok) {
           const failText = await res.text()
-          throw new Error(`ASR请求失败(${res.status}) ${failText || ''}`.trim())
+          let errorData = {}
+          try {
+            errorData = JSON.parse(failText)
+          } catch (e) {}
+          
+          if (res.status === 401 || errorData.msg === 'Missing Authorization Header') {
+            throw new Error('登录已过期，请重新登录后再试')
+          }
+          throw new Error(`ASR后端异常(${res.status}) ${errorData.error || errorData.msg || failText}`.trim())
         }
         const result = await res.json()
         if (result.text) {
