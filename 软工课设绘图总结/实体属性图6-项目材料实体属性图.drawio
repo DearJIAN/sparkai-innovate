@@ -1,0 +1,67 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="第 1 页" id="zV41eyhnTK4gTsvdR6k6">
+    <mxGraphModel dx="1161" dy="693" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1250" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="entity" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=24;fontStyle=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="项目材料" vertex="1">
+          <mxGeometry height="70" width="190" x="520" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=17;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="材料id" vertex="1">
+          <mxGeometry height="65" width="150" x="230" y="234" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=17;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="项目id" vertex="1">
+          <mxGeometry height="65" width="150" x="332" y="176" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=17;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="上传人id" vertex="1">
+          <mxGeometry height="65" width="165" x="562" y="72" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=17;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="材料名称" vertex="1">
+          <mxGeometry height="65" width="165" x="779" y="176" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=17;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="材料类型" vertex="1">
+          <mxGeometry height="65" width="165" x="897" y="229" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=17;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="文件路径" vertex="1">
+          <mxGeometry height="65" width="165" x="155" y="299" as="geometry" />
+        </mxCell>
+        <mxCell id="a7" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=17;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="文件大小" vertex="1">
+          <mxGeometry height="65" width="165" x="453" y="131" as="geometry" />
+        </mxCell>
+        <mxCell id="a8" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=17;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="上传时间" vertex="1">
+          <mxGeometry height="65" width="165" x="656" y="131" as="geometry" />
+        </mxCell>
+        <mxCell id="a9" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=17;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="材料状态" vertex="1">
+          <mxGeometry height="65" width="165" x="944" y="296" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="a1" style="html=1;endArrow=none;strokeColor=#000000;strokeWidth=1.2;" target="entity" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="a2" style="html=1;endArrow=none;strokeColor=#000000;strokeWidth=1.2;" target="entity" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="a3" style="html=1;endArrow=none;strokeColor=#000000;strokeWidth=1.2;" target="entity" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="a4" style="html=1;endArrow=none;strokeColor=#000000;strokeWidth=1.2;" target="entity" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="a5" style="html=1;endArrow=none;strokeColor=#000000;strokeWidth=1.2;" target="entity" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="a6" style="html=1;endArrow=none;strokeColor=#000000;strokeWidth=1.2;" target="entity" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="a7" style="html=1;endArrow=none;strokeColor=#000000;strokeWidth=1.2;" target="entity" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="a8" style="html=1;endArrow=none;strokeColor=#000000;strokeWidth=1.2;" target="entity" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="a9" style="html=1;endArrow=none;strokeColor=#000000;strokeWidth=1.2;" target="entity" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

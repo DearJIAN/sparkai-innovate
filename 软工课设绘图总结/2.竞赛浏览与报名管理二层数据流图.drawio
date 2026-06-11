@@ -1,0 +1,272 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="第 1 页" id="pL47toJWyVTJM_2KrH22">
+    <mxGraphModel dx="2068" dy="1648" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="student" parent="1" style="whiteSpace=wrap;html=1;fontStyle=1;fontSize=16;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="学生" vertex="1">
+          <mxGeometry height="230" width="145" x="65" y="245" as="geometry" />
+        </mxCell>
+        <mxCell id="admin" parent="1" style="whiteSpace=wrap;html=1;fontStyle=1;fontSize=16;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="管理员" vertex="1">
+          <mxGeometry height="70" width="170" x="465" y="-8" as="geometry" />
+        </mxCell>
+        <mxCell id="p21" parent="1" style="swimlane;rounded=1;whiteSpace=wrap;html=1;horizontal=1;startSize=24;fontStyle=1;fontSize=14;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;arcSize=14;" value="2.1" vertex="1">
+          <mxGeometry height="80" width="155" x="262" y="-23" as="geometry" />
+        </mxCell>
+        <mxCell id="p21text" parent="p21" style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;whiteSpace=wrap;" value="获取竞赛列表" vertex="1">
+          <mxGeometry height="42" width="139" x="8" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p22" parent="1" style="swimlane;rounded=1;whiteSpace=wrap;html=1;horizontal=1;startSize=24;fontStyle=1;fontSize=14;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;arcSize=14;" value="2.2" vertex="1">
+          <mxGeometry height="80" width="155" x="541" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="p22text" parent="p22" style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;whiteSpace=wrap;" value="查看竞赛详情" vertex="1">
+          <mxGeometry height="42" width="139" x="8" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p23" parent="1" style="swimlane;rounded=1;whiteSpace=wrap;html=1;horizontal=1;startSize=24;fontStyle=1;fontSize=14;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;arcSize=14;" value="2.3" vertex="1">
+          <mxGeometry height="82" width="155" x="308" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="p23text" parent="p23" style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;whiteSpace=wrap;" value="提交报名申请" vertex="1">
+          <mxGeometry height="44" width="139" x="8" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p24" parent="1" style="swimlane;rounded=1;whiteSpace=wrap;html=1;horizontal=1;startSize=24;fontStyle=1;fontSize=14;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;arcSize=14;" value="2.4" vertex="1">
+          <mxGeometry height="82" width="155" x="560" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="p24text" parent="p24" style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;whiteSpace=wrap;" value="报名信息校验" vertex="1">
+          <mxGeometry height="44" width="139" x="8" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p25" parent="1" style="swimlane;rounded=1;whiteSpace=wrap;html=1;horizontal=1;startSize=24;fontStyle=1;fontSize=14;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;arcSize=14;" value="2.5" vertex="1">
+          <mxGeometry height="82" width="155" x="805" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="p25text" parent="p25" style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;whiteSpace=wrap;" value="保存报名记录" vertex="1">
+          <mxGeometry height="44" width="139" x="8" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p26" parent="1" style="swimlane;rounded=1;whiteSpace=wrap;html=1;horizontal=1;startSize=24;fontStyle=1;fontSize=14;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;arcSize=14;" value="2.6" vertex="1">
+          <mxGeometry height="82" width="155" x="560" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="p26text" parent="p26" style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;whiteSpace=wrap;" value="返回报名状态" vertex="1">
+          <mxGeometry height="44" width="139" x="8" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="p27" parent="1" style="swimlane;rounded=1;whiteSpace=wrap;html=1;horizontal=1;startSize=24;fontStyle=1;fontSize=14;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;arcSize=14;" value="2.7" vertex="1">
+          <mxGeometry height="88" width="165" x="1135" y="263" as="geometry" />
+        </mxCell>
+        <mxCell id="p27text" parent="p27" style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;whiteSpace=wrap;" value="竞赛维护与&lt;br&gt;报名审核" vertex="1">
+          <mxGeometry height="50" width="149" x="8" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;align=center;verticalAlign=middle;whiteSpace=wrap;" value="D1　用户信息表" vertex="1">
+          <mxGeometry height="36" width="220" x="815" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="d1t" parent="1" style="shape=line;html=1;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="1" width="220" x="815" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="d1b" parent="1" style="shape=line;html=1;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="1" width="220" x="815" y="262" as="geometry" />
+        </mxCell>
+        <mxCell id="d21" parent="1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;align=center;verticalAlign=middle;whiteSpace=wrap;" value="D2-1　竞赛信息表" vertex="1">
+          <mxGeometry height="36" width="225" x="815" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="d21t" parent="1" style="shape=line;html=1;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="1" width="225" x="815" y="107" as="geometry" />
+        </mxCell>
+        <mxCell id="d21b" parent="1" style="shape=line;html=1;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="1" width="225" x="815" y="157" as="geometry" />
+        </mxCell>
+        <mxCell id="d22" parent="1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;align=center;verticalAlign=middle;whiteSpace=wrap;" value="D2-2　报名记录表" vertex="1">
+          <mxGeometry height="36" width="225" x="815" y="660" as="geometry" />
+        </mxCell>
+        <mxCell id="d22t" parent="1" style="shape=line;html=1;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="1" width="225" x="815" y="652" as="geometry" />
+        </mxCell>
+        <mxCell id="d22b" parent="1" style="shape=line;html=1;strokeColor=#000000;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry height="1" width="225" x="815" y="702" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="student" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p21" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="321" y="311" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="p21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="student" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="d21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p21" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="366" y="119" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="student" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p22" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="433" y="351" />
+              <mxPoint x="433" y="242" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="p22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="student" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="358" y="225" />
+              <mxPoint x="358" y="335" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="d21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p22" value="">
+          <mxGeometry relative="1" x="-0.3238" y="-12" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="675" y="133" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="student" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p23" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="221" y="444" />
+              <mxPoint x="221" y="444" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="p23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p24" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="d21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p24" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="710" y="147" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="d22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p24" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="756" y="678" />
+              <mxPoint x="756" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="p24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p25" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="p24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="student" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="293" y="376" />
+              <mxPoint x="293" y="376" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="p25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="933" y="590" />
+              <mxPoint x="933" y="590" />
+            </Array>
+            <mxPoint x="933" y="651" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="p25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p26" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1160" y="376" />
+              <mxPoint x="1160" y="745" />
+              <mxPoint x="638" y="745" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="p26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="student" value="报名状态">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="p27" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="p27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="d21" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1166" y="133" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="1" source="p27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="d22" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1241" y="678" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="p27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=13;labelBackgroundColor=#ffffff;" target="admin" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1254" y="-56" />
+              <mxPoint x="550" y="-56" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-1" parent="1" style="text;whiteSpace=wrap;html=1;rotation=90;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;竞赛列表&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="80" x="72.99586799172793" y="102.00175034466915" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-2" parent="1" style="text;whiteSpace=wrap;html=1;rotation=90;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;竞赛查询请求&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="244.99586799172792" y="163.00175034466915" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-3" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;竞赛详情&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="80" x="385.00469152113965" y="189.99586799172792" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-4" parent="1" style="text;whiteSpace=wrap;html=1;rotation=90;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;竞赛详情请求&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="390.99880916819865" y="290.99586799172795" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-5" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;校验失败提示&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="339.99880916819865" y="350.001162109375" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-6" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;报名信息&lt;/span&gt;" vertex="1">
+          <mxGeometry height="25.83" width="59.17" x="226" y="443" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-7" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;竞赛数据、报名统计&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="145" x="751.0011190257351" y="-90.00235294117647" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-8" parent="1" style="text;whiteSpace=wrap;html=1;rotation=90;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;历史报名记录&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="715.0005882352941" y="549.0035294117649" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-10" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;报名处理结果&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="970.0033740234376" y="372.0033536783855" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-11" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;合法报名信息&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="715.0033740234375" y="350.0033536783855" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-12" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;报名申请数据&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="517.0042857142857" y="433.00001743861617" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-13" parent="1" style="text;whiteSpace=wrap;html=1;rotation=90;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;报名记录&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="80" x="864.9982927389708" y="545.9958967141545" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-15" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;竞赛管理信息、报名审核信息&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="197" x="989.4941750919118" y="-10.995279756433783" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-16" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;竞赛维护数据&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="1062.0012339154414" y="97.00413200827208" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-17" parent="1" style="text;whiteSpace=wrap;html=1;rotation=90;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;审核状态&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="80" x="1209.000048828125" y="480.99995117187495" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-18" parent="1" style="text;whiteSpace=wrap;html=1;rotation=90;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;竞赛报名规则&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="665.001781589674" y="219.9965217391305" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-19" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;用户身份信息&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="806.9978685461957" y="285.998695652174" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-20" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;竞赛基本信息&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="106" x="500.00221637228276" y="104.17391304347825" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-21" parent="1" style="text;whiteSpace=wrap;html=1;" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;竞赛赛道与要求&lt;/span&gt;" vertex="1">
+          <mxGeometry height="38" width="119" x="580" y="142.1699755859375" as="geometry" />
+        </mxCell>
+        <mxCell id="NbQMCHdzk52EjLGHW8iR-22" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;endFill=0;startArrow=classic;startFill=1;entryX=0.25;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="d1b" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="717" y="339" as="sourcePoint" />
+            <mxPoint x="767" y="289" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
