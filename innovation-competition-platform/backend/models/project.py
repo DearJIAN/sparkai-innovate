@@ -41,6 +41,7 @@ class Project(db.Model):
             'stage': self.stage,
             'status': self.status,
             'leader_id': self.leader_id,
+            'leader': self.leader.to_dict() if self.leader else None,
             'teacher_id': self.teacher_id,
             'competition_id': self.competition_id,
             'start_date': self.start_date.isoformat() if self.start_date else None,

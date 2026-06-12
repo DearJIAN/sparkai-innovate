@@ -223,18 +223,20 @@ def update_project(project_id):
     if not project:
         return error('项目不存在', code=404, status_code=404)
 
-    # 权限检查：项目负责人或 admin
-    if project.leader_id != user.id and not user.is_admin():
+    # 权限检查：项目负责人、指导老师或 admin
+    is_leader = project.leader_id == user.id
+    is_teacher = project.teacher_id == user.id
+    if not (is_leader or is_teacher or user.is_admin()):
         return error('无权编辑该项目', code=403, status_code=403)
 
-    # 已进入评审阶段的项目不允许随意修改核心信息
+    # 已进入评审阶段的项目不允许随意修改核心信息（管理员除外）
     if project.status in ['judging', 'passed', 'rejected'] and not user.is_admin():
         return error('该项目已进入评审阶段，无法修改', code=403, status_code=403)
 
     data = request.get_json()
 
     # 可编辑字段
-    editable_fields = ['name', 'description', 'category', 'track', 'stage', 'teacher_id', 'competition_id']
+    editable_fields = ['name', 'description', 'category', 'track', 'stage', 'teacher_id', 'competition_id', 'status', 'remark']
     for field in editable_fields:
         if field in data:
             value = data[field]

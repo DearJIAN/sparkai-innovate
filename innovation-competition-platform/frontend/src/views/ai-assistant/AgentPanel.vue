@@ -408,14 +408,18 @@ async function onProjectChange(projectId) {
     form.value.registrationId = null
     registrations.value = []
     if (!projectId) return
-    try {
-      const res = await getMyRegistrations()
-      const list = res.data?.registrations || res.registrations || res.data || []
-      const filtered = list.filter(r => r.project_id === projectId)
-      registrations.value = filtered
-    } catch (e) {
-      console.error('获取报名列表失败:', e)
-      registrations.value = []
+    
+    // 只有学生角色才需要获取“我的报名”来绑定竞赛上下文
+    if (props.userRole === 'student') {
+      try {
+        const res = await getMyRegistrations()
+        const list = res.data?.registrations || res.registrations || res.data || []
+        const filtered = list.filter(r => r.project_id === projectId)
+        registrations.value = filtered
+      } catch (e) {
+        console.error('获取报名列表失败:', e)
+        registrations.value = []
+      }
     }
   }
 
@@ -584,6 +588,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   color: #1e293b;
+  overflow: hidden;
+}
+
+.capability-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .agent-panel--compact {

@@ -101,9 +101,6 @@
                   <el-button size="small" type="primary" link @click="speakAnalysisResult">朗读</el-button>
                 </div>
               </div>
-              <div class="mode-switch-hint">
-                <el-button type="primary" link size="small" @click="mode = 'chat'">← 返回对话模式</el-button>
-              </div>
             </div>
 
             <!-- AI 智能体模式 -->
@@ -115,9 +112,6 @@
                 @result="onAgentResult"
                 @speak="onAgentSpeak"
               />
-              <div class="mode-switch-hint">
-                <el-button type="primary" link size="small" @click="mode = 'chat'">← 返回对话模式</el-button>
-              </div>
             </div>
 
             <!-- 对话模式 -->
@@ -196,6 +190,11 @@
                   </el-button>
                 </div>
               </div>
+            </div>
+
+            <!-- 返回对话模式提示（仅在非对话模式显示） -->
+            <div v-if="mode !== 'chat'" class="mode-switch-hint-global">
+              <el-button type="primary" link size="small" @click="mode = 'chat'">← 返回对话模式</el-button>
             </div>
           </div>
         </div>
@@ -2204,18 +2203,26 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
 .agent-mode {
-  min-height: 0;
-  overflow-y: auto;
+  padding: 0;
 }
 
 .analysis-mode {
   padding: 16px;
   overflow-y: auto;
-  max-height: 520px;
+}
+
+.mode-switch-hint-global {
+  padding: 8px 0;
+  text-align: center;
+  background: #ffffff;
+  border-top: 1px solid rgba(59, 130, 246, 0.1);
+  flex-shrink: 0;
+  z-index: 5;
 }
 
 .analysis-mode ::deep(.el-form-item) {
@@ -2348,11 +2355,6 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 12px;
   margin-top: 8px;
-}
-
-.mode-switch-hint {
-  text-align: center;
-  margin-top: 12px;
 }
 
 .chat-messages {

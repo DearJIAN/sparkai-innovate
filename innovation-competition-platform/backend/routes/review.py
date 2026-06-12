@@ -113,7 +113,7 @@ def submit_review(project_id):
         return error('项目不存在', code=404, status_code=404)
 
     # 检查项目状态
-    if project.status not in ['submitted', 'teacher_review', 'judging', 'need_modify']:
+    if project.status not in ['submitted', 'teacher_review', 'judging', 'need_modify', 'passed', 'rejected']:
         return error(f'当前项目状态为 {project.status}，无法评审', code=403, status_code=403)
 
     data = request.get_json()

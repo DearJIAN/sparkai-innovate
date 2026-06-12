@@ -50,7 +50,11 @@
             <span class="project-link" @click="$router.push(`/projects/${row.id}`)">{{ row.name }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="leader" label="负责人" width="100" />
+        <el-table-column prop="leader" label="负责人" width="100">
+          <template #default="{ row }">
+            {{ row.leader?.real_name || row.leader?.username || '-' }}
+          </template>
+        </el-table-column>
         <el-table-column prop="category" label="类别" width="120" />
         <el-table-column prop="stage" label="阶段" width="100">
           <template #default="{ row }"><el-tag size="small" type="info">{{ stageText(row.stage) }}</el-tag></template>
@@ -79,7 +83,7 @@
       <template v-if="currentProject">
         <el-descriptions :column="1" border class="mb-4">
           <el-descriptions-item label="项目名称">{{ currentProject.name }}</el-descriptions-item>
-          <el-descriptions-item label="负责人">{{ currentProject.leader }}</el-descriptions-item>
+          <el-descriptions-item label="负责人">{{ currentProject.leader?.real_name || currentProject.leader?.username || '-' }}</el-descriptions-item>
           <el-descriptions-item label="当前状态">{{ statusText(currentProject.status) }}</el-descriptions-item>
         </el-descriptions>
         <el-form :model="reviewForm" label-width="90px">
@@ -130,12 +134,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { getProjects, updateProject } from '@/api/project'
 
 const searchQuery = ref('')
 const filterStatus = ref('')
+const loading = ref(false)
 const reviewVisible = ref(false)
 const feedbackVisible = ref(false)
 const currentProject = ref(null)
@@ -143,16 +149,25 @@ const currentProject = ref(null)
 const reviewForm = reactive({ result: 'passed', comment: '' })
 const feedbackForm = reactive({ suggestion: '', resources: [] })
 
-const projects = ref([
-  { id: 1, name: '智慧校园服务平台', leader: '张三', category: '信息技术', stage: 'development', status: 'submitted', members_count: 4, updated_at: '2025-05-01' },
-  { id: 2, name: 'AI 辅助学习系统', leader: '李四', category: '人工智能', stage: 'proof', status: 'teacher_review', members_count: 3, updated_at: '2025-04-30' },
-  { id: 3, name: '绿色物流配送平台', leader: '王五', category: '绿色科技', stage: 'market', status: 'passed', members_count: 5, updated_at: '2025-04-28' },
-  { id: 4, name: '乡村振兴电商助农', leader: '赵六', category: '乡村振兴', stage: 'resource', status: 'submitted', members_count: 4, updated_at: '2025-04-27' },
-  { id: 5, name: '智能健康监测手环', leader: '钱七', category: '医疗健康', stage: 'idea', status: 'need_modify', members_count: 3, updated_at: '2025-04-25' },
-  { id: 6, name: '校园二手交易平台', leader: '孙八', category: '校园服务', stage: 'roadshow', status: 'judging', members_count: 2, updated_at: '2025-04-24' },
-  { id: 7, name: '非遗文化数字化传播', leader: '周九', category: '文化创意', stage: 'development', status: 'submitted', members_count: 6, updated_at: '2025-04-22' },
-  { id: 8, name: '社区养老服务平台', leader: '吴十', category: '社会公益', stage: 'proof', status: 'submitted', members_count: 4, updated_at: '2025-04-20' }
-])
+const projects = ref([])
+
+onMounted(() => {
+  fetchProjects()
+})
+
+const fetchProjects = async () => {
+  loading.value = true
+  try {
+    const res = await getProjects()
+    if (res.code === 200) {
+      projects.value = res.data.projects
+    }
+  } catch (error) {
+    ElMessage.error('获取项目列表失败')
+  } finally {
+    loading.value = false
+  }
+}
 
 const filteredProjects = computed(() => {
   let list = projects.value
@@ -205,9 +220,20 @@ function openFeedbackDialog(project) {
   feedbackVisible.value = true
 }
 
-function submitReview() {
-  ElMessage.success(`已对「${currentProject.value.name}」完成审核：${reviewForm.result === 'passed' ? '通过' : reviewForm.result === 'need_modify' ? '需修改' : '驳回'}`)
-  reviewVisible.value = false
+async function submitReview() {
+  try {
+    const res = await updateProject(currentProject.value.id, {
+      status: reviewForm.result,
+      remark: reviewForm.comment // 后端模型可能不支持 remark，但先保持同步，主要修复状态不变化
+    })
+    if (res.code === 200) {
+      ElMessage.success(`已对「${currentProject.value.name}」完成审核：${reviewForm.result === 'passed' ? '通过' : reviewForm.result === 'need_modify' ? '需修改' : '驳回'}`)
+      reviewVisible.value = false
+      fetchProjects()
+    }
+  } catch (error) {
+    ElMessage.error('审核提交失败')
+  }
 }
 
 function submitFeedback() {

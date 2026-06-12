@@ -8,7 +8,7 @@ from models.registration_material import RegistrationMaterial
 from models.user import User
 from extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from utils.decorators import require_roles
+from utils.decorators import require_roles, require_min_role
 from utils.response import success, error
 
 registration_bp = Blueprint('registration', __name__)
@@ -362,7 +362,7 @@ def submit_registration(registration_id):
 
 @registration_bp.route('/my-registrations', methods=['GET'])
 @jwt_required()
-@require_roles('student')
+@require_min_role('student')
 def get_my_registrations():
     """查看我的报名"""
     user = _get_current_user()
@@ -430,7 +430,8 @@ def get_admin_registrations():
         track = CompetitionTrack.query.get(r.track_id)
         d['competitionName'] = comp.name if comp else ''
         d['trackName'] = track.name if track else ''
-        d['leaderName'] = d['leader']['name'] if d.get('leader') else ''
+        # 修复 leaderName 获取，User.to_dict() 使用的是 real_name 而不是 name
+        d['leaderName'] = d['leader'].get('real_name') or d['leader'].get('username') if d.get('leader') else ''
         d['memberCount'] = len(d.get('members', []))
         d['materialCount'] = len(d.get('materials', []))
         d['submittedAt'] = d['submitted_at'].split('T')[0] if d.get('submitted_at') else ''
