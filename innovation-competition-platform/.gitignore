@@ -23,3 +23,5 @@ frontend/dist/
 backend/vector_stores/
 
 
+innovation-competition-platform/backend/.envbackend/.env
+backend/.env
