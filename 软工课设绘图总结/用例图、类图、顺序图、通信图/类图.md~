@@ -97,6 +97,23 @@
 	logical_models 	(list unit_reference_list
 	    (object Class "学生"
 		quid       	"6A29444B0200"
+		superclasses 	(list inheritance_relationship_list
+		    (object Inheritance_Relationship
+			quid       	"6A29528F00EC"
+			supplier   	"Logical View::团队成员"
+			quidu      	"6A294EFF023F")
+		    (object Inheritance_Relationship
+			quid       	"6A2952AA00D9"
+			supplier   	"Logical View::用户"
+			quidu      	"6A294CAE03CF")
+		    (object Inheritance_Relationship
+			quid       	"6A2952B401F0"
+			supplier   	"Logical View::报名记录"
+			quidu      	"6A294E930333")
+		    (object Inheritance_Relationship
+			quid       	"6A2952C6005A"
+			supplier   	"Logical View::项目材料"
+			quidu      	"6A29508201C0"))
 		operations 	(list Operations
 		    (object Operation "报名参赛"
 			quid       	"6A2948CC007A"
@@ -131,6 +148,11 @@
 			quidu      	"39CD6AE1011A")))
 	    (object Class "评委"
 		quid       	"6A294AE40222"
+		superclasses 	(list inheritance_relationship_list
+		    (object Inheritance_Relationship
+			quid       	"6A2952F300D4"
+			supplier   	"Logical View::用户"
+			quidu      	"6A294CAE03CF"))
 		operations 	(list Operations
 		    (object Operation "查看待评项目"
 			quid       	"6A294C370267"
@@ -200,6 +222,17 @@
 			quidu      	"39CD6AE1011A")))
 	    (object Class "管理员"
 		quid       	"6A294D2C009A"
+		superclasses 	(list inheritance_relationship_list
+		    (object Inheritance_Relationship
+			quid       	"6A295308009A"
+			supplier   	"Logical View::用户"
+			quidu      	"6A294CAE03CF"
+			exportControl 	"Private"))
+		used_nodes 	(list uses_relationship_list
+		    (object Uses_Relationship
+			quid       	"6A2953400339"
+			supplier   	"Logical View::团队成员"
+			quidu      	"6A294EFF023F"))
 		operations 	(list Operations
 		    (object Operation "管理用户"
 			quid       	"6A294DD400C7"
@@ -308,6 +341,22 @@
 			quidu      	"39CD6AE1011A")))
 	    (object Class "团队成员"
 		quid       	"6A294EFF023F"
+		operations 	(list Operations
+		    (object Operation "加入团队"
+			quid       	"6A294F610351"
+			concurrency 	"Sequential"
+			opExportControl 	"Public"
+			uid        	0)
+		    (object Operation "退出团队"
+			quid       	"6A294F690348"
+			concurrency 	"Sequential"
+			opExportControl 	"Public"
+			uid        	0)
+		    (object Operation "修改角色"
+			quid       	"6A294F72004A"
+			concurrency 	"Sequential"
+			opExportControl 	"Public"
+			uid        	0))
 		class_attributes 	(list class_attribute_list
 		    (object ClassAttribute "成员编号"
 			quid       	"6A294F0A0138"
@@ -327,6 +376,179 @@
 			quid       	"6A294F2303BC"
 			type       	"String"
 			quidu      	"39CD6AE1011A")))
+	    (object Class "项目材料"
+		quid       	"6A29508201C0"
+		superclasses 	(list inheritance_relationship_list
+		    (object Inheritance_Relationship
+			quid       	"6A2952D90141"
+			supplier   	"Logical View::AI辅导记录"
+			quidu      	"6A29519D0060"))
+		operations 	(list Operations
+		    (object Operation "上传材料"
+			quid       	"6A29518102BF"
+			concurrency 	"Sequential"
+			opExportControl 	"Public"
+			uid        	0)
+		    (object Operation "下载材料"
+			quid       	"6A2951830221"
+			concurrency 	"Sequential"
+			opExportControl 	"Public"
+			uid        	0)
+		    (object Operation "删除材料"
+			quid       	"6A29518C020B"
+			concurrency 	"Sequential"
+			opExportControl 	"Public"
+			uid        	0))
+		class_attributes 	(list class_attribute_list
+		    (object ClassAttribute "材料编号"
+			quid       	"6A29509E0001"
+			type       	"int")
+		    (object ClassAttribute "材料名称"
+			quid       	"6A2950A70113"
+			type       	"String"
+			quidu      	"39CD6AE1011A")
+		    (object ClassAttribute "材料类型"
+			quid       	"6A2950AC03B2"
+			type       	"String"
+			quidu      	"39CD6AE1011A")
+		    (object ClassAttribute "文件路径 "
+			quid       	"6A2950B20159"
+			type       	"String"
+			quidu      	"39CD6AE1011A")
+		    (object ClassAttribute "文件大小"
+			quid       	"6A2950BC02AA"
+			type       	"Double")
+		    (object ClassAttribute "上传时间"
+			quid       	"6A2950E50003"
+			type       	"Date")
+		    (object ClassAttribute "材料状态"
+			quid       	"6A2950ED01BC"
+			type       	"String"
+			quidu      	"39CD6AE1011A")))
+	    (object Class "AI辅导记录"
+		quid       	"6A29519D0060"
+		operations 	(list Operations
+		    (object Operation "生成建议"
+			quid       	"6A29520400E1"
+			concurrency 	"Sequential"
+			opExportControl 	"Public"
+			uid        	0)
+		    (object Operation "保存记录"
+			quid       	"6A29520C02FF"
+			concurrency 	"Sequential"
+			opExportControl 	"Public"
+			uid        	0)
+		    (object Operation "查询记录"
+			quid       	"6A29521400B2"
+			concurrency 	"Sequential"
+			opExportControl 	"Public"
+			uid        	0))
+		class_attributes 	(list class_attribute_list
+		    (object ClassAttribute "AI任务编号"
+			quid       	"6A2951B7008F"
+			type       	"int")
+		    (object ClassAttribute "辅导类型"
+			quid       	"6A2951BF0124"
+			type       	"String"
+			quidu      	"39CD6AE1011A")
+		    (object ClassAttribute "用户问题"
+			quid       	"6A2951C40379"
+			type       	"String"
+			quidu      	"39CD6AE1011A")
+		    (object ClassAttribute "AI回复"
+			quid       	"6A2951CB008A"
+			type       	"String"
+			quidu      	"39CD6AE1011A")
+		    (object ClassAttribute "体检建议"
+			quid       	"6A2951D6014E"
+			type       	"String"
+			quidu      	"39CD6AE1011A")
+		    (object ClassAttribute "生成时间"
+			quid       	"6A2951DB0239"
+			type       	"Date")))
+	    (object Association "$UNNAMED$0"
+		quid       	"6A2953710341"
+		roles      	(list role_list
+		    (object Role "$UNNAMED$1"
+			quid       	"6A29537202A0"
+			supplier   	"Logical View::团队成员"
+			quidu      	"6A294EFF023F")
+		    (object Role "$UNNAMED$2"
+			quid       	"6A29537202AA"
+			supplier   	"Logical View::管理员"
+			quidu      	"6A294D2C009A")))
+	    (object Association "$UNNAMED$3"
+		quid       	"6A2953E600CE"
+		roles      	(list role_list
+		    (object Role "$UNNAMED$4"
+			quid       	"6A2953E70236"
+			supplier   	"Logical View::报名记录"
+			quidu      	"6A294E930333"
+			is_navigable 	TRUE)
+		    (object Role "$UNNAMED$5"
+			quid       	"6A2953E70240"
+			supplier   	"Logical View::学生"
+			quidu      	"6A29444B0200"
+			is_navigable 	TRUE)))
+	    (object Association "$UNNAMED$6"
+		quid       	"6A2953EB00D1"
+		roles      	(list role_list
+		    (object Role "$UNNAMED$7"
+			quid       	"6A2953EC025D"
+			supplier   	"Logical View::团队成员"
+			quidu      	"6A294EFF023F")
+		    (object Role "$UNNAMED$8"
+			quid       	"6A2953EC0266"
+			supplier   	"Logical View::学生"
+			quidu      	"6A29444B0200")))
+	    (object Association "$UNNAMED$9"
+		quid       	"6A2954150360"
+		roles      	(list role_list
+		    (object Role "$UNNAMED$10"
+			quid       	"6A295416020C"
+			supplier   	"Logical View::报名记录"
+			quidu      	"6A294E930333")
+		    (object Role "$UNNAMED$11"
+			quid       	"6A2954160215"
+			supplier   	"Logical View::竞赛信息"
+			quidu      	"6A294DF30352")))
+	    (object Association "$UNNAMED$12"
+		quid       	"6A295427026C"
+		roles      	(list role_list
+		    (object Role "$UNNAMED$13"
+			quid       	"6A295428020A"
+			supplier   	"Logical View::AI辅导记录"
+			quidu      	"6A29519D0060"
+			is_navigable 	TRUE)
+		    (object Role "$UNNAMED$14"
+			quid       	"6A2954280210"
+			supplier   	"Logical View::项目材料"
+			quidu      	"6A29508201C0"
+			Containment 	"By Value"
+			is_navigable 	TRUE
+			is_aggregate 	TRUE)))
+	    (object Association "$UNNAMED$15"
+		quid       	"6A29544A033B"
+		roles      	(list role_list
+		    (object Role "$UNNAMED$16"
+			quid       	"6A29544D007D"
+			supplier   	"Logical View::竞赛信息"
+			quidu      	"6A294DF30352")
+		    (object Role "$UNNAMED$17"
+			quid       	"6A29544D0082"
+			supplier   	"Logical View::管理员"
+			quidu      	"6A294D2C009A")))
+	    (object Association "$UNNAMED$18"
+		quid       	"6A29548800FE"
+		roles      	(list role_list
+		    (object Role "$UNNAMED$19"
+			quid       	"6A295488017A"
+			supplier   	"Logical View::项目材料"
+			quidu      	"6A29508201C0")
+		    (object Role "$UNNAMED$20"
+			quid       	"6A2954880182"
+			supplier   	"Logical View::学生"
+			quidu      	"6A29444B0200")))
 	    (object Class_Category "javax"
 		is_unit    	TRUE
 		is_loaded  	FALSE
@@ -341,7 +563,12 @@
 		is_unit    	TRUE
 		is_loaded  	FALSE
 		file_name  	"$FRAMEWORK_PATH\\Shared Components\\j2se_1_3_org.cat"
-		quid       	"39C92693036F"))
+		quid       	"39C92693036F")
+	    (object Class_Category "NewPackage"
+		quid       	"6A2954A30069"
+		exportControl 	"Public"
+		logical_models 	(list unit_reference_list)
+		logical_presentations 	(list unit_reference_list)))
 	logical_presentations 	(list unit_reference_list
 	    (object ClassDiagram "Package Hierarchy"
 		quid       	"39C9261001B8"
@@ -349,14 +576,14 @@
 		zoom       	100
 		max_height 	28350
 		max_width  	21600
-		origin_x   	0
+		origin_x   	185
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object ClassView "Class" "Logical View::学生" @1
+		    (object ClassView "Class" "Logical View::评委" @1
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
-			location   	(240, 400)
+			location   	(896, 336)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -368,55 +595,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@1
-			    location   	(94, 194)
-			    fill_color 	13434879
-			    nlines     	1
-			    max_width  	292
-			    justify    	0
-			    label      	"学生")
-			icon_style 	"Icon"
-			line_color 	3342489
-			fill_color 	13434879
-			quidu      	"6A29444B0200"
-			compartment 	(object Compartment
-			    Parent_View 	@1
-			    location   	(94, 255)
-			    font       	(object Font
-				size       	10
-				face       	"Arial"
-				bold       	FALSE
-				italics    	FALSE
-				underline  	FALSE
-				strike     	FALSE
-				color      	0
-				default_color 	TRUE)
-			    icon_style 	"Icon"
-			    fill_color 	13434879
-			    anchor     	2
-			    nlines     	7
-			    max_width  	289
-			    justify    	1)
-			width      	310
-			height     	436
-			annotation 	8
-			autoResize 	TRUE)
-		    (object ClassView "Class" "Logical View::评委" @2
-			ShowCompartmentStereotypes 	TRUE
-			IncludeAttribute 	TRUE
-			IncludeOperation 	TRUE
-			location   	(1024, 368)
-			font       	(object Font
-			    size       	10
-			    face       	"Arial"
-			    bold       	FALSE
-			    italics    	FALSE
-			    underline  	FALSE
-			    strike     	FALSE
-			    color      	0
-			    default_color 	TRUE)
-			label      	(object ItemLabel
-			    Parent_View 	@2
-			    location   	(840, 187)
+			    location   	(712, 155)
 			    fill_color 	13434879
 			    nlines     	1
 			    max_width  	368
@@ -427,8 +606,8 @@
 			fill_color 	13434879
 			quidu      	"6A294AE40222"
 			compartment 	(object Compartment
-			    Parent_View 	@2
-			    location   	(840, 248)
+			    Parent_View 	@1
+			    location   	(712, 216)
 			    font       	(object Font
 				size       	10
 				face       	"Arial"
@@ -442,17 +621,17 @@
 			    fill_color 	13434879
 			    anchor     	2
 			    nlines     	6
-			    max_width  	366
+			    max_width  	403
 			    justify    	1)
 			width      	386
 			height     	386
 			annotation 	8
 			autoResize 	TRUE)
-		    (object ClassView "Class" "Logical View::用户" @3
+		    (object ClassView "Class" "Logical View::用户" @2
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
-			location   	(720, 928)
+			location   	(896, 1056)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -463,8 +642,8 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@3
-			    location   	(558, 672)
+			    Parent_View 	@2
+			    location   	(734, 800)
 			    fill_color 	13434879
 			    nlines     	1
 			    max_width  	324
@@ -475,8 +654,8 @@
 			fill_color 	13434879
 			quidu      	"6A294CAE03CF"
 			compartment 	(object Compartment
-			    Parent_View 	@3
-			    location   	(558, 733)
+			    Parent_View 	@2
+			    location   	(734, 861)
 			    font       	(object Font
 				size       	10
 				face       	"Arial"
@@ -490,65 +669,27 @@
 			    fill_color 	13434879
 			    anchor     	2
 			    nlines     	9
-			    max_width  	322
+			    max_width  	353
 			    justify    	1)
 			width      	342
 			height     	536
 			annotation 	8
 			autoResize 	TRUE)
-		    (object ClassView "Class" "Logical View::管理员" @4
-			ShowCompartmentStereotypes 	TRUE
-			IncludeAttribute 	TRUE
-			IncludeOperation 	TRUE
-			location   	(1392, 768)
-			font       	(object Font
-			    size       	10
-			    face       	"Arial"
-			    bold       	FALSE
-			    italics    	FALSE
-			    underline  	FALSE
-			    strike     	FALSE
-			    color      	0
-			    default_color 	TRUE)
-			label      	(object ItemLabel
-			    Parent_View 	@4
-			    location   	(1239, 587)
-			    fill_color 	13434879
-			    nlines     	1
-			    max_width  	306
-			    justify    	0
-			    label      	"管理员")
-			icon_style 	"Icon"
+		    (object InheritView "" @3
+			stereotype 	TRUE
 			line_color 	3342489
-			fill_color 	13434879
-			quidu      	"6A294D2C009A"
-			compartment 	(object Compartment
-			    Parent_View 	@4
-			    location   	(1239, 648)
-			    font       	(object Font
-				size       	10
-				face       	"Arial"
-				bold       	FALSE
-				italics    	FALSE
-				underline  	FALSE
-				strike     	FALSE
-				color      	0
-				default_color 	TRUE)
-			    icon_style 	"Icon"
-			    fill_color 	13434879
-			    anchor     	2
-			    nlines     	6
-			    max_width  	304
-			    justify    	1)
-			width      	324
-			height     	386
-			annotation 	8
-			autoResize 	TRUE)
-		    (object ClassView "Class" "Logical View::竞赛信息" @5
+			quidu      	"6A2952F300D4"
+			client     	@1
+			supplier   	@2
+			vertices   	(list Points
+			    (896, 529)
+			    (896, 787))
+			line_style 	0)
+		    (object ClassView "Class" "Logical View::竞赛信息" @4
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
-			location   	(1936, 448)
+			location   	(2720, 1760)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -559,8 +700,8 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@5
-			    location   	(1719, 117)
+			    Parent_View 	@4
+			    location   	(2503, 1429)
 			    fill_color 	13434879
 			    nlines     	1
 			    max_width  	434
@@ -571,8 +712,8 @@
 			fill_color 	13434879
 			quidu      	"6A294DF30352"
 			compartment 	(object Compartment
-			    Parent_View 	@5
-			    location   	(1719, 178)
+			    Parent_View 	@4
+			    location   	(2503, 1490)
 			    font       	(object Font
 				size       	10
 				face       	"Arial"
@@ -586,17 +727,17 @@
 			    fill_color 	13434879
 			    anchor     	2
 			    nlines     	12
-			    max_width  	430
+			    max_width  	481
 			    justify    	1)
 			width      	452
 			height     	686
 			annotation 	8
 			autoResize 	TRUE)
-		    (object ClassView "Class" "Logical View::报名记录" @6
+		    (object ClassView "Class" "Logical View::管理员" @5
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
-			location   	(1920, 1328)
+			location   	(912, 1904)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -607,68 +748,20 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@6
-			    location   	(1736, 1097)
+			    Parent_View 	@5
+			    location   	(759, 1723)
 			    fill_color 	13434879
 			    nlines     	1
-			    max_width  	368
+			    max_width  	306
 			    justify    	0
-			    label      	"报名记录")
+			    label      	"管理员")
 			icon_style 	"Icon"
 			line_color 	3342489
 			fill_color 	13434879
-			quidu      	"6A294E930333"
+			quidu      	"6A294D2C009A"
 			compartment 	(object Compartment
-			    Parent_View 	@6
-			    location   	(1736, 1158)
-			    font       	(object Font
-				size       	10
-				face       	"Arial"
-				bold       	FALSE
-				italics    	FALSE
-				underline  	FALSE
-				strike     	FALSE
-				color      	0
-				default_color 	TRUE)
-			    icon_style 	"Icon"
-			    fill_color 	13434879
-			    anchor     	2
-			    nlines     	8
-			    max_width  	365
-			    justify    	1)
-			width      	386
-			height     	486
-			annotation 	8
-			autoResize 	TRUE)
-		    (object ClassView "Class" "Logical View::团队成员" @7
-			ShowCompartmentStereotypes 	TRUE
-			IncludeAttribute 	TRUE
-			IncludeOperation 	TRUE
-			location   	(576, 1824)
-			font       	(object Font
-			    size       	10
-			    face       	"Arial"
-			    bold       	FALSE
-			    italics    	FALSE
-			    underline  	FALSE
-			    strike     	FALSE
-			    color      	0
-			    default_color 	TRUE)
-			label      	(object ItemLabel
-			    Parent_View 	@7
-			    location   	(392, 1643)
-			    fill_color 	13434879
-			    nlines     	1
-			    max_width  	368
-			    justify    	0
-			    label      	"团队成员")
-			icon_style 	"Icon"
-			line_color 	3342489
-			fill_color 	13434879
-			quidu      	"6A294EFF023F"
-			compartment 	(object Compartment
-			    Parent_View 	@7
-			    location   	(392, 1704)
+			    Parent_View 	@5
+			    location   	(759, 1784)
 			    font       	(object Font
 				size       	10
 				face       	"Arial"
@@ -682,12 +775,761 @@
 			    fill_color 	13434879
 			    anchor     	2
 			    nlines     	6
-			    max_width  	365
+			    max_width  	340
 			    justify    	1)
-			width      	386
+			width      	324
 			height     	386
 			annotation 	8
-			autoResize 	TRUE)))
+			autoResize 	TRUE)
+		    (object InheritView "" @6
+			stereotype 	FALSE
+			line_color 	3342489
+			quidu      	"6A295308009A"
+			client     	@5
+			supplier   	@2
+			vertices   	(list Points
+			    (908, 1710)
+			    (901, 1324))
+			line_style 	0)
+		    (object AssociationViewNew "$UNNAMED$15" @7
+			location   	(1783, 1834)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"6A29544A033B"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$16" @8
+				Parent_View 	@7
+				location   	(871, -70)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A29544D007D"
+				client     	@7
+				supplier   	@4
+				vertices   	(list Points
+				    (1783, 1834)
+				    (2493, 1776))
+				line_style 	0)
+			    (object RoleView "$UNNAMED$17" @9
+				Parent_View 	@7
+				location   	(871, -70)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A29544D0082"
+				client     	@7
+				supplier   	@5
+				vertices   	(list Points
+				    (1783, 1834)
+				    (1074, 1890))
+				line_style 	0)))
+		    (object ClassView "Class" "Logical View::报名记录" @10
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2736, 1008)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@10
+			    location   	(2552, 777)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	368
+			    justify    	0
+			    label      	"报名记录")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"6A294E930333"
+			compartment 	(object Compartment
+			    Parent_View 	@10
+			    location   	(2552, 838)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    icon_style 	"Icon"
+			    fill_color 	13434879
+			    anchor     	2
+			    nlines     	8
+			    max_width  	403
+			    justify    	1)
+			width      	386
+			height     	486
+			annotation 	8
+			autoResize 	TRUE)
+		    (object AssociationViewNew "$UNNAMED$9" @11
+			location   	(2728, 1333)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"6A2954150360"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$10" @12
+				Parent_View 	@11
+				location   	(40, -475)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A295416020C"
+				client     	@11
+				supplier   	@10
+				vertices   	(list Points
+				    (2728, 1333)
+				    (2730, 1251))
+				line_style 	0)
+			    (object RoleView "$UNNAMED$11" @13
+				Parent_View 	@11
+				location   	(40, -475)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A2954160215"
+				client     	@11
+				supplier   	@4
+				vertices   	(list Points
+				    (2728, 1333)
+				    (2726, 1416))
+				line_style 	0)))
+		    (object ClassView "Class" "Logical View::团队成员" @14
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2240, 1392)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@14
+			    location   	(2056, 1136)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	368
+			    justify    	0
+			    label      	"团队成员")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"6A294EFF023F"
+			compartment 	(object Compartment
+			    Parent_View 	@14
+			    location   	(2056, 1197)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    icon_style 	"Icon"
+			    fill_color 	13434879
+			    anchor     	2
+			    nlines     	9
+			    max_width  	403
+			    justify    	1)
+			width      	386
+			height     	536
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::AI辅导记录" @15
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(2704, 352)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@15
+			    location   	(2520, 71)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	368
+			    justify    	0
+			    label      	"AI辅导记录")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"6A29519D0060"
+			compartment 	(object Compartment
+			    Parent_View 	@15
+			    location   	(2520, 132)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    icon_style 	"Icon"
+			    fill_color 	13434879
+			    anchor     	2
+			    nlines     	10
+			    max_width  	403
+			    justify    	1)
+			width      	386
+			height     	586
+			annotation 	8
+			autoResize 	TRUE)
+		    (object ClassView "Class" "Logical View::项目材料" @16
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1600, 336)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@16
+			    location   	(1407, 30)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	386
+			    justify    	0
+			    label      	"项目材料")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"6A29508201C0"
+			compartment 	(object Compartment
+			    Parent_View 	@16
+			    location   	(1407, 91)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    icon_style 	"Icon"
+			    fill_color 	13434879
+			    anchor     	2
+			    nlines     	11
+			    max_width  	421
+			    justify    	1)
+			width      	404
+			height     	636
+			annotation 	8
+			autoResize 	TRUE)
+		    (object AssociationViewNew "$UNNAMED$12" @17
+			location   	(2156, 343)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"6A295427026C"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$13" @18
+				Parent_View 	@17
+				location   	(556, -9)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A295428020A"
+				client     	@17
+				supplier   	@15
+				vertices   	(list Points
+				    (2156, 343)
+				    (2510, 349))
+				line_style 	0)
+			    (object RoleView "$UNNAMED$14" @19
+				Parent_View 	@17
+				location   	(556, -9)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A2954280210"
+				client     	@17
+				supplier   	@16
+				vertices   	(list Points
+				    (2156, 343)
+				    (1802, 338))
+				line_style 	0)))
+		    (object ClassView "Class" "Logical View::学生" @20
+			ShowCompartmentStereotypes 	TRUE
+			IncludeAttribute 	TRUE
+			IncludeOperation 	TRUE
+			location   	(1600, 1056)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@20
+			    location   	(1454, 850)
+			    fill_color 	13434879
+			    nlines     	1
+			    max_width  	292
+			    justify    	0
+			    label      	"学生")
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"6A29444B0200"
+			compartment 	(object Compartment
+			    Parent_View 	@20
+			    location   	(1454, 911)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    icon_style 	"Icon"
+			    fill_color 	13434879
+			    anchor     	2
+			    nlines     	7
+			    max_width  	321
+			    justify    	1)
+			width      	310
+			height     	436
+			annotation 	8
+			autoResize 	TRUE)
+		    (object InheritView "" @21
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"6A2952AA00D9"
+			client     	@20
+			supplier   	@2
+			vertices   	(list Points
+			    (1444, 1056)
+			    (1067, 1056))
+			line_style 	0)
+		    (object AssociationViewNew "$UNNAMED$3" @22
+			location   	(2148, 1032)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"6A2953E600CE"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$4" @23
+				Parent_View 	@22
+				location   	(548, -24)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A2953E70236"
+				client     	@22
+				supplier   	@10
+				vertices   	(list Points
+				    (2148, 1032)
+				    (2542, 1015))
+				line_style 	0)
+			    (object RoleView "$UNNAMED$5" @24
+				Parent_View 	@22
+				location   	(548, -24)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A2953E70240"
+				client     	@22
+				supplier   	@20
+				vertices   	(list Points
+				    (2148, 1032)
+				    (1755, 1048))
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$6" @25
+			location   	(1900, 1213)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"6A2953EB00D1"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$7" @26
+				Parent_View 	@25
+				location   	(300, 157)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A2953EC025D"
+				client     	@25
+				supplier   	@14
+				vertices   	(list Points
+				    (1900, 1213)
+				    (2046, 1289))
+				line_style 	0)
+			    (object RoleView "$UNNAMED$8" @27
+				Parent_View 	@25
+				location   	(300, 157)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A2953EC0266"
+				client     	@25
+				supplier   	@20
+				vertices   	(list Points
+				    (1900, 1213)
+				    (1755, 1136))
+				line_style 	0)))
+		    (object AssociationViewNew "$UNNAMED$18" @28
+			location   	(1600, 745)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"6A29548800FE"
+			roleview_list 	(list RoleViews
+			    (object RoleView "$UNNAMED$19" @29
+				Parent_View 	@28
+				location   	(0, -311)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A295488017A"
+				client     	@28
+				supplier   	@16
+				vertices   	(list Points
+				    (1600, 745)
+				    (1600, 654))
+				line_style 	0)
+			    (object RoleView "$UNNAMED$20" @30
+				Parent_View 	@28
+				location   	(0, -311)
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"6A2954880182"
+				client     	@28
+				supplier   	@20
+				vertices   	(list Points
+				    (1600, 745)
+				    (1600, 837))
+				line_style 	0)))
+		    (object Label @31
+			location   	(1760, 1168)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	44
+			justify    	1
+			label      	"1")
+		    (object Label @32
+			location   	(1776, 976)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	44
+			justify    	1
+			label      	"1")
+		    (object Label @33
+			location   	(2400, 1824)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	75
+			justify    	1
+			label      	"*")
+		    (object Label @34
+			location   	(1136, 1904)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	44
+			justify    	1
+			label      	"1")
+		    (object Label @35
+			location   	(2736, 1376)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	44
+			justify    	1
+			label      	"1")
+		    (object Label @36
+			location   	(1808, 352)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	44
+			justify    	1
+			label      	"1")
+		    (object Label @37
+			location   	(1616, 784)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	44
+			justify    	1
+			label      	"1")
+		    (object Label @38
+			location   	(1616, 672)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	75
+			justify    	1
+			label      	"0..*")
+		    (object Label @39
+			location   	(1616, 720)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	118
+			justify    	1
+			label      	"上传")
+		    (object Label @40
+			location   	(1952, 1296)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	75
+			justify    	1
+			label      	"0..*")
+		    (object Label @41
+			location   	(2448, 960)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	75
+			justify    	1
+			label      	"0..*")
+		    (object Label @42
+			location   	(2752, 1264)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	75
+			justify    	1
+			label      	"0..*")
+		    (object Label @43
+			location   	(2432, 368)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	75
+			justify    	1
+			label      	"0..*")
+		    (object Label @44
+			location   	(1856, 1136)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	118
+			justify    	1
+			label      	"加入")
+		    (object Label @45
+			location   	(2064, 944)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	118
+			justify    	1
+			label      	"提交")
+		    (object Label @46
+			location   	(2768, 1328)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	118
+			justify    	1
+			label      	"属于")
+		    (object Label @47
+			location   	(2128, 272)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			nlines     	1
+			max_width  	118
+			justify    	1
+			label      	"生成")))
 	    (object ClassDiagram "Legend"
 		quid       	"39CD51840059"
 		title      	"Legend"
@@ -697,7 +1539,7 @@
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object NoteView @8
+		    (object NoteView @48
 			location   	(224, 624)
 			font       	(object Font
 			    size       	10
@@ -712,7 +1554,7 @@
 			fill_color 	12632256
 			width      	300
 			height     	132)
-		    (object NoteView @9
+		    (object NoteView @49
 			location   	(704, 624)
 			font       	(object Font
 			    size       	10
@@ -727,7 +1569,7 @@
 			fill_color 	8421631
 			width      	300
 			height     	132)
-		    (object NoteView @10
+		    (object NoteView @50
 			location   	(1200, 624)
 			font       	(object Font
 			    size       	10
@@ -742,7 +1584,7 @@
 			fill_color 	12615680
 			width      	300
 			height     	132)
-		    (object NoteView @11
+		    (object NoteView @51
 			location   	(1664, 624)
 			font       	(object Font
 			    size       	10
@@ -757,7 +1599,7 @@
 			fill_color 	16777215
 			width      	300
 			height     	132)
-		    (object Label @12
+		    (object Label @52
 			location   	(81, 369)
 			font       	(object Font
 			    size       	12
@@ -772,7 +1614,7 @@
 			max_width  	1163
 			justify    	1
 			label      	"J2EE: Java 2 Platform, Enterprise Edition - v 1.2.1")
-		    (object Label @13
+		    (object Label @53
 			location   	(96, 608)
 			font       	(object Font
 			    size       	10
@@ -787,7 +1629,7 @@
 			max_width  	268
 			justify    	1
 			label      	"Abstract Class")
-		    (object Label @14
+		    (object Label @54
 			location   	(592, 608)
 			font       	(object Font
 			    size       	10
@@ -802,7 +1644,7 @@
 			max_width  	225
 			justify    	1
 			label      	"Final Class")
-		    (object Label @15
+		    (object Label @55
 			location   	(1104, 608)
 			font       	(object Font
 			    size       	10
@@ -817,7 +1659,7 @@
 			max_width  	206
 			justify    	1
 			label      	"Interface")
-		    (object Label @16
+		    (object Label @56
 			location   	(1552, 608)
 			font       	(object Font
 			    size       	10
