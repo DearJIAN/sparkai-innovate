@@ -9,7 +9,6 @@
               <span class="spark-seed"></span>
               <p class="brand-system-title">火种计划 SPARK</p>
             </div>
-            <h2 class="main-title">创新创业基础</h2>
             <SparkLogo size="large" />
             <p class="brand-subtitle">Innovate with AI, Spark Your Future</p>
             <div class="feature-grid">
