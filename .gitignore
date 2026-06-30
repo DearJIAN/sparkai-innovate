@@ -28,12 +28,13 @@ image/
 keshe/
 skills/
 # ============================================
-# ⚠️ 重要：以下类型文件严禁被忽略
+# ⚠️ 重要：忽略敏感配置文件和本地数据库文件
 # ============================================
-# .env 配置文件（含密钥，协作者需要）
-# *.db 数据库文件
-# *.sqlite / *.sqlite3
-# 以上文件即使出现也不会被忽略
+.env
+.env.*
+*.db
+*.sqlite
+*.sqlite3
 
 
 innovation-competition-platform/backend/uploads/
@@ -41,3 +42,5 @@ innovation-competition-platform/backend/test_output/
 _resume_extracted.txt
 deploy_artifacts
 软工课设绘图总结.zip
+软工课设绘图总结/
+测试文件/

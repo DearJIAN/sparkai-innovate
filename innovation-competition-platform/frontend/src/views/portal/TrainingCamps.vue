@@ -108,11 +108,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Clock, User, Star, Opportunity, EditPen, Mic, Cpu, ArrowRight, VideoPlay, Notebook } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/user'
 import SparkPortalCard from '@/components/portal/SparkPortalCard.vue'
+
+const router = useRouter()
+const userStore = useUserStore()
 
 import coverChuangxin from '@/assets/images/training-camps/创新创业基础训练营.png'
 import coverShangye from '@/assets/images/training-camps/商业计划书写作训练营.png'
@@ -369,7 +373,6 @@ function playLesson(lesson) {
   ElMessage.info(`正在加载课程：${lesson.name}...`)
 }
 
-const router = useRouter()
 
 function startLearning() {
   router.push(`/training-camps/${currentCamp.value.id}`)

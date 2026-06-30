@@ -25,3 +25,7 @@ backend/vector_stores/
 
 innovation-competition-platform/backend/.envbackend/.env
 backend/.env
+
+# 忽略所有环境配置文件
+.env
+.env.*

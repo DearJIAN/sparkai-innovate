@@ -115,6 +115,25 @@
               </div>
             </div>
           </el-card>
+
+          <!-- 教师与专家反馈区域 -->
+          <el-card v-if="project.remark || (project.reviews && project.reviews.length > 0)" class="mt-4" shadow="never">
+            <template #header>
+              <span>反馈与评审意见</span>
+            </template>
+            <div v-if="project.remark" class="feedback-section">
+              <h4 class="feedback-title"><el-icon><ChatDotRound /></el-icon> 指导老师/管理员意见</h4>
+              <p class="feedback-content">{{ project.remark }}</p>
+            </div>
+            
+            <div v-if="project.reviews && project.reviews.length > 0" class="feedback-section" :class="{ 'mt-4': project.remark }">
+              <h4 class="feedback-title"><el-icon><Trophy /></el-icon> 专家评审意见</h4>
+              <div v-for="(review, index) in project.reviews" :key="index" class="review-item">
+                <div class="review-score">综合评分：<strong>{{ review.total_score || '暂无打分' }}</strong></div>
+                <p class="feedback-content">{{ review.comment || '暂无文字评价' }}</p>
+              </div>
+            </div>
+          </el-card>
         </el-col>
 
         <!-- 右侧：统计信息 -->
@@ -241,7 +260,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import {
   ArrowLeft, Edit, Upload, Document, List, User, ArrowRight,
-  CircleCheckFilled, Loading, WarningFilled, CircleCloseFilled, Timer
+  CircleCheckFilled, Loading, WarningFilled, CircleCloseFilled, Timer,
+  CollectionTag, Trophy, ChatDotRound
 } from '@element-plus/icons-vue'
 import { getProject, submitProject } from '@/api/project'
 import { getTasks } from '@/api/task'
@@ -666,5 +686,42 @@ onMounted(() => {
   line-height: 1.5;
   padding-top: 8px;
   border-top: 1px solid var(--border-light);
+}
+
+.feedback-section {
+  background: var(--bg-color-page);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color-light);
+}
+
+.feedback-title {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 15px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.feedback-content {
+  font-size: 14px;
+  color: var(--text-regular);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.review-item {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-color-light);
+}
+
+.review-score {
+  font-size: 14px;
+  color: var(--primary-600);
+  margin-bottom: 6px;
 }
 </style>

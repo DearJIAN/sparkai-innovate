@@ -7,6 +7,7 @@ from models.project_file import ProjectFile
 from models.project_task import ProjectTask
 from models.user import User
 from models.competition import Competition
+from models.review import Review
 from extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from utils.response import success, error
@@ -200,9 +201,11 @@ def get_project(project_id):
     members = ProjectMember.query.filter_by(project_id=project.id).all()
     files_count = ProjectFile.query.filter_by(project_id=project.id).count()
     tasks_count = ProjectTask.query.filter_by(project_id=project.id).count()
+    reviews = Review.query.filter_by(project_id=project.id).all()
 
     result = project.to_dict()
     result['members'] = [m.to_dict() for m in members]
+    result['reviews'] = [r.to_dict() for r in reviews]
     result['files_count'] = files_count
     result['tasks_count'] = tasks_count
 

@@ -18,7 +18,7 @@ export function getExpressionByEmotion(emotion) {
     dizzy: '04 晕',
     surprise: '07 星星眼'
   }
-  return map[emotion] || '06 0.0'
+  return map[emotion] || null
 }
 
 export function updateExpressionByText(text) {

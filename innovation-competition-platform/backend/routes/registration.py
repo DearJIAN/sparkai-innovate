@@ -50,8 +50,26 @@ def create_registration():
         competition_id=data['competition_id'],
         leader_id=user.id
     ).first()
+    
     if existing:
-        return error('您已报名该竞赛', code=400, status_code=400)
+        if existing.status in ['draft', 'withdrawn']:
+            existing.track_id = data['track_id']
+            existing.project_id = data.get('project_id')
+            existing.team_name = data.get('team_name', '')
+            existing.school = data.get('school', '')
+            existing.college = data.get('college', '')
+            existing.major = data.get('major', '')
+            existing.teacher_name = data.get('teacher_name', '')
+            existing.teacher_phone = data.get('teacher_phone', '')
+            existing.contact_phone = data.get('contact_phone', '')
+            existing.contact_email = data.get('contact_email', '')
+            
+            db.session.commit()
+            return success({
+                'registration': existing.to_dict()
+            }, message='更新并继续报名', code=201)
+        else:
+            return error('您已报名该竞赛', code=400, status_code=400)
 
     registration = CompetitionRegistration(
         competition_id=data['competition_id'],
@@ -338,8 +356,8 @@ def submit_registration(registration_id):
     if registration.leader_id != user.id:
         return error('无权操作', code=403, status_code=403)
 
-    if registration.status != 'draft':
-        return error('只能提交草稿状态的报名', code=400, status_code=400)
+    if registration.status not in ['draft', 'withdrawn']:
+        return error('只能提交草稿或撤回状态的报名', code=400, status_code=400)
 
     # 校验必填信息
     if not registration.team_name:
@@ -358,6 +376,38 @@ def submit_registration(registration_id):
     return success({
         'registration': registration.to_dict()
     }, message='报名提交成功')
+
+
+@registration_bp.route('/registrations/<int:registration_id>/withdraw', methods=['POST'])
+@jwt_required()
+@require_roles('student')
+def withdraw_registration(registration_id):
+    """撤回报名"""
+    user = _get_current_user()
+    registration = CompetitionRegistration.query.get(registration_id)
+
+    if not registration:
+        return error('报名记录不存在', code=404, status_code=404)
+
+    if registration.leader_id != user.id:
+        return error('无权操作该报名', code=403, status_code=403)
+
+    if registration.status not in ['draft', 'submitted']:
+        return error('当前状态无法撤回', code=400, status_code=400)
+
+    registration.status = 'withdrawn'
+    
+    # 如果原本已提交，则竞赛报名数减1
+    if registration.submitted_at:
+        competition = Competition.query.get(registration.competition_id)
+        if competition and (competition.registration_count or 0) > 0:
+            competition.registration_count -= 1
+
+    db.session.commit()
+
+    return success({
+        'registration': registration.to_dict()
+    }, message='报名已成功撤回')
 
 
 @registration_bp.route('/my-registrations', methods=['GET'])

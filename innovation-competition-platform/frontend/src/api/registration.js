@@ -5,6 +5,7 @@ export const createRegistration = (data) => request.post('/registrations', data)
 export const getRegistration = (id) => request.get(`/registrations/${id}`)
 export const updateRegistration = (id, data) => request.put(`/registrations/${id}`, data)
 export const submitRegistration = (id) => request.post(`/registrations/${id}/submit`)
+export const withdrawRegistration = (id) => request.post(`/registrations/${id}/withdraw`)
 export const getMyRegistrations = () => request.get('/my-registrations')
 
 // 队员相关

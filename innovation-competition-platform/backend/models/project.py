@@ -17,6 +17,7 @@ class Project(db.Model):
     start_date = db.Column(db.Date, nullable=True)
     end_date = db.Column(db.Date, nullable=True)
     progress = db.Column(db.Integer, default=0)
+    remark = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
@@ -44,6 +45,7 @@ class Project(db.Model):
             'leader': self.leader.to_dict() if self.leader else None,
             'teacher_id': self.teacher_id,
             'competition_id': self.competition_id,
+            'remark': self.remark,
             'start_date': self.start_date.isoformat() if self.start_date else None,
             'end_date': self.end_date.isoformat() if self.end_date else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,

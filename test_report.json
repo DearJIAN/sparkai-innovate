@@ -1,0 +1,30 @@
+[
+  {
+    "Role": "student",
+    "Feature": "Login",
+    "Expected": "200 OK",
+    "Actual": "Exception: 'access_token'",
+    "Status": "FAIL"
+  },
+  {
+    "Role": "teacher",
+    "Feature": "Login",
+    "Expected": "200 OK",
+    "Actual": "Exception: 'access_token'",
+    "Status": "FAIL"
+  },
+  {
+    "Role": "judge",
+    "Feature": "Login",
+    "Expected": "200 OK",
+    "Actual": "Exception: 'access_token'",
+    "Status": "FAIL"
+  },
+  {
+    "Role": "admin",
+    "Feature": "Login",
+    "Expected": "200 OK",
+    "Actual": "Exception: 'access_token'",
+    "Status": "FAIL"
+  }
+]

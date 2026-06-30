@@ -35,7 +35,7 @@
         class="registration-card"
       >
         <div class="card-poster" :style="reg.posterStyle">
-          <span class="poster-name" v-if="!reg.poster_url">{{ reg.competitionName }}</span>
+          <span class="poster-name" v-if="!reg.poster_url && !reg.localImage">{{ reg.competitionName }}</span>
         </div>
         <div class="card-body">
           <div class="card-header">
@@ -70,6 +70,14 @@
               继续完善
             </el-button>
             <el-button
+              v-if="reg.status === 'withdrawn'"
+              type="primary"
+              size="small"
+              @click="continueEdit(reg)"
+            >
+              重新报名
+            </el-button>
+            <el-button
               v-if="reg.status === 'submitted'"
               type="info"
               size="small"
@@ -94,7 +102,7 @@
               报名驳回
             </el-button>
             <el-button
-              v-if="reg.status === 'draft'"
+              v-if="['draft', 'submitted'].includes(reg.status)"
               type="danger"
               size="small"
               link
@@ -171,7 +179,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Calendar, User, Document } from '@element-plus/icons-vue'
-import { getMyRegistrations } from '@/api/registration'
+import { getMyRegistrations, withdrawRegistration } from '@/api/registration'
 
 // 导入本地竞赛图片
 import imgAI from '@/assets/images/competitions/2026 AI 应用创新设计大赛.png'
@@ -232,7 +240,7 @@ const loadData = async () => {
       })
 
       stats.value = {
-        total: data.length,
+        total: data.filter(r => r.status !== 'withdrawn').length,
         draft: data.filter(r => r.status === 'draft').length,
         submitted: data.filter(r => r.status === 'submitted').length,
         approved: data.filter(r => r.status === 'approved').length,
@@ -278,7 +286,7 @@ const goToCompetitions = () => {
 }
 
 const continueEdit = (reg) => {
-  router.push(`/competitions/${reg.id}/register`)
+  router.push(`/competitions/${reg.competition_id}/register?regId=${reg.id}`)
 }
 
 const withdraw = async (reg) => {
@@ -288,9 +296,14 @@ const withdraw = async (reg) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    reg.status = 'withdrawn'
-    ElMessage.success('报名已撤回')
-  } catch {
+    const res = await withdrawRegistration(reg.id)
+    if (res.code === 200) {
+      ElMessage.success('报名已撤回')
+      loadData()
+    } else {
+      ElMessage.error(res.message || '撤回失败')
+    }
+  } catch (e) {
     // 取消
   }
 }

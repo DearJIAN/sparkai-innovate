@@ -218,6 +218,8 @@ const handleSubmit = async () => {
       query: {
         topic_id: topic.value.id,
         topic_title: topic.value.title,
+        proposal: form.proposal,
+        advantage: form.advantage,
         source: 'industry_topic'
       }
     })

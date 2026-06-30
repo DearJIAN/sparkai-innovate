@@ -77,7 +77,7 @@
             { icon: View, text: comp.viewCount + ' 次浏览' },
             { icon: User, text: comp.registrationCount + ' 人报名' }
           ]"
-          :primary-action-text="canRegister ? '立即报名' : '查看详情'"
+          :primary-action-text="canRegister ? '立即报名' : '当前角色不可报名'"
           :primary-action-icon="ArrowRight"
           :secondary-action-text="comp.statusText ? '查看详情' : ''"
           :secondary-action-icon="ArrowRight"

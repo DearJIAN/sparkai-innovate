@@ -36,9 +36,13 @@
           </span>
         </div>
         <div class="hero-action">
-          <el-button type="primary" size="large" class="hero-accept-btn" @click="handleAccept">
+          <el-button v-if="canAccept" type="primary" size="large" class="hero-accept-btn" @click="handleAccept">
             <el-icon><MagicStick /></el-icon>
             承接命题
+          </el-button>
+          <el-button v-else type="info" size="large" class="hero-accept-btn" disabled>
+            <el-icon><MagicStick /></el-icon>
+            当前角色不可承接
           </el-button>
           <el-button size="large" class="hero-back-btn" @click="$router.back()">
             <el-icon><ArrowLeft /></el-icon>
@@ -275,9 +279,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getIndustryTopicById } from '@/data/industryTopics'
+import { useUserStore } from '@/stores/user'
 import {
   ArrowRight, ArrowLeft, OfficeBuilding, Timer, Coin, TrendCharts,
   Document, List, Cpu, Folder, Clock, Trophy, Avatar, Checked,
@@ -286,8 +291,14 @@ import {
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
-const topic = computed(() => getIndustryTopicById(route.params.id))
+const topic = ref(null)
+const canAccept = computed(() => userStore.isStudent)
+
+onMounted(() => {
+  topic.value = getIndustryTopicById(route.params.id)
+})
 
 const difficultyTagClass = computed(() => {
   if (!topic.value) return ''

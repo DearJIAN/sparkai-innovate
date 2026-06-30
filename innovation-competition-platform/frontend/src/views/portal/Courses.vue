@@ -121,11 +121,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { User, Clock, Opportunity, TrendCharts, PieChart, ChatDotRound, Collection, ArrowRight, VideoPlay, InfoFilled, Star, Notebook } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import SparkPortalCard from '@/components/portal/SparkPortalCard.vue'
+
+const router = useRouter()
+const userStore = useUserStore()
 
 // 导入课程封面图片
 import coverChuangye from '@/assets/images/courses/创业基础.png'
@@ -355,7 +359,6 @@ function toggleChapter(idx) {
   expandedChapter.value = expandedChapter.value === idx ? -1 : idx
 }
 
-const router = useRouter()
 
 function startCourse() {
   router.push(`/courses/${currentCourse.value.id}`)

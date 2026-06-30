@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { ElMessage } from 'element-plus'
 
 // 公共路由
 const publicRoutes = [
@@ -158,6 +159,14 @@ function checkPermission(to, next, userStore) {
 
   // 检查路由是否需要特定角色
   if (to.meta.roles && !to.meta.roles.includes(userRole)) {
+    const roleNames = {
+      'student': '学生',
+      'teacher': '教师',
+      'judge': '评委',
+      'admin': '管理员'
+    }
+    const requiredRoles = to.meta.roles.map(r => roleNames[r] || r).join('或')
+    ElMessage.warning(`您当前的角色不符合该权限。此功能仅限【${requiredRoles}】操作，已为您返回工作台`)
     // 角色无权访问，跳转到工作台
     next('/dashboard')
     return

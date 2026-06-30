@@ -131,13 +131,14 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { createProject } from '@/api/project'
 import { ElMessage } from 'element-plus'
 import { MagicStick } from '@element-plus/icons-vue'
 
 const router = useRouter()
+const route = useRoute()
 const formRef = ref()
 const submitting = ref(false)
 
@@ -166,6 +167,24 @@ const rules = {
     { min: 10, message: '项目简介至少 10 个字符', trigger: 'blur' }
   ]
 }
+
+onMounted(() => {
+  if (route.query.source === 'industry_topic') {
+    if (route.query.topic_title) {
+      form.name = `基于【${route.query.topic_title}】的创新项目`
+    }
+    
+    let desc = ''
+    if (route.query.proposal) desc += `【方案概述】\n${route.query.proposal}\n\n`
+    if (route.query.advantage) desc += `【团队优势】\n${route.query.advantage}`
+    if (desc) {
+      form.description = desc
+    }
+    
+    form.category = '科技创新'
+    form.track = '其他'
+  }
+})
 
 const quickFillProject = () => {
   const projectNames = [

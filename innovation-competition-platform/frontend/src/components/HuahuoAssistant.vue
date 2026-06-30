@@ -686,7 +686,10 @@ function setupExpressionControls() {
       // 避免与 core.update 中的 overlay 应用冲突导致闪烁
 
       if (state.currentBaseExpression) {
-        model.setExpression?.(state.currentBaseExpression)
+        if (model.__currentExpressionName !== state.currentBaseExpression) {
+          model.setExpression?.(state.currentBaseExpression)
+          model.__currentExpressionName = state.currentBaseExpression
+        }
       }
 
       window.__applyOverlayState(model)

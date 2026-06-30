@@ -262,7 +262,7 @@ import { ElMessage } from 'element-plus'
 import { Plus, Upload, MagicStick } from '@element-plus/icons-vue'
 import { getPublicCompetitionDetail } from '@/api/competition'
 import { getProjects } from '@/api/project'
-import { createRegistration, addRegistrationMember, submitRegistration } from '@/api/registration'
+import { createRegistration, addRegistrationMember, submitRegistration, getRegistration, updateRegistration } from '@/api/registration'
 import { withApiBase } from '@/utils/appBase'
 
 const route = useRoute()
@@ -346,6 +346,40 @@ onMounted(async () => {
     if (projRes.code === 200 && projRes.data.projects) {
       myProjects.value = projRes.data.projects
     }
+    
+    // 如果是从我的赛事带了 regId 过来，则预填充表单
+    const regId = route.query.regId
+    if (regId) {
+      const regRes = await getRegistration(regId)
+      if (regRes.code === 200) {
+        const reg = regRes.data
+        form.value.trackId = reg.track_id
+        form.value.teamName = reg.team_name
+        form.value.school = reg.school
+        form.value.college = reg.college
+        form.value.major = reg.major
+        form.value.teacherName = reg.teacher_name
+        form.value.teacherPhone = reg.teacher_phone
+        form.value.contactPhone = reg.contact_phone
+        form.value.contactEmail = reg.contact_email
+        form.value.projectId = reg.project_id
+        
+        if (reg.members && reg.members.length > 0) {
+          form.value.members = reg.members.map(m => ({
+            id: m.id,
+            name: m.name,
+            studentNo: m.student_no,
+            college: m.college,
+            major: m.major,
+            phone: m.phone,
+            email: m.email
+          }))
+        } else {
+          form.value.members = [ { name: '', studentNo: '', college: '', major: '', phone: '', email: '' } ]
+        }
+        registrationId.value = reg.id
+      }
+    }
   } catch (error) {
     console.error('加载数据失败', error)
   }
@@ -364,20 +398,20 @@ const nextStep = async () => {
     if (!valid) return
     
     // 第二步完成时，创建报名草稿
+    const payload = {
+      competition_id: parseInt(route.params.id),
+      track_id: form.value.trackId,
+      team_name: form.value.teamName,
+      school: form.value.school,
+      college: form.value.college,
+      major: form.value.major,
+      teacher_name: form.value.teacherName,
+      teacher_phone: form.value.teacherPhone,
+      contact_phone: form.value.contactPhone,
+      contact_email: form.value.contactEmail,
+      project_id: form.value.projectId || null
+    }
     if (!registrationId.value) {
-      const payload = {
-        competition_id: parseInt(route.params.id),
-        track_id: form.value.trackId,
-        team_name: form.value.teamName,
-        school: form.value.school,
-        college: form.value.college,
-        major: form.value.major,
-        teacher_name: form.value.teacherName,
-        teacher_phone: form.value.teacherPhone,
-        contact_phone: form.value.contactPhone,
-        contact_email: form.value.contactEmail,
-        project_id: form.value.projectId || null
-      }
       try {
         const res = await createRegistration(payload)
         if (res.code === 201) {
@@ -385,6 +419,12 @@ const nextStep = async () => {
         } else {
           return
         }
+      } catch (e) {
+        return
+      }
+    } else {
+      try {
+        await updateRegistration(registrationId.value, payload)
       } catch (e) {
         return
       }

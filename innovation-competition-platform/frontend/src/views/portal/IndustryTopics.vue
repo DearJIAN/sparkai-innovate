@@ -34,7 +34,7 @@
             { icon: View, text: topic.viewCount + ' 浏览' },
             { icon: User, text: topic.acceptCount + ' 人承接' }
           ]"
-          :primary-action-text="'承接命题'"
+          :primary-action-text="canAccept ? '承接命题' : '当前角色不可承接'"
           :primary-action-icon="ArrowRight"
           :secondary-action-text="'查看详情'"
           :secondary-action-icon="View"
@@ -52,8 +52,12 @@ import { useRouter } from 'vue-router'
 import { Timer, ArrowRight, View, HomeFilled, User } from '@element-plus/icons-vue'
 import SparkPortalCard from '@/components/portal/SparkPortalCard.vue'
 import { industryTopics as topics } from '@/data/industryTopics'
+import { useUserStore } from '@/stores/user'
+import { computed } from 'vue'
 
 const router = useRouter()
+const userStore = useUserStore()
+const canAccept = computed(() => userStore.isStudent)
 
 const goDetail = (topic) => {
   router.push(`/industry-topics/${topic.id}`)

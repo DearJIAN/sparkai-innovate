@@ -63,7 +63,7 @@ def _check_project_access(project, user):
     member = ProjectMember.query.filter_by(project_id=project.id, user_id=user.id).first()
     if member:
         return True
-    if user.role == 'judge' and project.status in ('submitted', 'judging', 'reviewing'):
+    if user.role == 'judge' and project.status != 'draft':
         return True
     return False
 
@@ -75,8 +75,8 @@ def _check_capability_access(user, capability, project=None):
     if capability == 'review_assist':
         if user.role not in ('teacher', 'judge', 'admin'):
             return False, '评审辅助仅限教师、评委和管理员使用'
-        if project and user.role == 'judge' and project.status not in ('submitted', 'judging', 'reviewing'):
-            return False, '评委只能评审已提交的项目'
+        if project and user.role == 'judge' and project.status == 'draft':
+            return False, '评委不能评审草稿状态的项目'
 
     if capability == 'competition_recommend':
         if user.role not in ('student', 'admin'):
@@ -681,7 +681,7 @@ def batch_review():
     if project_ids:
         for pid in project_ids[:10]:
             p = Project.query.get(pid)
-            if p:
+            if p and _check_project_access(p, user):
                 projects_info.append({
                     'name': p.name,
                     'description': p.description or '',
