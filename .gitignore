@@ -34,6 +34,42 @@ skills/
 .env.*
 *.db
 *.sqlite
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/
+
+# Python 虚拟环境
+venv/
+env/
+.venv/
+__pycache__/
+*.pyc
+
+# Node 依赖（根目录如果有前端独立项目）
+node_modules/
+
+# 日志和临时文件
+*.log
+logs/
+temp/
+tmp/
+
+# 子项目目录
+image/
+.trae/
+keshe/
+skills/
+# ============================================
+# ⚠️ 重要：忽略敏感配置文件和本地数据库文件
+# ============================================
+.env
+.env.*
+*.db
+*.sqlite
 *.sqlite3
 
 
@@ -44,3 +80,5 @@ deploy_artifacts
 软工课设绘图总结.zip
 软工课设绘图总结/
 测试文件/
+AI评估报告_report_6.pdf
+yqz.txt
