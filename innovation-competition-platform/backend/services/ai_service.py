@@ -2,6 +2,7 @@ import os
 import json
 import threading
 import time
+import re
 from datetime import datetime, timedelta
 from queue import Queue, Empty
 
@@ -168,7 +169,9 @@ SYSTEM_PROMPT = (
     "\n   - 评委：智能引航、评审意见草稿、评分一致性检查、AI材料问答、商业计划书体检、评审辅助"
     "\n   - 管理员：所有功能"
     "\n2. 当用户要求'生成项目简介/简历/创意'或'如何组建团队'等需要具体信息的问题时，你必须先追问用户的关键信息（如项目方向、技术领域、团队规模等），等用户回复后再生成具体内容。不要在缺少信息时直接编造。"
-    "\n3. 回答时使用自然流畅的中文，可以适当使用加粗强调关键词，但不要过度使用标题符号。"
+    "\n3. 回答时使用自然流畅的中文，绝对禁止使用任何不必要的英文单词（如不要用 brainstorm，请用“头脑风暴”；不要用 decode 等），除了必要的行业缩写如 AI、PPT。标点符号也请尽量全部使用中文标点符号。"
+    "\n4. 绝对禁止使用任何 Emoji 表情符号（如 👋、✨ 等）以及任何特殊 Unicode 符号。"
+    "\n5. 请直接输出正文，绝对不要在回答开头或结尾使用 ```markdown 等代码块符号包裹你的回答。"
 )
 
 
@@ -299,7 +302,13 @@ def _stream_voice_model(queue, question, scene_name, session_id):
                     # 关键修复：当使用语音流时，delta 只作为文本传输，不应再次触发 split_stream_chunks 回退逻辑
                     queue.put({"text": delta})
                     try:
-                        tts_session.feed_text(delta)
+                        clean_delta = re.sub(r'[\*\#\>\_\~\|\`]', '', delta)
+                        clean_delta = re.sub(r'[\U00010000-\U0010ffff\u2600-\u27BF]', '', clean_delta)
+                        clean_delta = re.sub(r'[\-\—\–]', ',', clean_delta)
+                        clean_delta = clean_delta.replace('...', '……')
+                        clean_delta = clean_delta.replace('/', '、')
+                        clean_delta = re.sub(r'(?<!\d)\.(?!\d)', '。', clean_delta)
+                        tts_session.feed_text(clean_delta)
                     except Exception as e:
                         print(f"[Aliyun TTS] Feed text error: {e}")
                 if reply is not None:
@@ -379,9 +388,11 @@ def generate_stream_response(question, scene_name, session_id, use_voice=False):
                     yield f"audio_delta:{item['audio']}\n"
                     continue
                 if 'text' in item:
-                    yield f"delta:{item['text']}\n"
+                    safe_text = str(item['text']).replace('\n', '\\n')
+                    yield f"delta:{safe_text}\n"
                     continue
-            yield f"delta:{str(item)}\n"
+            safe_item = str(item).replace('\n', '\\n')
+            yield f"delta:{safe_item}\n"
         yield "done:1\n"
 
     response = Response(generate(), mimetype='text/plain; charset=utf-8')

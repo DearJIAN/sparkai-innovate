@@ -76,7 +76,7 @@ def login():
         return error('用户名或密码错误', code=401, status_code=401)
 
     if not user.is_active:
-        return error('账号已被禁用', code=403, status_code=403)
+        return error('账号已被禁用，请联系管理员', code=403, status_code=403)
 
     access_token = create_access_token(identity=str(user.id))
 

@@ -1224,7 +1224,7 @@ async function sendMessage(options = {}) {
           } else if (trimmed.startsWith('capability:')) {
             currentCapability.value = trimmed.slice(11).trim()
           } else if (trimmed.startsWith('delta:')) {
-            const delta = trimmed.slice(6)
+            const delta = trimmed.slice(6).replace(/\\n/g, '\n')
             streamingText.value += delta
             fullResponse += delta
             currentReplyText.value = fullResponse
@@ -1578,8 +1578,12 @@ function speakText(text, options = {}) {
   speechPendingText = ''
   updateSpeechStreamingState()
   
-  // 对于重播，直接请求整段文本的 TTS 资源，不再进行分句，避免停顿
-  enqueueSpeechSegments([text])
+  let cleanText = text.replace(/[*#>_~|`]/g, '').replace(/[-—–]/g, ',')
+  cleanText = cleanText.replace(/[\u{10000}-\u{10FFFF}\u{2600}-\u{27BF}]/gu, '')
+  cleanText = cleanText.replace(/\.\.\./g, '……').replace(/\//g, '、')
+  cleanText = cleanText.replace(/(?<!\d)\.(?!\d)/g, '。')
+  // 对于重播，恢复分句逻辑，将整段文本分句，避免单次请求过长导致超时或没有响应
+  enqueueSpeechSegments(splitSpeakableSegments(cleanText))
 }
 
 function clearMessages() {

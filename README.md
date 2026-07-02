@@ -2000,7 +2000,19 @@ cd backend && flask db upgrade && python seed.py
 > - 同一次提交中的所有改动归入同一个版本号，不分多条记录
 
 
-### v4.10.0 - 2026-06-30（当前版本）
+### v4.10.1 - 2026-07-01（当前版本）
+
+> AI 语音 TTS 发音精细化清洗 + 重播防超时降级机制恢复 + 提示词极致精简瘦身
+
+- **功能修改**
+  - AI 大模型系统提示词优化（`backend/services/ai_service.py`：新增强制使用全中文标点及严格禁止输出无必要英文单词、Emoji表情和代码块的底层规则；要求 AI 仅输出最终精简回答，彻底省略中间思路与分析说明，大幅削减无用文字输出以节省 Token 并加速音频合成）
+
+- **Bug 修复**
+  - 语音合成 (TTS) 异常中英文混读与乱码播报（`backend/services/ai_service.py` & `frontend/src/components/HuahuoAssistant.vue`：针对流式文本中的 Markdown 列表破折号、英文省略号 `...`、斜杠 `/` 及独立句号进行了深层正则清洗与中文顿号/句号替换，强制剔除所有超出中英文字符圈的扩展 Unicode 符号及代码块标签符，彻底杜绝发声引擎在朗读时穿插“减减”、“dot”、“slash”等毫无逻辑的英文解析发音）
+  - AI 回答完毕后重播点击无响应/超时（`frontend/src/components/HuahuoAssistant.vue`：撤销前端 `speakText` 重读时激进的“整段合流请求”方案，恢复 `splitSpeakableSegments` 按换行符分片流式请求音频的队列机制，解决文字较长时因调用云端长文本音频合成接口过久导致的前端死锁不发声问题）
+  - Live2D 表情异常闪烁回退（`frontend/src/components/HuahuoAssistant.vue`：拦截多次同级情绪调用，修复了在语音流式渲染中，若语句中包含多个不同情绪关键词导致的表情闪跳并高频重置回默认表情 06 0.0 的视觉缺陷）
+
+### v4.10.0 - 2026-06-30
 
 > AI 助手权限校验全面解耦 + 前端全局权限拦截升级 + 撤回逻辑闭环优化
 

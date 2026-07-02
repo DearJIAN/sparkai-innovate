@@ -385,7 +385,7 @@ async function sendChatMessage(text) {
         if (line.startsWith('sessionId:')) {
           chatSessionId.value = line.slice(10).trim()
         } else if (line.startsWith('delta:')) {
-          const delta = line.slice(6)
+          const delta = line.slice(6).replace(/\\n/g, '\n')
           chatStreamingText.value += delta
           fullText += delta
           notifyLive2dHook('onDelta', { text: delta })

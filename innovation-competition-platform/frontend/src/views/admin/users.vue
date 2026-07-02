@@ -44,12 +44,13 @@
         <el-table-column prop="created_at" label="注册时间" width="140">
           <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="editUser(row)">编辑</el-button>
             <el-button type="warning" link size="small" @click="handleToggleStatus(row)">
               {{ row.is_active ? '禁用' : '启用' }}
             </el-button>
+            <el-button type="info" link size="small" @click="handleResetPassword(row)">重置密码</el-button>
             <el-button type="danger" link size="small" @click="handleDeleteUser(row)" class="delete-btn">删除</el-button>
           </template>
         </el-table-column>
@@ -238,6 +239,26 @@ async function handleToggleStatus(user) {
     }
   } catch (e) {
     ElMessage.error('操作失败')
+  }
+}
+
+async function handleResetPassword(user) {
+  try {
+    await ElMessageBox.confirm(
+      `确定要把用户「${user.real_name || user.username}」的密码重置为 123456 吗？`,
+      '重置密码',
+      { type: 'warning' }
+    )
+    const res = await updateUser(user.id, { password: '123456' })
+    if (res.code === 200) {
+      ElMessage.success(`已成功重置用户「${user.real_name || user.username}」的密码为 123456`)
+    } else {
+      ElMessage.error(res.message || '重置密码失败')
+    }
+  } catch (e) {
+    if (e !== 'cancel') {
+      ElMessage.error('操作失败')
+    }
   }
 }
 
