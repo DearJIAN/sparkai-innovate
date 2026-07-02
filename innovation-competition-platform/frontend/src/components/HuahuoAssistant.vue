@@ -636,7 +636,7 @@ function setupExpressionControls() {
       }
     }
 
-    for (const partId of allPartIds) {
+      for (const partId of allPartIds) {
       const shouldEnable = [...activeOv].some((overlayName) => {
         return overlayRules[overlayName]?.parts?.includes(partId)
       })
