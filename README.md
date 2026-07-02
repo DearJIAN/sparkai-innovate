@@ -180,7 +180,7 @@
 
 ### AI 智能对话
 
-- 基于通义千问 qwen-plus 大模型（通过 LangChain + ChatOpenAI 兼容接口接入），同时保留火山方舟大模型（doubao-seed-1-6-251015）作为备选
+- 基于通义千问 qwen-plus 大模型（通过 LangChain + ChatOpenAI 兼容接口接入），同时保留阿里云通义千问（qwen-plus）作为备选
 - **统一对话路由**（`unified_chat`）：根据用户消息自动识别意图（导航 / 通用对话 / 智能体能力），分发到对应处理逻辑
 - **智能导航**：用户输入模糊指令（如"我想报名比赛""帮我看看项目"），AI 自动识别意图并返回路由跳转建议，前端自动执行页面跳转
 - 支持 SSE 流式输出，打字机效果（`/api/ai/chat/stream`）
@@ -2922,7 +2922,7 @@ cd backend && flask db upgrade && python seed.py
 #### 新增功能
 
 - **Live2D 虚拟形象「火花」**：全局浮动看板娘组件（`Live2dWidget.vue`），10 种基础表情 + 2 种叠加效果，AI 对话时自动表情切换，语音朗读口型驱动
-- **AI 智能对话**：基于火山方舟大模型（doubao-seed-1-6-251015）的真实 AI 对话，SSE 流式输出，会话管理（6 轮上下文记忆），智能回答清洗
+- **AI 智能对话**：基于阿里云通义千问（qwen-plus）的真实 AI 对话，SSE 流式输出，会话管理（6 轮上下文记忆），智能回答清洗
 - **语音交互面板**：`VoiceChat.vue` 可拖拽浮动面板，Chrome / Edge 原生语音识别 + Firefox 录音上传 ASR，TTS 语音合成
 - **AI 分析工具升级**：项目简介 / 商业计划书 / 风险分析从 Mock 模板升级为 AI 驱动生成，AI 失败时自动回退到模板
 - **Markdown 渲染**：AI 输出结果使用 marked 库渲染 Markdown，支持表格 / 列表 / 代码块等
