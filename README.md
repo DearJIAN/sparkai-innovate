@@ -957,7 +957,7 @@ done:1                     # 流结束标记
 | 接口                             | 方法   | 认证  | 说明                                                                          |
 | ------------------------------ | ---- | --- | --------------------------------------------------------------------------- |
 | `/api/ai/asr`                  | POST | JWT | 语音识别（multipart/form-data，豆包 ASR / faster-whisper 回退，返回 text/provider/model） |
-| `/api/ai/tts/synthesize`       | POST | JWT | TTS 语音合成（火山 TTS，返回 audio\_url）                                              |
+| `/api/ai/tts/synthesize`       | POST | JWT | TTS 语音合成（阿里云通义千问 TTS，返回 audio\_url）                                              |
 | `/api/ai/tts/audio/<filename>` | GET  | 无   | 获取合成音频文件（MP3）                                                               |
 | `/api/ai/voice/config`         | GET  | JWT | 语音配置信息（realtime\_configured/speaker/bot\_name/input\_mod）                   |
 
@@ -1727,7 +1727,7 @@ def create_competition():
 ### 6. TTS 语音合成失败
 
 1. 检查 `.env` 中的 `VOICE_REALTIME_TOKEN` 和 `VOICE_REALTIME_APP_ID` 是否正确
-2. 确认火山 TTS API 可访问
+2. 确认阿里云 TTS API 可访问
 3. 检查 `backend/services/tts_cache/` 目录是否有写入权限
 4. TTS 缓存：MD5 键 + 7 天 TTL，可通过 `get_tts_cache_stats` / `clear_tts_cache` 管理
 
