@@ -47,7 +47,7 @@ function loadExternalResource(url, type) {
 
   await Promise.all([
     loadExternalResource(live2d_path + 'waifu.css', 'css'),
-    loadExternalResource(live2d_path + 'waifu-tips.js', 'js')
+    loadExternalResource(live2d_path + 'waifu-tips.js?v=20260702a', 'js')
   ]);
 
   console.log("[Live2D] Resources loaded, waiting for app init...");

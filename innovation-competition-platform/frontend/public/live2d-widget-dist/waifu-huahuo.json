@@ -21,7 +21,7 @@
   "models": [
     {
       "name": "huahuo",
-      "paths": ["/live2d/huahuo/火花.model3.json?v=20260420d"],
+      "paths": ["/live2d/huahuo/火花.model3.json?v=20260702a"],
       "message": "已连接火花形象"
     }
   ]

@@ -78,7 +78,9 @@
 		{
 			"Target": "Parameter",
 			"Name": "LipSync",
-			"Ids": []
+			"Ids": [
+				"PARAM_DUMMY_LIPSYNC"
+			]
 		},
 		{
 			"Target": "Parameter",

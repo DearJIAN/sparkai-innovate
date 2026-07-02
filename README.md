@@ -2002,11 +2002,14 @@ cd backend && flask db upgrade && python seed.py
 
 ### v4.10.2 - 2026-07-02（当前版本）
 
-> 修复 Live2D 模型对话时眼睛高频闪烁（“星星眼”）问题
+> 彻底修复 Live2D 模型对话时眼睛高频闪烁（“星星眼”）及口型同步冲突问题
 
 #### 🐛 Bug 修复
 
-- **Live2D 对话表情闪烁**：修复了在 AI 对话播放语音时，由于 Live2D Widget 底层音频分析器自动驱动 `ParamMouthOpenY`（嘴部张合参数），且当前模型的嘴部参数意外关联了眼睛放大，导致眼睛高频闪烁“星星眼”的问题。通过在 `HuahuoAssistant.vue` 的 `__applyOverlayStateToCore` 渲染拦截器中，强制将每一帧的 `ParamMouthOpenY` 锁定为 0，彻底切断了音频到眼睛的污染链路，稳定了对话期间的表情显示。
+- **Live2D 对话口型与表情闪烁**：修复了在 AI 对话播放语音时，由于 Live2D Widget 底层音频分析器自动驱动嘴部张合参数，且当前使用的“火花”模型嘴部参数在物理绑定上存在缺陷（意外关联了眼睛放大），导致眼睛高频闪烁“星星眼”的问题。由于模型本身无口型，进行了多层联动的彻底禁用：
+  - **模型配置**：在 `火花.model3.json` 中，将 `LipSync` 组的 `Ids` 指向虚拟占位符 `PARAM_DUMMY_LIPSYNC`，切断 SDK 内置的嘴巴参数自动兜底机制。
+  - **底层引擎**：修改 `index.js` (Cubism 2) 剔除对 `PARAM_MOUTH_OPEN_Y` 的声音能量写入；同时修改 `index2.js` (Cubism 5) 的构造函数强制将 `this._lipsync` 设为 `false`，彻底跳过音频 RMS 检测与口型更新。
+  - **版本更新**：修改 `autoload.js` 与 `waifu-tips.js` 在加载组件库与模型时带上缓存击穿版本号（`?v=20260702a`），确保客户端在页面刷新后直接生效。
 
 ***
 

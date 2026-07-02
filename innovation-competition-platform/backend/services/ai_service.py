@@ -268,13 +268,13 @@ def _stream_text_model(queue, question, scene_name, session_id):
 
 def _stream_voice_model(queue, question, scene_name, session_id):
     try:
-        from services.tts_service import AliyunTTSStreamingSession, get_tts_provider
+        from services.tts_service import create_tts_streaming_session, get_tts_provider
         
         provider = get_tts_provider()
         
-        if provider == "aliyun":
-            # 阿里云全流式实现
-            tts_session = AliyunTTSStreamingSession()
+        if provider in ("aliyun", "qianwen", "doubao"):
+            # 统一流式TTS实现
+            tts_session = create_tts_streaming_session()
             tts_session.start()
             
             # 使用同步事件来协调停止
@@ -287,7 +287,7 @@ def _stream_voice_model(queue, question, scene_name, session_id):
                             break
                         queue.put({"audio": audio_delta})
                 except Exception as e:
-                    print(f"[Aliyun TTS] Audio worker error: {e}")
+                    print(f"[{provider.capitalize()} TTS] Audio worker error: {e}")
 
             audio_thread = threading.Thread(target=audio_worker, daemon=True)
             audio_thread.start()
@@ -310,7 +310,7 @@ def _stream_voice_model(queue, question, scene_name, session_id):
                         clean_delta = re.sub(r'(?<!\d)\.(?!\d)', '。', clean_delta)
                         tts_session.feed_text(clean_delta)
                     except Exception as e:
-                        print(f"[Aliyun TTS] Feed text error: {e}")
+                        print(f"[{provider.capitalize()} TTS] Feed text error: {e}")
                 if reply is not None:
                     final_reply = reply
                 if meta is not None:

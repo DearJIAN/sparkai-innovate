@@ -1,4 +1,12 @@
-import hashlib
+import os
+
+tts_path = r"e:\LEAR-CODE-NEW\软件工程\my-keshe\innovation-competition-platform\backend\services\tts_service.py"
+
+with open(tts_path, 'r', encoding='utf-8') as f:
+    old_content = f.read()
+
+# I will write the complete new content.
+new_content = """import hashlib
 import os
 import time
 import uuid
@@ -295,7 +303,6 @@ class DoubaoTTSStreamingSession:
         self.loop = None
         self.thread = None
         self.ws = None
-        self.session_started_event = threading.Event()
         
     def start(self):
         def _thread_target():
@@ -306,20 +313,17 @@ class DoubaoTTSStreamingSession:
             except Exception as e:
                 self.error = f"Doubao TTS 后台线程异常: {e}"
                 self.is_finished = True
-                self.session_started_event.set()
             finally:
                 self.loop.close()
 
         self.thread = threading.Thread(target=_thread_target, daemon=True)
         self.thread.start()
         
-        # 等待 WebSocket 和 Session 准备就绪
-        self.session_started_event.wait(timeout=10)
-        if self.error:
-            raise TTSError(self.error)
+        # 等待 WebSocket 准备就绪
+        while not self.is_finished and self.ws is None:
+            time.sleep(0.01)
 
     async def _async_run(self):
-        import json
         from services.doubao_tts_protocols import (
             start_connection, start_session, wait_for_event, receive_message, MsgType, EventType, finish_connection
         )
@@ -340,7 +344,7 @@ class DoubaoTTSStreamingSession:
             print(f"[Doubao TTS] provider=doubao resource_id={self.resource_id} speaker={self.voice} connect_id={self.connect_id} session_id={self.session_id} api_key={mask_secret(self.api_key)}")
             
             await start_connection(self.ws)
-            await wait_for_event(self.ws, MsgType.FullServerResponse, EventType.ConnectionStarted)
+            await wait_for_event(self.ws, EventType.ConnectionStarted)
             
             req = {
                 "req_params": {
@@ -354,24 +358,17 @@ class DoubaoTTSStreamingSession:
                     }
                 }
             }
-            payload_bytes = json.dumps(req).encode("utf-8")
-            await start_session(self.ws, payload_bytes, self.session_id)
-            await wait_for_event(self.ws, MsgType.FullServerResponse, EventType.SessionStarted)
-            
-            self.session_started_event.set()
+            await start_session(self.ws, self.session_id, req)
+            await wait_for_event(self.ws, EventType.SessionStarted)
             
             while not self.is_finished:
                 msg = await receive_message(self.ws)
-                if msg.type == MsgType.AudioOnlyServer:
+                if msg.msg_type == MsgType.AudioOnlyServer:
                     audio_b64 = base64.b64encode(msg.payload).decode("ascii")
                     self.audio_queue.put(audio_b64)
-                elif msg.type == MsgType.FullServerResponse:
-                    try:
-                        event = json.loads(msg.payload.decode("utf-8"))
-                        event_type = msg.event
-                    except:
-                        event = msg.payload
-                        event_type = msg.event
+                elif msg.msg_type == MsgType.ServerEvent:
+                    event = msg.payload
+                    event_type = event.get("event")
                     if event_type == EventType.SessionFinished:
                         self.is_finished = True
                         break
@@ -379,13 +376,7 @@ class DoubaoTTSStreamingSession:
                         self.error = f"Doubao TTS Event Error: {event}"
                         self.is_finished = True
                         break
-                elif msg.type == MsgType.Error:
-                    self.error = f"Doubao TTS MsgError: {msg.error_code} - {msg.payload}"
-                    self.is_finished = True
-                    break
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             self.error = f"Doubao TTS 连接或接收异常: {e}"
             self.is_finished = True
         finally:
@@ -403,15 +394,14 @@ class DoubaoTTSStreamingSession:
             
         async def _feed():
             try:
-                import json
                 from services.doubao_tts_protocols import task_request, EventType
                 request = {
+                    "event": EventType.TaskRequest,
                     "req_params": {
                         "text": text
                     }
                 }
-                payload_bytes = json.dumps(request).encode("utf-8")
-                await task_request(self.ws, payload_bytes, self.session_id)
+                await task_request(self.ws, self.session_id, request)
             except Exception as e:
                 self.error = f"Doubao TTS 喂入文本异常: {e}"
                 self.is_finished = True
@@ -624,3 +614,15 @@ def clear_tts_cache():
         except Exception:
             pass
     return {"message": "语音缓存已清除"}
+"""
+
+with open("modify_tts.py", "w", encoding="utf-8") as f:
+    f.write(f'''
+with open(r"{tts_path}", "w", encoding="utf-8") as out:
+    out.write("""{new_content}""")
+''')
+
+import subprocess
+subprocess.run(["python", "modify_tts.py"])
+os.remove("modify_tts.py")
+print("tts_service.py updated successfully.")

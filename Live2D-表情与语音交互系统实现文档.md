@@ -448,15 +448,18 @@ onBeforeUnmount(() => {
 当 AI 助手回答并播放语音时，前端 Live2D 引擎底层的音频分析器会自动捕获声音音量，并试图驱动模型的嘴巴参数（`ParamMouthOpenY`）来实现“张嘴说话”的口型同步。然而，当前使用的“火花”模型在物理绑定（Rigging）上存在缺陷，它的口型参数 `ParamMouthOpenY` 意外牵连了眼睛的放大参数。因此，语音播放期间嘴部参数的高频跳动，直接导致了眼睛呈现疯狂放大的“星星眼”闪烁效果。
 
 **修复方式**：
-由于该模型本身并没有张嘴说话的素材需要同步，且存在物理绑定污染。我们可以直接在模型的配置文件中彻底移除并关闭 LipSync 模块。
-在 `前端项目/public/live2d/huahuo/火花.model3.json` 中，将 `LipSync` 组的 `Ids` 置空即可：
+由于该模型本身并没有张嘴说话的素材需要同步，且存在物理绑定污染。我们必须**彻底禁用底层的口型同步（LipSync）机制**：
 
-```json
-{
-  "Target": "Parameter",
-  "Name": "LipSync",
-  "Ids": []
-}
-```
-通过在数据源头切断引擎对嘴型特征的识别，Live2D SDK 将不再执行任何音频张合分析，从而一劳永逸地解决了眼睛异常闪烁的问题。
+1. **模型配置层重定向**：
+   在 `前端项目/public/live2d/huahuo/火花.model3.json` 中，将 `LipSync` 组的 `Ids` 由 `[]` 改为无实际意义的占位符 `["PARAM_DUMMY_LIPSYNC"]`。
+   > **避坑原理**：如果 `Ids` 为空数组 `[]`，Live2D Web SDK 会自动启用内置兜底规则，绑定到默认的嘴巴参数（`PARAM_MOUTH_OPEN_Y`）。将其强行绑定到不存在的虚拟参数后，SDK 不会产生任何物理形变。
 
+2. **核心引擎层物理禁用**：
+   在打包好的 Live2D Web 核心文件下禁用口型参数更新：
+   * **对于 Cubism 2 (`public/live2d-widget-dist/chunk/index.js`)**：彻底删除了将声音音量 `lipSyncValue` 映射更新至 `PARAM_MOUTH_OPEN_Y` 的操作语句。
+   * **对于 Cubism 5 (`public/live2d-widget-dist/chunk/index2.js`)**：在模型初始化构造函数中，将控制口型同步的标志属性由 `this._lipsync = !0` (true) 强制修改为 `this._lipsync = !1` (false)。这会在最底层完全跳过所有的口型音频更新与 RMS 计算逻辑（`if (this._lipsync) { ... }` 内部将永远不执行）。
+
+3. **清除静态文件缓存**：
+   在 `waifu-tips.js` 和 `autoload.js` 中动态引入 `index.js`、`index2.js` 及模型配置时，拼接版本号 Query 字符串（如 `?v=20260702a`），避开浏览器的本地强缓存。
+
+通过这一套深层联动的修改，彻底切断了音频输入与模型参数的连接，完美解决眼睛及表情高频闪烁的问题。
