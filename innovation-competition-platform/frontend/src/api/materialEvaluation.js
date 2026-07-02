@@ -19,13 +19,12 @@ export const getReport = (taskId) =>
   request.get(`/material-evaluation/reports/${taskId}`)
 
 export const downloadReportPdf = (taskId) =>
-  request.get(`/material-evaluation/reports/${taskId}/pdf`, {
-    responseType: 'blob',
+  request.get(`/material-evaluation/reports/${taskId}/download`, {
     timeout: 300000
   })
 
 export const getDownloadUrl = (taskId) =>
-  withApiBase(`/material-evaluation/reports/${taskId}/pdf`)
+  withApiBase(`/material-evaluation/reports/${taskId}/download`)
 
 export const getMyTasks = (params = {}) =>
   request.get('/material-evaluation/tasks', { params })

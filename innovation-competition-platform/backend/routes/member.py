@@ -43,8 +43,20 @@ def get_members(project_id):
         return error('无权查看该项目成员', code=403, status_code=403)
 
     members = ProjectMember.query.filter_by(project_id=project_id).all()
+    member_list = [m.to_dict() for m in members]
+    if project.leader and not any(m['user_id'] == project.leader_id for m in member_list):
+        member_list.insert(0, {
+            'id': -1,
+            'project_id': project.id,
+            'user_id': project.leader_id,
+            'member_name': project.leader.real_name or project.leader.username,
+            'role_in_project': '项目负责人',
+            'responsibility': '项目统筹与管理',
+            'created_at': project.created_at.isoformat() if project.created_at else None
+        })
+
     return success({
-        'members': [m.to_dict() for m in members]
+        'members': member_list
     })
 
 
@@ -68,16 +80,32 @@ def add_member(project_id):
     if not data or not data.get('member_name'):
         return error('成员姓名不能为空', code=400, status_code=400)
 
+    user_id_to_link = data.get('user_id')
+    if user_id_to_link:
+        try:
+            user_id_to_link = int(user_id_to_link)
+            linked_user = User.query.get(user_id_to_link)
+            if not linked_user:
+                return error(f'关联的用户ID({user_id_to_link})不存在', code=400, status_code=400)
+        except ValueError:
+            return error('关联的用户ID必须是有效的数字', code=400, status_code=400)
+    else:
+        user_id_to_link = None
+
     member = ProjectMember(
         project_id=project_id,
-        user_id=data.get('user_id') or None,
+        user_id=user_id_to_link,
         member_name=data.get('member_name', '').strip(),
         role_in_project=data.get('role_in_project', '').strip() or None,
         responsibility=data.get('responsibility', '').strip() or None
     )
 
-    db.session.add(member)
-    db.session.commit()
+    try:
+        db.session.add(member)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return error(f'添加成员失败: {str(e)}', code=500, status_code=500)
 
     return success({
         'member': member.to_dict()
@@ -113,9 +141,24 @@ def update_member(member_id):
     if 'responsibility' in data:
         member.responsibility = data['responsibility'].strip() or None
     if 'user_id' in data:
-        member.user_id = data['user_id'] or None
+        user_id_to_link = data['user_id']
+        if user_id_to_link:
+            try:
+                user_id_to_link = int(user_id_to_link)
+                linked_user = User.query.get(user_id_to_link)
+                if not linked_user:
+                    return error(f'关联的用户ID({user_id_to_link})不存在', code=400, status_code=400)
+            except ValueError:
+                return error('关联的用户ID必须是有效的数字', code=400, status_code=400)
+        else:
+            user_id_to_link = None
+        member.user_id = user_id_to_link
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return error(f'更新成员失败: {str(e)}', code=500, status_code=500)
 
     return success({
         'member': member.to_dict()

@@ -1,6 +1,7 @@
 import os
 import json
 import uuid
+import base64
 from datetime import datetime
 from flask import Blueprint, request, send_file
 from extensions import db
@@ -218,7 +219,7 @@ def get_report(task_id):
     return success(evaluation.to_dict())
 
 
-@material_evaluation_bp.route('/reports/<int:task_id>/pdf', methods=['GET'])
+@material_evaluation_bp.route('/reports/<int:task_id>/download', methods=['GET'])
 @jwt_required()
 def download_report_pdf(task_id):
     user_id = get_jwt_identity()
@@ -233,11 +234,16 @@ def download_report_pdf(task_id):
     if evaluation.pdf_path and os.path.exists(evaluation.pdf_path):
         file_size = os.path.getsize(evaluation.pdf_path)
         if file_size > 0:
-            resp = send_file(evaluation.pdf_path, as_attachment=True,
-                             download_name=f"AI评估报告_{evaluation.evaluation_type}_{evaluation.id}.pdf",
-                             mimetype='application/pdf')
-            resp.headers['Content-Length'] = str(file_size)
-            return resp
+            try:
+                with open(evaluation.pdf_path, 'rb') as f:
+                    pdf_data = f.read()
+                b64_data = base64.b64encode(pdf_data).decode('utf-8')
+                return success({
+                    'base64': b64_data,
+                    'file_name': f"AI评估报告_{evaluation.evaluation_type}_{evaluation.id}.pdf"
+                })
+            except Exception as e:
+                pass
         try:
             os.remove(evaluation.pdf_path)
         except Exception:
@@ -254,12 +260,15 @@ def download_report_pdf(task_id):
             return error('PDF生成内容为空，请稍后重试', 500, 500)
         evaluation.pdf_path = pdf_path
         db.session.commit()
-        resp = send_file(pdf_path, as_attachment=True,
-                         download_name=f"AI评估报告_{evaluation.evaluation_type}_{evaluation.id}.pdf",
-                         mimetype='application/pdf')
-        resp.headers['Content-Length'] = str(pdf_size)
-        resp.headers['Content-Disposition'] = f"attachment; filename*=UTF-8''AI评估报告_{evaluation.evaluation_type}_{evaluation.id}.pdf"
-        return resp
+        
+        with open(pdf_path, 'rb') as f:
+            pdf_data = f.read()
+        b64_data = base64.b64encode(pdf_data).decode('utf-8')
+        
+        return success({
+            'base64': b64_data,
+            'file_name': f"AI评估报告_{evaluation.evaluation_type}_{evaluation.id}.pdf"
+        })
     except Exception as e:
         import traceback
         traceback.print_exc()

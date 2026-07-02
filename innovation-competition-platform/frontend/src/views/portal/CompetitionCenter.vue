@@ -270,6 +270,10 @@ const particleStyle = (i) => {
   overflow: hidden;
   border: 1px solid #e2e8f0;
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .entry-card:hover {
@@ -361,6 +365,11 @@ const particleStyle = (i) => {
   color: #64748b;
   line-height: 1.6;
   margin-bottom: 24px;
+  height: 45px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .card-features {
@@ -380,6 +389,8 @@ const particleStyle = (i) => {
   background: #f8fafc;
   border-radius: 10px;
   transition: background 0.25s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .external-card .feature-item { color: #475569; }

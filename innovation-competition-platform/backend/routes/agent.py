@@ -139,6 +139,20 @@ def _get_project_info_text(project):
     return '\n'.join(parts)
 
 
+@agent_bp.route('/check-index', methods=['GET'])
+@jwt_required()
+def check_index():
+    source_type = request.args.get('source_type', 'project')
+    source_id = request.args.get('source_id')
+    
+    if not source_id:
+        return error('参数缺失：source_id')
+        
+    from services.vector_store import get_index_info
+    index_info = get_index_info(source_type, source_id)
+    return success(index_info)
+
+
 @agent_bp.route('/index-materials', methods=['POST'])
 @jwt_required()
 def index_materials():
@@ -166,10 +180,19 @@ def index_materials():
             return error('您没有权限访问该项目', code=403, status_code=403)
 
         files = ProjectFile.query.filter_by(project_id=project_id).all()
-        if not files:
+        # Also include materials from registrations associated with this project
+        from models.competition_registration import CompetitionRegistration
+        from models.registration_material import RegistrationMaterial
+        reg_materials = RegistrationMaterial.query.join(CompetitionRegistration).filter(
+            CompetitionRegistration.project_id == project_id
+        ).all()
+        
+        all_files = files + reg_materials
+
+        if not all_files:
             return error('该项目暂无上传文件')
 
-        parsed_results = parse_project_files(files, _get_upload_folder())
+        parsed_results = parse_project_files(all_files, _get_upload_folder())
 
         source_id = project_id
         index_info = get_index_info('project', source_id)

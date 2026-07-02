@@ -96,8 +96,25 @@ def get_projects():
     query = query.order_by(Project.created_at.desc())
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
+    projects_list = []
+    for project in pagination.items:
+        p_dict = project.to_dict()
+        from models.competition_registration import CompetitionRegistration
+        from models.registration_material import RegistrationMaterial
+        reg_files_cnt = RegistrationMaterial.query.join(CompetitionRegistration).filter(
+            CompetitionRegistration.project_id == project.id
+        ).count()
+        p_dict['file_count'] = project.files.count() + reg_files_cnt
+        
+        member_cnt = project.members.count()
+        if project.leader and not project.members.filter_by(user_id=project.leader_id).first():
+            member_cnt += 1
+        p_dict['member_count'] = member_cnt
+        
+        projects_list.append(p_dict)
+
     return success({
-        'projects': [project.to_dict() for project in pagination.items],
+        'projects': projects_list,
         'total': pagination.total,
         'pages': pagination.pages,
         'current_page': page
@@ -199,12 +216,28 @@ def get_project(project_id):
 
     # 获取关联数据
     members = ProjectMember.query.filter_by(project_id=project.id).all()
-    files_count = ProjectFile.query.filter_by(project_id=project.id).count()
+    from models.competition_registration import CompetitionRegistration
+    from models.registration_material import RegistrationMaterial
+    reg_files_count = RegistrationMaterial.query.join(CompetitionRegistration).filter(
+        CompetitionRegistration.project_id == project.id
+    ).count()
+    files_count = ProjectFile.query.filter_by(project_id=project.id).count() + reg_files_count
     tasks_count = ProjectTask.query.filter_by(project_id=project.id).count()
     reviews = Review.query.filter_by(project_id=project.id).all()
 
     result = project.to_dict()
-    result['members'] = [m.to_dict() for m in members]
+    member_list = [m.to_dict() for m in members]
+    if project.leader and not any(m['user_id'] == project.leader_id for m in member_list):
+        member_list.insert(0, {
+            'id': -1,
+            'project_id': project.id,
+            'user_id': project.leader_id,
+            'member_name': project.leader.real_name or project.leader.username,
+            'role_in_project': '项目负责人',
+            'responsibility': '项目统筹与管理',
+            'created_at': project.created_at.isoformat() if project.created_at else None
+        })
+    result['members'] = member_list
     result['reviews'] = [r.to_dict() for r in reviews]
     result['files_count'] = files_count
     result['tasks_count'] = tasks_count

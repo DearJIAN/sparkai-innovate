@@ -224,10 +224,10 @@ import {
   mockDefense,
   batchReview,
   smartFeedback,
-  reviewDraft,
   scoreCheck,
   getCapabilities,
   indexMaterials,
+  checkIndex,
 } from '@/api/agent'
 import { getProjects } from '@/api/project'
 import { getMyRegistrations } from '@/api/registration'
@@ -303,7 +303,7 @@ const needsProjectRequired = computed(() => {
 const needsIndex = computed(() => {
   if (!selectedCapability.value) return false
   const key = selectedCapability.value.key
-  return ['material_qa', 'bp_check', 'review_assist', 'smart_feedback', 'review_draft'].includes(key)
+  return ['material_qa', 'bp_check', 'review_assist', 'smart_feedback', 'review_draft', 'roadshow'].includes(key)
 })
 
 const resultHtml = computed(() => {
@@ -318,6 +318,7 @@ const canExecute = computed(() => {
   if (loading.value) return false
   if (needsProjectRequired.value && !form.value.projectId) return false
   if (selectedCapability.value?.key === 'material_qa' && !form.value.question.trim()) return false
+  if (needsIndex.value && !indexExists.value) return false
   return true
 })
 
@@ -328,7 +329,6 @@ function selectCapability(cap) {
   }
   selectedCapability.value = cap
   result.value = null
-  indexExists.value = false
 }
 
 function goBack() {
@@ -403,11 +403,24 @@ async function searchProjects(query) {
   }
 }
 
+async function checkIndexStatus(projectId) {
+  if (!projectId) return
+  try {
+    const res = await checkIndex({ source_type: 'project', source_id: projectId })
+    const data = res.data || res
+    indexExists.value = !!data.exists
+  } catch (e) {
+    console.error('检查索引状态失败:', e)
+  }
+}
+
 async function onProjectChange(projectId) {
     indexExists.value = false
     form.value.registrationId = null
     registrations.value = []
     if (!projectId) return
+    
+    checkIndexStatus(projectId)
     
     // 只有学生角色才需要获取“我的报名”来绑定竞赛上下文
     if (props.userRole === 'student') {
@@ -589,6 +602,14 @@ onMounted(() => {
   flex-direction: column;
   color: #1e293b;
   overflow: hidden;
+}
+
+.capability-cards {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .capability-form {

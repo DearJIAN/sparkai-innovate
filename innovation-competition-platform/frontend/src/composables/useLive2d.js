@@ -1,4 +1,11 @@
 export function detectEmotionByText(text) {
+  if (typeof text !== 'string') {
+    try {
+      text = JSON.stringify(text)
+    } catch (e) {
+      return null
+    }
+  }
   const lower = (text || '').toLowerCase()
   if (/开心|高兴|太好了|哈哈|棒|厉害|优秀|成功|恭喜/.test(lower)) return 'happy'
   if (/害羞|脸红|不好意思|羞/.test(lower)) return 'shy'

@@ -329,20 +329,23 @@ async function downloadPDF() {
   if (downloadingPDF.value) return
   downloadingPDF.value = true
   try {
-    const blob = await downloadReportPdf(taskId.value)
-
-    if (!blob || !(blob instanceof Blob)) {
-      ElMessage.error('PDF文件格式异常，请稍后重试')
+    const res = await downloadReportPdf(taskId.value)
+    
+    if (!res || res.code !== 200 || !res.data || !res.data.base64) {
+      ElMessage.error('PDF生成失败或内容为空，请稍后重试')
       return
     }
+
+    const bstr = atob(res.data.base64)
+    let n = bstr.length
+    const u8arr = new Uint8Array(n)
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n)
+    }
+    const blob = new Blob([u8arr], { type: 'application/pdf' })
 
     if (blob.size === 0) {
       ElMessage.error('PDF文件内容为空，无法下载')
-      return
-    }
-
-    if (blob.size < 100) {
-      ElMessage.error('PDF文件内容不完整，请稍后重试')
       return
     }
 

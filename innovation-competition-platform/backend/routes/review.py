@@ -87,7 +87,18 @@ def get_project_for_review(project_id):
     my_review = Review.query.filter_by(project_id=project.id, judge_id=user.id).first()
 
     result = project.to_dict()
-    result['members'] = [m.to_dict() for m in members]
+    member_list = [m.to_dict() for m in members]
+    if project.leader and not any(m['user_id'] == project.leader_id for m in member_list):
+        member_list.insert(0, {
+            'id': -1,
+            'project_id': project.id,
+            'user_id': project.leader_id,
+            'member_name': project.leader.real_name or project.leader.username,
+            'role_in_project': '项目负责人',
+            'responsibility': '项目统筹与管理',
+            'created_at': project.created_at.isoformat() if project.created_at else None
+        })
+    result['members'] = member_list
     result['files'] = [f.to_dict() for f in files]
     result['tasks'] = [t.to_dict() for t in tasks]
     result['my_review'] = my_review.to_dict() if my_review else None

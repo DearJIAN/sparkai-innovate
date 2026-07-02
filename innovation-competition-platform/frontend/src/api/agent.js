@@ -3,6 +3,7 @@ import request from './request'
 const agentTimeout = { timeout: 120000 }
 
 export const indexMaterials = (data) => request.post('/agent/index-materials', data, agentTimeout)
+export const checkIndex = (params) => request.get('/agent/check-index', { params })
 export const materialQa = (data) => request.post('/agent/material-qa', data, agentTimeout)
 export const bpCheck = (data) => request.post('/agent/bp-check', data, agentTimeout)
 export const generateRoadshow = (data) => request.post('/agent/roadshow', data, agentTimeout)

@@ -541,8 +541,13 @@ onActivated(() => {
 .sidebar-actions {
   margin-top: auto;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
+}
+
+.sidebar-actions .el-button {
+  flex: 1;
+  margin-left: 0;
 }
 
 .pagination-wrapper {
